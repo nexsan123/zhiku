@@ -1,0 +1,87 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -Command \"$cmd=$env:CLAUDE_TOOL_ARG_COMMAND; if($cmd -match 'rm\\s+-rf|git\\s+push\\s+--force|git\\s+reset\\s+--hard|DROP\\s+TABLE|format\\s+[A-Z]:'){Write-Host 'BLOCKED: Dangerous command pattern detected'; exit 2}\"",
+            "timeout": 5,
+            "statusMessage": "Safety guard..."
+          }
+        ]
+      },
+      {
+        "matcher": "SendMessage",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -Command \"$t=$env:CLAUDE_TOOL_ARG_TYPE;$a=$env:CLAUDE_TOOL_ARG_APPROVE;$c=$env:CLAUDE_TOOL_ARG_CONTENT;if($t -eq 'plan_approval_response' -and $a -eq 'true'){if(-not $c -or $c.Length -lt 100){Write-Host 'BLOCKED(PA-01): Plan approval requires 8-dimension scoring. Content too short.';exit 2};if($c -notmatch '\\d\\.?\\d?\\s*/\\s*5'){Write-Host 'BLOCKED(PA-01): Plan approval missing X/5 scoring format.';exit 2}}\"",
+            "timeout": 5,
+            "statusMessage": "Plan approval scoring check..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -Command \"$f=$env:CLAUDE_TOOL_ARG_FILE_PATH; if($f -and (Test-Path $f) -and ($f -match '\\\\.(css|tsx?)$')){$m=Select-String -Path $f -Pattern '#[0-9a-fA-F]{3,8}' -AllMatches; if($m){$m.Matches|Select -First 3|ForEach{Write-Host $_.Value}; exit 2}}\"",
+            "timeout": 5,
+            "statusMessage": "Checking hardcoded colors..."
+          },
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -Command \"$f=$env:CLAUDE_TOOL_ARG_FILE_PATH; if($f -and (Test-Path $f) -and ($f -match '\\\\.(tsx?)$')){$m=Select-String -Path $f -Pattern 'console\\.(log|error|warn|debug)\\(' -AllMatches; if($m){$m|Select -First 3|ForEach{Write-Host $_.Line.Trim()}; exit 2}}\"",
+            "timeout": 5,
+            "statusMessage": "Checking console statements..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -Command \"if(Test-Path tsconfig.json){$r=npx tsc --noEmit 2>&1|Select -First 15; if($LASTEXITCODE -ne 0){Write-Host 'TypeScript errors:'; $r|ForEach{Write-Host $_}; exit 2}}\"",
+            "timeout": 60,
+            "statusMessage": "TypeScript type check..."
+          },
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -Command \"$cargo=Get-ChildItem -Recurse -Depth 2 -Filter Cargo.toml -ErrorAction SilentlyContinue|Select -First 1; if($cargo){$r=cargo check --manifest-path $cargo.FullName 2>&1|Select -Last 10; if($LASTEXITCODE -ne 0){Write-Host 'Rust compilation errors:'; $r|ForEach{Write-Host $_}; exit 2}}\"",
+            "timeout": 120,
+            "statusMessage": "Rust compilation check..."
+          },
+          {
+            "type": "prompt",
+            "prompt": "VERIFICATION COMPLETENESS CHECK (Q-02 + S-03):\n\nBefore ending session, verify:\n1. If ANY implementation tasks exist (coder-be/coder-fe/ui-designer completed work), do verification agent tasks also exist and are completed?\n2. Implementation done + verification NOT done = DO NOT end. Flag: 'INCOMPLETE: Verification stages pending. S-03 prohibits skipping.'\n3. No verification agents created at all = Flag: 'CRITICAL: Q-02 violated. No verification agents exist.'\n\nOnly end if: (a) no implementation done, OR (b) all verification also completed."
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -Command \"$td=Join-Path $env:USERPROFILE '.claude/teams';if(Test-Path $td){$c=@();$c+=Get-ChildItem (Join-Path $td '*/config.json') -EA SilentlyContinue;$c+=Get-ChildItem (Join-Path $td '*.json') -EA SilentlyContinue;$lc=$c|Sort LastWriteTime -Desc|Select -First 1;if($lc){$j=Get-Content $lc -Raw|ConvertFrom-Json;if($j.members){$n=$j.members|ForEach-Object{$_.name};$hi=$n|Where-Object{$_ -match 'coder|ui-designer'};$hv=$n|Where-Object{$_ -match 'reviewer|e2e-verifier'};if($hi -and -not $hv){Write-Host ('BLOCKED(Q-02): Team has impl agents ['+($hi-join',')+'] but NO verification agents. Add reviewer/e2e-verifier before proceeding.');exit 2}}}}\"",
+            "timeout": 10,
+            "statusMessage": "Verification agent check..."
+          },
+          {
+            "type": "prompt",
+            "prompt": "MANDATORY QUALITY CHECK (Q-01~Q-04 + S-01~S-05 + PA-01):\n\nA teammate has stopped. Perform ALL checks below.\n\n== 1. EVIDENCE (Q-01) ==\nDid they provide actual execution evidence? 'Completed' without evidence = V-01 violation.\n\n== 2. EXIT CONDITIONS (S-02) ==\nWere ALL exit conditions addressed with evidence? Missing any = S-02 violation.\n\n== 3. COMPLETENESS (Q-02) ==\nDid they skip any steps? Check plan vs actual work.\n\n== 4. RUNTIME (Q-01) ==\nDid they RUN the code? 'cargo check' alone is insufficient.\n\n== 5. PLAN COMPLIANCE (PA-01) ==\nDid implementation match approved Plan invariants and risk mitigations?\n\n== 6. TASK STATUS (S-03) ==\nCall TaskList. For each verification agent task:\n- completed = OK\n- in_progress = OK\n- pending/no owner = CRITICAL: never started\n- missing = CRITICAL: never created\n\n== 7. DECISIONS (D3-01~D3-03) ==\nMajor decisions considered: (1) do it, (2) don't, (3) alternatives?\n\n== 8. GIT COMMIT (B-05) ==\nIf this was an implementation agent (coder-be/coder-fe/ui-designer) and quality check PASSED:\n- Run 'git status' to check for uncommitted changes\n- If changes exist: remind Lead to commit with appropriate scope (feat-be/feat-fe/design)\n- Format: 'GIT REMINDER: Implementation completed. Uncommitted changes detected. Recommend: git add + commit before next stage.'\n- If no changes: skip\n\n== OUTPUT ==\n```\nQUALITY CHECK:\n[1] Evidence:     PASS/FAIL\n[2] Exit Conds:   PASS/FAIL\n[3] Completeness: PASS/FAIL\n[4] Runtime:      PASS/FAIL\n[5] Plan Comply:  PASS/FAIL\n[6] Task Status:  PASS/FAIL\n[7] Decisions:    PASS/FAIL\n[8] Git Commit:   DONE/PENDING/N-A\nOVERALL: PASS/FAIL\n```\nAny FAIL = recommend corrective action."
+          }
+        ]
+      }
+    ]
+  }
+}
