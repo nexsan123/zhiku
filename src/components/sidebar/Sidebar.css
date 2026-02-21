@@ -1,0 +1,139 @@
+/* Sidebar — collapsible navigation */
+
+.sidebar {
+  width: var(--sidebar-collapsed-width);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--glass-bg-structural);
+  backdrop-filter: blur(var(--blur-sidebar));
+  -webkit-backdrop-filter: blur(var(--blur-sidebar));
+  border-right: 1px solid var(--glass-border-subtle);
+  z-index: var(--z-sidebar);
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: width var(--duration-normal) var(--easing-default);
+}
+
+.sidebar--expanded {
+  width: var(--sidebar-expanded-width);
+}
+
+/* Navigation area */
+.sidebar__nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: var(--spacing-2);
+  gap: var(--spacing-0-5);
+}
+
+/* Bottom area (toggle + settings) */
+.sidebar__bottom {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: var(--spacing-2);
+  gap: var(--spacing-0-5);
+}
+
+/* Collapsed nav item */
+.sidebar__item {
+  width: 48px;
+  height: 48px;
+  margin: var(--spacing-0-5) auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: background-color var(--duration-fast) var(--easing-default),
+              color var(--duration-fast) var(--easing-default);
+  padding: 0;
+  position: relative;
+}
+
+.sidebar__item:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+.sidebar__item--active {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent-primary);
+}
+
+/* Active left border accent */
+.sidebar__item--active::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--color-accent-primary);
+}
+
+/* Expanded nav item */
+.sidebar--expanded .sidebar__item {
+  width: calc(100% - var(--spacing-4));
+  height: 44px;
+  margin: var(--spacing-0-5) var(--spacing-2);
+  padding: 0 var(--spacing-3);
+  justify-content: flex-start;
+  gap: var(--spacing-3);
+}
+
+/* Icon sizing */
+.sidebar__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sidebar__icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.sidebar--expanded .sidebar__icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Label — hidden in collapsed mode */
+.sidebar__label {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  transition: opacity var(--duration-normal) var(--easing-default);
+}
+
+.sidebar--expanded .sidebar__label {
+  opacity: 1;
+  width: auto;
+}
+
+/* Separator line between toggle and settings */
+.sidebar__separator {
+  width: 32px;
+  height: 1px;
+  background: var(--color-border-primary);
+  margin: var(--spacing-1) auto;
+}
+
+.sidebar--expanded .sidebar__separator {
+  width: calc(100% - var(--spacing-8));
+}

@@ -1,0 +1,330 @@
+/* ============================================================
+   智库 CSS Custom Properties
+   Mapped 1:1 from design/theme.ts
+   Dark theme only — Intelligence/Analysis aesthetic
+   ============================================================ */
+
+:root {
+  /* ----------------------------------------------------------
+     Background Layers
+     ---------------------------------------------------------- */
+  --color-bg-base: #0D0D12;
+  --color-bg-primary: #141419;
+  --color-bg-elevated: #1C1C24;
+  --color-bg-overlay: #252530;
+  --color-bg-hover: #2A2A36;
+  --color-bg-active: #32323F;
+
+  /* ----------------------------------------------------------
+     Text Layers
+     ---------------------------------------------------------- */
+  --color-text-primary: rgba(255, 255, 255, 0.92);
+  --color-text-secondary: rgba(255, 255, 255, 0.56);
+  --color-text-tertiary: rgba(255, 255, 255, 0.36);
+  --color-text-disabled: rgba(255, 255, 255, 0.20);
+
+  /* ----------------------------------------------------------
+     Accent Color — Teal (Intelligence/Analysis)
+     ---------------------------------------------------------- */
+  --color-accent-primary: #00C2A8;
+  --color-accent-hover: #33D4BE;
+  --color-accent-active: #009E88;
+  --color-accent-subtle: rgba(0, 194, 168, 0.12);
+
+  /* ----------------------------------------------------------
+     Semantic Colors
+     ---------------------------------------------------------- */
+  --color-semantic-success: #30D158;
+  --color-semantic-success-subtle: rgba(48, 209, 88, 0.12);
+  --color-semantic-warning: #FFD60A;
+  --color-semantic-warning-subtle: rgba(255, 214, 10, 0.12);
+  --color-semantic-error: #FF453A;
+  --color-semantic-error-subtle: rgba(255, 69, 58, 0.12);
+  --color-semantic-info: #64D2FF;
+  --color-semantic-info-subtle: rgba(100, 210, 255, 0.12);
+
+  /* ----------------------------------------------------------
+     Intel Colors — Priority Levels
+     ---------------------------------------------------------- */
+  --color-intel-p0: #FF453A;
+  --color-intel-p0-subtle: rgba(255, 69, 58, 0.15);
+  --color-intel-p1: #FF9F0A;
+  --color-intel-p1-subtle: rgba(255, 159, 10, 0.15);
+  --color-intel-p2: #00C2A8;
+  --color-intel-p2-subtle: rgba(0, 194, 168, 0.12);
+
+  /* ----------------------------------------------------------
+     Intel Colors — News Categories
+     ---------------------------------------------------------- */
+  --color-intel-geopolitical: #D4553A;
+  --color-intel-geopolitical-subtle: rgba(212, 85, 58, 0.15);
+  --color-intel-macro-policy: #7B68EE;
+  --color-intel-macro-policy-subtle: rgba(123, 104, 238, 0.15);
+  --color-intel-market: #00C2A8;
+  --color-intel-market-subtle: rgba(0, 194, 168, 0.12);
+  --color-intel-corporate: #D4A03A;
+  --color-intel-corporate-subtle: rgba(212, 160, 58, 0.15);
+
+  /* ----------------------------------------------------------
+     Border
+     ---------------------------------------------------------- */
+  --color-border-primary: rgba(255, 255, 255, 0.08);
+  --color-border-secondary: rgba(255, 255, 255, 0.12);
+  --color-border-focus: rgba(0, 194, 168, 0.48);
+  --color-border-error: rgba(255, 69, 58, 0.48);
+
+  /* ----------------------------------------------------------
+     Shadows
+     ---------------------------------------------------------- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.24), 0 0 1px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.32), 0 0 1px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.48), 0 0 1px rgba(0, 0, 0, 0.12);
+
+  /* ----------------------------------------------------------
+     Border Radius
+     ---------------------------------------------------------- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* ----------------------------------------------------------
+     Spacing (4px base grid)
+     ---------------------------------------------------------- */
+  --spacing-0-5: 2px;
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+
+  /* ----------------------------------------------------------
+     Animation
+     ---------------------------------------------------------- */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+  --easing-default: cubic-bezier(0.25, 0.1, 0.25, 1.0);
+  --easing-in: cubic-bezier(0.42, 0, 1, 1);
+  --easing-out: cubic-bezier(0, 0, 0.58, 1);
+  --easing-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ----------------------------------------------------------
+     Typography
+     ---------------------------------------------------------- */
+  --font-sans: -apple-system, "SF Pro Display", "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "SF Mono", "JetBrains Mono", "Cascadia Code", "Consolas", monospace;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 13px;
+  --font-size-md: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.7;
+
+  /* ----------------------------------------------------------
+     Blur (backdrop-filter values)
+     ---------------------------------------------------------- */
+  --blur-sidebar: 20px;
+  --blur-modal: 40px;
+  --blur-tooltip: 10px;
+  --blur-title-bar: 24px;
+  --blur-status-bar: 16px;
+
+  /* ----------------------------------------------------------
+     Z-index Scale
+     ---------------------------------------------------------- */
+  --z-behind: -1;
+  --z-base: 0;
+  --z-sticky: 10;
+  --z-sidebar: 20;
+  --z-status-bar: 25;
+  --z-title-bar: 30;
+  --z-dropdown: 40;
+  --z-tooltip: 50;
+  --z-modal: 60;
+  --z-toast: 70;
+
+  /* ----------------------------------------------------------
+     Layout Dimensions
+     ---------------------------------------------------------- */
+  --title-bar-height: 52px;
+  --sidebar-collapsed-width: 72px;
+  --sidebar-expanded-width: 240px;
+  --status-bar-height: 32px;
+
+  /* ----------------------------------------------------------
+     Glassmorphism — Backgrounds
+     ---------------------------------------------------------- */
+  --glass-bg-structural: rgba(20, 20, 28, 0.72);   /* titlebar, sidebar, statusbar */
+  --glass-bg-card: rgba(28, 28, 40, 0.45);          /* content cards, data panels */
+  --glass-bg-elevated: rgba(36, 36, 48, 0.82);      /* modals, dropdowns, tooltips */
+
+  /* ----------------------------------------------------------
+     Glassmorphism — Borders
+     ---------------------------------------------------------- */
+  --glass-border-subtle: rgba(255, 255, 255, 0.06);  /* structural element edges */
+  --glass-border-default: rgba(255, 255, 255, 0.08); /* card / panel edges */
+  --glass-border-strong: rgba(255, 255, 255, 0.12);  /* elevated surface edges */
+
+  /* ----------------------------------------------------------
+     Glassmorphism — Glow Effects
+     Teal accent (not blue — intel aesthetic)
+     ---------------------------------------------------------- */
+  --glass-glow-accent: rgba(0, 194, 168, 0.10);    /* primary actions, hover glow (teal) */
+  --glass-glow-success: rgba(48, 209, 88, 0.10);   /* connected / success states */
+  --glass-glow-error: rgba(255, 69, 58, 0.10);     /* error / disconnected states */
+  --glass-glow-ai: rgba(191, 90, 242, 0.10);       /* AI-related components */
+
+  /* ----------------------------------------------------------
+     Glassmorphism — Mesh Gradient
+     Teal accent replacing QT's blue
+     ---------------------------------------------------------- */
+  --glass-mesh-accent: rgba(0, 194, 168, 0.04);    /* teal accent, top-left */
+  --glass-mesh-purple: rgba(191, 90, 242, 0.035);  /* AI purple, bottom-right */
+  --glass-mesh-warm: rgba(255, 140, 50, 0.02);     /* warm highlight, center */
+
+  /* ----------------------------------------------------------
+     Map-specific tokens
+     ---------------------------------------------------------- */
+  --map-ocean: #080B10;
+  --map-border-width: 2px;
+  --map-fog-opacity: 0.25;
+  --map-fog-hover-opacity: 0.45;
+  --map-pulse-duration: 2s;
+  --map-pulse-glow-radius: 12px;
+  --map-hover-card-width: 280px;
+  --map-summary-bar-height: 48px;
+}
+
+/* ============================================================
+   Base Styles
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-base);
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ============================================================
+   App Layout Shell
+   ============================================================ */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      ellipse 600px 400px at 15% 20%,
+      var(--glass-mesh-accent) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 500px 500px at 80% 75%,
+      var(--glass-mesh-purple) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 400px 300px at 50% 50%,
+      var(--glass-mesh-warm) 0%,
+      transparent 70%
+    ),
+    var(--color-bg-base);
+}
+
+.app__body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--spacing-4);
+  min-width: 0;
+}
+
+/* MainContent scrollbar */
+.main-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.main-content::-webkit-scrollbar-track {
+  background: var(--color-bg-primary);
+}
+
+.main-content::-webkit-scrollbar-thumb {
+  background: var(--color-bg-hover);
+  border-radius: var(--radius-full);
+}
+
+.main-content::-webkit-scrollbar-thumb:hover {
+  background: var(--color-bg-active);
+}
+
+/* ============================================================
+   Utility Classes
+   ============================================================ */
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+::selection {
+  background-color: var(--color-accent-subtle);
+  color: var(--color-text-primary);
+}
+
+/* Global scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.20);
+}

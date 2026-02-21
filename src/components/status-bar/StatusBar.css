@@ -1,0 +1,78 @@
+/* StatusBar — bottom status bar */
+
+.status-bar {
+  height: var(--status-bar-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--spacing-3);
+  background: var(--glass-bg-structural);
+  backdrop-filter: blur(var(--blur-status-bar));
+  -webkit-backdrop-filter: blur(var(--blur-status-bar));
+  border-top: 1px solid var(--glass-border-subtle);
+  z-index: var(--z-status-bar);
+  flex-shrink: 0;
+}
+
+/* Left: connection indicators */
+.status-bar__indicators {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+/* Status dot item (dot + label) */
+.status-dot-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.status-dot--connected {
+  background: var(--color-semantic-success);
+}
+
+.status-dot--fetching {
+  background: var(--color-semantic-warning);
+  animation: status-pulse 1.5s ease-in-out infinite;
+}
+
+.status-dot--error {
+  background: var(--color-semantic-error);
+}
+
+.status-dot--idle {
+  background: var(--color-text-disabled);
+}
+
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.status-dot-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+/* Right: status text */
+.status-bar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.status-bar__text {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+}
