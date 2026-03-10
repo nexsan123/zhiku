@@ -1,19 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Newspaper, TrendingUp, Building2, RefreshCw } from 'lucide-react';
-import { open } from '@tauri-apps/plugin-shell';
-import { getNews, getMarketData, getMacroData, isTauri } from '@services/tauri-bridge';
+import { getNews, getMarketData, getMacroData } from '@services/tauri-bridge';
 import type { MarketDataItem, MacroDataItem } from '@services/tauri-bridge';
 import type { NewsItem } from '@contracts/api-news';
-
-function openUrl(url: string) {
-  if (!url) return;
-  if (isTauri()) {
-    void open(url);
-  } else {
-    window.open(url, '_blank', 'noopener,noreferrer');
-  }
-}
+import { NewsDetailModal } from '@components/news-detail';
 
 export interface MapSelection {
   name: string;
@@ -55,6 +46,7 @@ export function MapDetailCard({ selection, onClose }: Props) {
   const [relatedMarket, setRelatedMarket] = useState<MarketDataItem[]>([]);
   const [macroData, setMacroData] = useState<MacroDataItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -200,11 +192,11 @@ export function MapDetailCard({ selection, onClose }: Props) {
                   <li
                     key={n.id}
                     className="map-detail__news-item map-detail__news-item--clickable"
-                    onClick={() => openUrl(n.sourceUrl)}
+                    onClick={() => setSelectedNews(n)}
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') openUrl(n.sourceUrl);
+                      if (e.key === 'Enter' || e.key === ' ') setSelectedNews(n);
                     }}
                   >
                     <span className="map-detail__news-title">{n.title}</span>
@@ -217,6 +209,10 @@ export function MapDetailCard({ selection, onClose }: Props) {
           </div>
         </>
       )}
+      <NewsDetailModal
+        news={selectedNews}
+        onClose={() => setSelectedNews(null)}
+      />
     </div>
   );
 }

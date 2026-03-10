@@ -205,6 +205,11 @@
     "placeholder": "Search panels, countries, sources...",
     "noResults": "No results found"
   },
+  "newsDetail": {
+    "openInBrowser": "Open in Browser",
+    "noSummary": "No summary available",
+    "source": "Source"
+  },
   "cycle": {
     "title": "Financial Cycle Reasoning",
     "loading": "Loading cycle data...",

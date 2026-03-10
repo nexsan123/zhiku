@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { open } from '@tauri-apps/plugin-shell';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw, Inbox } from 'lucide-react';
-import { getNews, listenNewsUpdated, hostnameFromUrl, formatTimeAgo, isTauri } from '@services/tauri-bridge';
+import { getNews, listenNewsUpdated, hostnameFromUrl, formatTimeAgo } from '@services/tauri-bridge';
 import type { NewsItem } from '@contracts/api-news';
+import { NewsDetailModal } from '@components/news-detail';
 import './NewsFeedPanel.css';
 
 type LoadState = 'loading' | 'loaded' | 'error';
@@ -20,6 +20,7 @@ export function NewsFeedPanel() {
   const [items, setItems] = useState<NewsItem[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [errorMsg, setErrorMsg] = useState<string>('');
+  const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
 
   const load = useCallback(async () => {
     setLoadState('loading');
@@ -85,50 +86,47 @@ export function NewsFeedPanel() {
     );
   }
 
-  const openUrl = (url: string) => {
-    if (!url) return;
-    if (isTauri()) {
-      void open(url);
-    } else {
-      window.open(url, '_blank', 'noopener,noreferrer');
-    }
-  };
-
   // Loaded state — render list
   return (
-    <ul className="news-feed" aria-label="News feed">
-      {items.map((item, idx) => (
-        <li
-          key={item.id}
-          className={`news-feed__item news-feed__item--clickable ${idx < items.length - 1 ? 'news-feed__item--divider' : ''}`}
-          onClick={() => openUrl(item.sourceUrl)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') openUrl(item.sourceUrl);
-          }}
-        >
-          <div
-            className="news-feed__category-dot"
-            style={{
-              background:
-                CATEGORY_COLORS[item.category] ?? 'var(--color-text-disabled)',
+    <>
+      <ul className="news-feed" aria-label="News feed">
+        {items.map((item, idx) => (
+          <li
+            key={item.id}
+            className={`news-feed__item news-feed__item--clickable ${idx < items.length - 1 ? 'news-feed__item--divider' : ''}`}
+            onClick={() => setSelectedNews(item)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') setSelectedNews(item);
             }}
-            aria-hidden="true"
-          />
-          <div className="news-feed__content">
-            <p className="news-feed__title">{item.title}</p>
-            <div className="news-feed__meta">
-              <span className="news-feed__source">
-                {hostnameFromUrl(item.sourceUrl)}
-              </span>
-              <span className="news-feed__time">
-                {formatTimeAgo(item.publishedAt)}
-              </span>
+          >
+            <div
+              className="news-feed__category-dot"
+              style={{
+                background:
+                  CATEGORY_COLORS[item.category] ?? 'var(--color-text-disabled)',
+              }}
+              aria-hidden="true"
+            />
+            <div className="news-feed__content">
+              <p className="news-feed__title">{item.title}</p>
+              <div className="news-feed__meta">
+                <span className="news-feed__source">
+                  {hostnameFromUrl(item.sourceUrl)}
+                </span>
+                <span className="news-feed__time">
+                  {formatTimeAgo(item.publishedAt)}
+                </span>
+              </div>
             </div>
-          </div>
-        </li>
-      ))}
-    </ul>
+          </li>
+        ))}
+      </ul>
+      <NewsDetailModal
+        news={selectedNews}
+        onClose={() => setSelectedNews(null)}
+      />
+    </>
   );
 }

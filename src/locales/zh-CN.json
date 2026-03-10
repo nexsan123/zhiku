@@ -205,6 +205,11 @@
     "placeholder": "搜索面板、国家、数据源...",
     "noResults": "未找到结果"
   },
+  "newsDetail": {
+    "openInBrowser": "在浏览器打开原文",
+    "noSummary": "暂无摘要",
+    "source": "来源"
+  },
   "cycle": {
     "title": "金融周期推理",
     "loading": "正在加载周期数据...",
