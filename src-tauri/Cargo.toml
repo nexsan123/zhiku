@@ -29,5 +29,6 @@ feed-rs = "2"
 axum = "0.8"
 tokio-tungstenite = "0.26"
 futures-util = { version = "0.3", default-features = false, features = ["sink"] }
+opener = "0.7"
 log = "0.4"
 env_logger = "0.11"

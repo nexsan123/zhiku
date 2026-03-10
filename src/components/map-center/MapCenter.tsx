@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import DeckGL from '@deck.gl/react';
 import type { PickingInfo, Color } from '@deck.gl/core';
@@ -6,6 +6,16 @@ import { Map } from 'react-map-gl/maplibre';
 import { ScatterplotLayer, TextLayer } from '@deck.gl/layers';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './MapCenter.css';
+
+function isWebGLAvailable(): boolean {
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+    return gl !== null;
+  } catch {
+    return false;
+  }
+}
 import { MapDetailCard } from './MapDetailCard';
 import type { MapSelection } from './MapDetailCard';
 
@@ -85,7 +95,12 @@ type GulfFdiZone = typeof GULF_FDI_ZONES[0];
 
 export function MapCenter() {
   const { t } = useTranslation();
+  const [webglOk, setWebglOk] = useState(true);
   const [viewState, setViewState] = useState(INITIAL_VIEW_STATE);
+
+  useEffect(() => {
+    setWebglOk(isWebGLAvailable());
+  }, []);
   const [activeLayers, setActiveLayers] = useState<Record<LayerId, boolean>>({
     exchanges: true,
     centralBanks: true,
@@ -214,6 +229,17 @@ export function MapCenter() {
       setSelection(null);
     }
   }, []);
+
+  if (!webglOk) {
+    return (
+      <div className="map-center" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
+          <p style={{ marginBottom: 8 }}>WebGL unavailable</p>
+          <p style={{ fontSize: 10, opacity: 0.6 }}>Map requires GPU acceleration</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="map-center">

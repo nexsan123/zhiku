@@ -30,6 +30,7 @@ pub fn run() {
             commands::ai::get_cycle_indicators,
             commands::ai::get_cycle_reasoning,
             commands::ai::trigger_cycle_reasoning,
+            commands::shell::open_url,
         ])
         .setup(|app| {
             let app_data_dir = app

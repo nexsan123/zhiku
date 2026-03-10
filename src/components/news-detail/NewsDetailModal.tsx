@@ -1,7 +1,8 @@
 import { useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { X, ExternalLink } from 'lucide-react';
-import { open } from '@tauri-apps/plugin-shell';
+import { invoke } from '@tauri-apps/api/core';
 import { isTauri, hostnameFromUrl, formatTimeAgo } from '@services/tauri-bridge';
 import type { NewsItem } from '@contracts/api-news';
 import './NewsDetailModal.css';
@@ -30,10 +31,13 @@ export function NewsDetailModal({ news, onClose }: Props) {
 
   const handleOpenUrl = useCallback(() => {
     if (!news?.sourceUrl) return;
+    const url = news.sourceUrl;
     if (isTauri()) {
-      void open(news.sourceUrl).catch((err: unknown) => console.warn('Failed to open URL:', err));
+      invoke('open_url', { url }).catch(() => {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      });
     } else {
-      window.open(news.sourceUrl, '_blank', 'noopener,noreferrer');
+      window.open(url, '_blank', 'noopener,noreferrer');
     }
   }, [news?.sourceUrl]);
 
@@ -54,7 +58,7 @@ export function NewsDetailModal({ news, onClose }: Props) {
   const categoryColor = CATEGORY_COLORS[news.category] ?? 'var(--color-text-disabled)';
   const categoryLabel = CATEGORY_LABELS[news.category] ?? news.category.toUpperCase();
 
-  return (
+  return createPortal(
     <div
       className="news-detail-modal__overlay"
       onClick={onClose}
@@ -114,6 +118,7 @@ export function NewsDetailModal({ news, onClose }: Props) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

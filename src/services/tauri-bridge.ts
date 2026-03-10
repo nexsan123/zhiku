@@ -31,7 +31,7 @@ import { MOCK_API_STATUS } from '@utils/mocks/api-status';
 
 /** Returns true when running inside Tauri WebView (not plain browser). */
 export function isTauri(): boolean {
-  return typeof window !== 'undefined' && '__TAURI__' in window;
+  return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 }
 
 // ============================================================
