@@ -1,9 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Newspaper, TrendingUp, Building2, RefreshCw } from 'lucide-react';
-import { getNews, getMarketData, getMacroData } from '@services/tauri-bridge';
+import { open } from '@tauri-apps/plugin-shell';
+import { getNews, getMarketData, getMacroData, isTauri } from '@services/tauri-bridge';
 import type { MarketDataItem, MacroDataItem } from '@services/tauri-bridge';
 import type { NewsItem } from '@contracts/api-news';
+
+function openUrl(url: string) {
+  if (!url) return;
+  if (isTauri()) {
+    void open(url);
+  } else {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+}
 
 export interface MapSelection {
   name: string;
@@ -190,15 +200,11 @@ export function MapDetailCard({ selection, onClose }: Props) {
                   <li
                     key={n.id}
                     className="map-detail__news-item map-detail__news-item--clickable"
-                    onClick={() => {
-                      if (n.sourceUrl) window.open(n.sourceUrl, '_blank', 'noopener,noreferrer');
-                    }}
+                    onClick={() => openUrl(n.sourceUrl)}
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        if (n.sourceUrl) window.open(n.sourceUrl, '_blank', 'noopener,noreferrer');
-                      }
+                      if (e.key === 'Enter' || e.key === ' ') openUrl(n.sourceUrl);
                     }}
                   >
                     <span className="map-detail__news-title">{n.title}</span>

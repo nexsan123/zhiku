@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
+import { open } from '@tauri-apps/plugin-shell';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw, Inbox } from 'lucide-react';
-import { getNews, listenNewsUpdated, hostnameFromUrl, formatTimeAgo } from '@services/tauri-bridge';
+import { getNews, listenNewsUpdated, hostnameFromUrl, formatTimeAgo, isTauri } from '@services/tauri-bridge';
 import type { NewsItem } from '@contracts/api-news';
 import './NewsFeedPanel.css';
 
@@ -85,7 +86,12 @@ export function NewsFeedPanel() {
   }
 
   const openUrl = (url: string) => {
-    if (url) window.open(url, '_blank', 'noopener,noreferrer');
+    if (!url) return;
+    if (isTauri()) {
+      void open(url);
+    } else {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
   };
 
   // Loaded state — render list
