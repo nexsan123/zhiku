@@ -4,8 +4,8 @@ use tauri::{Emitter, Manager};
 
 use crate::models::news::ApiStatus;
 use crate::services::{
-    coingecko_client, cycle_reasoner, db, eia_client, fear_greed_client, indicator_engine,
-    market_context, rss_fetcher, summarizer, yahoo_client,
+    bis_client, coingecko_client, cycle_reasoner, db, eia_client, fear_greed_client,
+    indicator_engine, market_context, mempool_client, rss_fetcher, summarizer, yahoo_client,
 };
 
 /// Configuration for poll intervals per data source.
@@ -17,6 +17,9 @@ pub struct PollConfig {
     pub fear_greed_interval: Duration,
     pub coingecko_interval: Duration,
     pub mc_interval: Duration,
+    pub bis_interval: Duration,
+    pub wto_interval: Duration,
+    pub mempool_interval: Duration,
 }
 
 impl Default for PollConfig {
@@ -29,6 +32,9 @@ impl Default for PollConfig {
             fear_greed_interval: Duration::from_secs(30 * 60), // 30 minutes
             coingecko_interval: Duration::from_secs(2 * 60),  // 2 minutes
             mc_interval: Duration::from_secs(60),               // 1 minute
+            bis_interval: Duration::from_secs(6 * 60 * 60),    // 6 hours
+            wto_interval: Duration::from_secs(24 * 60 * 60),   // 24 hours
+            mempool_interval: Duration::from_secs(5 * 60),     // 5 minutes
         }
     }
 }
@@ -365,7 +371,89 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         });
     }
 
-    log::info!("SmartPollLoop: all 9 tasks spawned (6 data sources + 1 cleanup + AI summarization + cycle reasoning + market context)");
+    // BIS central bank policy rates polling (no API key required)
+    {
+        let pool = pool.clone();
+        let app = app_handle.clone();
+        let interval = config.bis_interval;
+        tauri::async_runtime::spawn(async move {
+            loop {
+                let start = std::time::Instant::now();
+                let (status, error) = match bis_client::fetch_bis_rates(&pool).await {
+                    Ok(count) => {
+                        log::info!("PollLoop [BIS]: {} rate observations", count);
+                        ("online".to_string(), None)
+                    }
+                    Err(e) => {
+                        log::warn!("PollLoop [BIS] error: {}", e);
+                        ("offline".to_string(), Some(e.to_string()))
+                    }
+                };
+                let elapsed_ms = start.elapsed().as_millis() as i64;
+                update_and_emit(&pool, &app, "bis", &status, error.as_deref(), elapsed_ms).await;
+                tokio::time::sleep(interval).await;
+            }
+        });
+    }
+
+    // WTO trade data polling (needs API key)
+    {
+        let pool = pool.clone();
+        let app = app_handle.clone();
+        let interval = config.wto_interval;
+        tauri::async_runtime::spawn(async move {
+            loop {
+                let api_key = read_store_key(&app, "wto_api_key");
+                let start = std::time::Instant::now();
+                let (status, error) =
+                    match crate::services::wto_client::fetch_wto_data(&pool, &api_key).await {
+                        Ok(count) => {
+                            if api_key.is_empty() {
+                                ("idle".to_string(), Some("API key not configured".to_string()))
+                            } else {
+                                log::info!("PollLoop [WTO]: {} data points", count);
+                                ("online".to_string(), None)
+                            }
+                        }
+                        Err(e) => {
+                            log::warn!("PollLoop [WTO] error: {}", e);
+                            ("offline".to_string(), Some(e.to_string()))
+                        }
+                    };
+                let elapsed_ms = start.elapsed().as_millis() as i64;
+                update_and_emit(&pool, &app, "wto", &status, error.as_deref(), elapsed_ms).await;
+                tokio::time::sleep(interval).await;
+            }
+        });
+    }
+
+    // mempool.space BTC network data polling (no API key required)
+    {
+        let pool = pool.clone();
+        let app = app_handle.clone();
+        let interval = config.mempool_interval;
+        tauri::async_runtime::spawn(async move {
+            loop {
+                let start = std::time::Instant::now();
+                let (status, error) = match mempool_client::fetch_mempool_data(&pool).await {
+                    Ok(count) => {
+                        log::info!("PollLoop [mempool]: {} indicators updated", count);
+                        ("online".to_string(), None)
+                    }
+                    Err(e) => {
+                        log::warn!("PollLoop [mempool] error: {}", e);
+                        ("offline".to_string(), Some(e.to_string()))
+                    }
+                };
+                let elapsed_ms = start.elapsed().as_millis() as i64;
+                update_and_emit(&pool, &app, "mempool", &status, error.as_deref(), elapsed_ms)
+                    .await;
+                tokio::time::sleep(interval).await;
+            }
+        });
+    }
+
+    log::info!("SmartPollLoop: all 12 tasks spawned (9 data sources + 1 cleanup + AI summarization + cycle reasoning + market context)");
 }
 
 /// Update api_status table and emit event to frontend.

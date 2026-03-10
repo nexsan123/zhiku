@@ -16,3 +16,6 @@ pub mod cycle_reasoner;
 pub mod market_context;
 pub mod qt_rest;
 pub mod qt_ws;
+pub mod bis_client;
+pub mod wto_client;
+pub mod mempool_client;
