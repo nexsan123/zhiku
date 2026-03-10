@@ -2,41 +2,41 @@
 
 > Lead 在关键时刻更新此文件，context compaction 后以此为准
 
-## 当前阶段：代码到位，待验证 + 补缺
+## 当前阶段：P0 缺失已补，待运行验证
 
 ### 圣旨
 - **当前圣旨**：edict-002-finance-reshaping（2026-03-08 颁发）
 - **前任圣旨**：edict-001-mvp（已被替代）
 
-### 阶段进度（真实状态 2026-03-09）
+### 阶段进度（真实状态 2026-03-09 更新）
 | 阶段 | 内容 | 代码 | 运行验证 | 差距 |
 |------|------|:----:|:--------:|------|
 | Phase 1 | 项目骨架 | ✅ | ✅ | 无 |
-| Phase 2 | 数据引擎 | ✅ | ❌ | RSS 仅 6 源（圣旨要求 55+），缺 BIS/WTO/mempool 客户端 |
+| Phase 2 | 数据引擎 | ✅ | ❌ | RSS 57源已到位，BIS/WTO/mempool 客户端已创建，未运行验证 |
 | Phase 3 | AI 引擎 | ✅ | ❌ | 未配置 API Key，未运行验证 |
-| Phase 4 | 前端面板 | ✅ | ⚠️ | 7/14 面板真功能，3 个假联通，4 个纯静态壳 |
-| Phase 5 | 地图+集成 | ✅ | ⚠️ | 地图渲染+互动可用，QT 联调未做 |
+| Phase 4 | 前端面板 | ✅ | ❌ | 10/14 面板真功能（+BIS+WTO+BTC Network），3 个已联通后端，1 个纯静态（SupplyChain） |
+| Phase 5 | 地图+集成 | ✅ | ⚠️ | 地图渲染+互动可用，新闻点击已修复(shell open)，QT 联调未做 |
 
-### 皇上待验证清单（2026-03-09）
-- [ ] 点击新闻标题 → 系统浏览器打开原文（若打开内嵌窗口则需换 plugin-shell 方案）
+### 本轮修复记录（2026-03-09）
+| Commit | 内容 |
+|--------|------|
+| `252beca` | 面板交互：新闻可点击 + hover 高亮 |
+| `9964a41` | 新闻点击修复：plugin-shell open + capability |
+| `5123752` | 新增 BIS/WTO/mempool 后端客户端 + poll_loop 12 tasks |
+| `29c53b4` | RSS 源扩充 6→57（33英+24中） |
+| `695f729` | BIS/WTO/Crypto 面板接通真实 macro_data |
+
+### 皇上待验证清单
+- [ ] 点击新闻标题 → 系统浏览器打开原文（已改用 plugin-shell，需重新验证）
 - [ ] 面板数据行 hover → 应有浅色背景高亮
 - [ ] 面板标题栏点击 → 应可折叠/展开
 - [ ] Ctrl+[ / Ctrl+] → 左右栏整体折叠
 - [ ] Ctrl+K → 命令面板弹出
 - [ ] 地图点击光圈 → MapDetailCard 浮层显示
+- [ ] BisPanel → 显示静态参考值（后端 BIS 数据尚未写入时）
+- [ ] CryptoPanel → BTC Network 小节是否显示
 
-### 未完成事项（按优先级）
-
-#### P0 — 缺失功能（圣旨要求但代码不存在）
-| # | 缺失项 | 圣旨要求 | 现状 |
-|---|--------|---------|------|
-| 1 | RSS 源不足 | 55+ 含中文 | 仅 6 个英文源（Reuters/BBC/CNBC/MarketWatch/NYT） |
-| 2 | BIS 数据客户端 | L2 重要 | 无 bis_client.rs，前端 BisPanel 纯硬编码 |
-| 3 | WTO 数据客户端 | L3 增强 | 无 wto_client.rs，前端 WtoPanel 纯硬编码 |
-| 4 | mempool.space 客户端 | L3 增强 | 无 mempool_client.rs，market_radar signal5 标注 pending |
-| 5 | AiBrief 前端假联通 | 后端有命令 | tauri-bridge 永远返回 mock 数据 |
-| 6 | MarketRadar 前端假联通 | 后端有命令 | tauri-bridge 永远返回 mock 数据 |
-| 7 | CycleReasoning 前端假联通 | 后端有命令 | tauri-bridge 永远返回 mock 数据 |
+### 剩余未完成事项
 
 #### P1 — 未验证（代码到位但从未运行）
 | # | 验收项（edict-002） | 方法 | 状态 |
@@ -58,19 +58,28 @@
 | 2 | Groq API Key | 未配置 |
 | 3 | Claude API Key | 未配置 |
 | 4 | EIA API Key | 未配置 |
-| 5 | Ollama 本地安装 | 未确认 |
+| 5 | WTO API Key | 未配置（WtoPanel 会显示提示） |
+| 6 | Ollama 本地安装 | 未确认 |
 
 #### P3 — 已知缺陷（非阻断）
+- SupplyChain 面板：纯静态硬编码，无数据源
+- GulfFDI 面板：纯静态硬编码（圣旨说"静态策划"可接受）
 - ai-summary-completed 事件：后端发射但前端无 listener（orphan）
 - btc-etf PanelId：contracts 中声明但无面板实现（stale）
-- SupplyChain 面板：纯静态硬编码，无数据源计划
-- GulfFDI 面板：纯静态硬编码（圣旨说"静态策划"可接受）
+- BIS 方向推断：inferDir() 始终返回 hold（需后端提供连续两期数据）
+- BTC_HASHRATE 单位：前端假设 EH/s，需确认后端存储单位
+- RSS 中 16 个源标注 TODO 需验证可用性
 
-### Git 提交记录
+### Git 提交记录（全部）
 | Commit | 内容 |
 |--------|------|
 | `bfa7fae` | Phase 1 骨架 |
-| `48bcd7f` | Phase 2-3-5 后端（数据引擎+AI引擎+QT集成） |
-| `1d0a269` | Phase 4 前端（16面板+三栏布局+i18n） |
-| `042d611` | Phase 5 前端（地图+MapDetailCard+Cmd+K） |
-| `252beca` | 修复：面板交互（新闻可点击+hover高亮） |
+| `48bcd7f` | Phase 2-3-5 后端 |
+| `1d0a269` | Phase 4 前端 |
+| `042d611` | Phase 5 前端（地图+Cmd+K） |
+| `252beca` | 面板交互修复 |
+| `70cd339` | workflow-state 真实状态更新 |
+| `9964a41` | 新闻点击 plugin-shell 修复 |
+| `5123752` | BIS/WTO/mempool 后端客户端 |
+| `29c53b4` | RSS 57 源 |
+| `695f729` | BIS/WTO/Crypto 面板接通 |
