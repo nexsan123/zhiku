@@ -13,12 +13,23 @@ struct RssSource {
     language: &'static str,
 }
 
-/// Hardcoded financial RSS feeds for Phase 2 (US vertical slice).
-/// Tier 1 = most credible, Tier 4 = least.
+/// Financial RSS feeds for global intelligence coverage (55+ sources).
+/// Tier 1 = wire services / top-tier journalism, Tier 2 = major financial media,
+/// Tier 3 = specialized / regional, Tier 4 = aggregators / opinion.
+/// Sources marked "TODO: verify RSS availability" may not have working RSS feeds.
 const RSS_SOURCES: &[RssSource] = &[
+    // =========================================================================
+    // ENGLISH: Wire Services & Top-Tier Journalism (Tier 1)
+    // =========================================================================
     RssSource {
         url: "https://feeds.reuters.com/reuters/businessNews",
         name: "Reuters Business",
+        tier: 1,
+        language: "en",
+    },
+    RssSource {
+        url: "https://feeds.reuters.com/reuters/topNews",
+        name: "Reuters Top News",
         tier: 1,
         language: "en",
     },
@@ -29,14 +40,48 @@ const RSS_SOURCES: &[RssSource] = &[
         language: "en",
     },
     RssSource {
-        url: "https://www.cnbc.com/id/100003114/device/rss/rss.html",
-        name: "CNBC",
-        tier: 2,
+        url: "https://rss.nytimes.com/services/xml/rss/nyt/Business.xml",
+        name: "NYT Business",
+        tier: 1,
         language: "en",
     },
     RssSource {
-        url: "https://feeds.marketwatch.com/marketwatch/topstories",
-        name: "MarketWatch",
+        url: "https://rss.nytimes.com/services/xml/rss/nyt/Economy.xml",
+        name: "NYT Economy",
+        tier: 1,
+        language: "en",
+    },
+    RssSource {
+        url: "https://feeds.a]pressassociation.com/apnews/topnews", // TODO: verify RSS availability — AP has changed feed URLs multiple times
+        name: "AP News",
+        tier: 1,
+        language: "en",
+    },
+    RssSource {
+        url: "https://www.ft.com/?format=rss", // TODO: verify RSS availability — FT may require login
+        name: "Financial Times",
+        tier: 1,
+        language: "en",
+    },
+    RssSource {
+        url: "https://feeds.content.dowjones.io/public/rss/mw_topstories", // TODO: verify RSS availability — WSJ paywall
+        name: "WSJ Top Stories",
+        tier: 1,
+        language: "en",
+    },
+    RssSource {
+        url: "https://www.economist.com/finance-and-economics/rss.xml",
+        name: "The Economist Finance",
+        tier: 1,
+        language: "en",
+    },
+
+    // =========================================================================
+    // ENGLISH: Major Financial Media (Tier 2)
+    // =========================================================================
+    RssSource {
+        url: "https://www.cnbc.com/id/100003114/device/rss/rss.html",
+        name: "CNBC Top News",
         tier: 2,
         language: "en",
     },
@@ -47,10 +92,288 @@ const RSS_SOURCES: &[RssSource] = &[
         language: "en",
     },
     RssSource {
-        url: "https://rss.nytimes.com/services/xml/rss/nyt/Business.xml",
-        name: "NYT Business",
-        tier: 1,
+        url: "https://www.cnbc.com/id/100727362/device/rss/rss.html",
+        name: "CNBC World",
+        tier: 2,
         language: "en",
+    },
+    RssSource {
+        url: "https://feeds.marketwatch.com/marketwatch/topstories",
+        name: "MarketWatch Top",
+        tier: 2,
+        language: "en",
+    },
+    RssSource {
+        url: "https://feeds.marketwatch.com/marketwatch/marketpulse",
+        name: "MarketWatch Pulse",
+        tier: 2,
+        language: "en",
+    },
+    RssSource {
+        url: "https://www.forbes.com/business/feed/",
+        name: "Forbes Business",
+        tier: 2,
+        language: "en",
+    },
+    RssSource {
+        url: "https://www.forbes.com/markets/feed/",
+        name: "Forbes Markets",
+        tier: 2,
+        language: "en",
+    },
+    RssSource {
+        url: "https://fortune.com/feed/",
+        name: "Fortune",
+        tier: 2,
+        language: "en",
+    },
+    RssSource {
+        url: "https://feeds.bloomberg.com/markets/news.rss", // TODO: verify RSS availability — Bloomberg frequently changes/disables RSS
+        name: "Bloomberg Markets",
+        tier: 2,
+        language: "en",
+    },
+    RssSource {
+        url: "https://www.businessinsider.com/rss",
+        name: "Business Insider",
+        tier: 2,
+        language: "en",
+    },
+    RssSource {
+        url: "https://rss.cnn.com/rss/money_news_economy.rss",
+        name: "CNN Business Economy",
+        tier: 2,
+        language: "en",
+    },
+    RssSource {
+        url: "https://rss.cnn.com/rss/money_markets.rss",
+        name: "CNN Markets",
+        tier: 2,
+        language: "en",
+    },
+    RssSource {
+        url: "https://www.theguardian.com/business/rss",
+        name: "The Guardian Business",
+        tier: 2,
+        language: "en",
+    },
+    RssSource {
+        url: "https://www.aljazeera.com/xml/rss/all.xml",
+        name: "Al Jazeera",
+        tier: 2,
+        language: "en",
+    },
+    RssSource {
+        url: "https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC&region=US&lang=en-US", // TODO: verify RSS availability — Yahoo Finance RSS is unstable
+        name: "Yahoo Finance",
+        tier: 2,
+        language: "en",
+    },
+
+    // =========================================================================
+    // ENGLISH: Specialized & Crypto (Tier 3)
+    // =========================================================================
+    RssSource {
+        url: "https://seekingalpha.com/market_currents.xml",
+        name: "Seeking Alpha Currents",
+        tier: 3,
+        language: "en",
+    },
+    RssSource {
+        url: "https://www.investing.com/rss/news.rss", // TODO: verify RSS availability
+        name: "Investing.com",
+        tier: 3,
+        language: "en",
+    },
+    RssSource {
+        url: "https://feeds.barrons.com/barrons/review", // TODO: verify RSS availability — Barron's paywall
+        name: "Barron's",
+        tier: 3,
+        language: "en",
+    },
+    RssSource {
+        url: "https://feeds.feedburner.com/zerohedge/feed",
+        name: "ZeroHedge",
+        tier: 4,
+        language: "en",
+    },
+    RssSource {
+        url: "https://cointelegraph.com/rss",
+        name: "CoinTelegraph",
+        tier: 3,
+        language: "en",
+    },
+    RssSource {
+        url: "https://coindesk.com/arc/outboundfeeds/rss/",
+        name: "CoinDesk",
+        tier: 3,
+        language: "en",
+    },
+    RssSource {
+        url: "https://www.theblock.co/rss.xml", // TODO: verify RSS availability
+        name: "The Block",
+        tier: 3,
+        language: "en",
+    },
+    RssSource {
+        url: "https://oilprice.com/rss/main",
+        name: "OilPrice.com",
+        tier: 3,
+        language: "en",
+    },
+    RssSource {
+        url: "https://www.mining.com/feed/",
+        name: "Mining.com",
+        tier: 3,
+        language: "en",
+    },
+
+    // =========================================================================
+    // CHINESE: Major Financial Media (Tier 1-2)
+    // =========================================================================
+    RssSource {
+        url: "https://finance.sina.com.cn/roll/cj/rss/cj_hot.xml", // TODO: verify RSS availability — Sina may have discontinued RSS
+        name: "Sina Finance Hot",
+        tier: 2,
+        language: "zh",
+    },
+    RssSource {
+        url: "https://rsshub.app/caixin/latest", // RSSHub proxy for Caixin
+        name: "Caixin Latest",
+        tier: 1,
+        language: "zh",
+    },
+    RssSource {
+        url: "https://rsshub.app/wallstreetcn/news/global", // RSSHub proxy for WallStreetCN
+        name: "WallStreetCN Global",
+        tier: 2,
+        language: "zh",
+    },
+    RssSource {
+        url: "https://rsshub.app/yicai/headline", // RSSHub proxy for Yicai
+        name: "Yicai Headlines",
+        tier: 2,
+        language: "zh",
+    },
+    RssSource {
+        url: "https://rsshub.app/cls/telegraph", // RSSHub proxy for CLS (财联社)
+        name: "CLS Telegraph",
+        tier: 2,
+        language: "zh",
+    },
+    RssSource {
+        url: "https://rsshub.app/eastmoney/report/strategy", // RSSHub proxy for EastMoney
+        name: "EastMoney Strategy",
+        tier: 3,
+        language: "zh",
+    },
+    RssSource {
+        url: "https://www.ftchinese.com/rss/feed", // FT Chinese official RSS
+        name: "FT Chinese",
+        tier: 1,
+        language: "zh",
+    },
+    RssSource {
+        url: "https://rsshub.app/ifeng/feng/finance", // RSSHub proxy for iFeng Finance
+        name: "iFeng Finance",
+        tier: 2,
+        language: "zh",
+    },
+    RssSource {
+        url: "https://rsshub.app/163/money/special", // RSSHub proxy for NetEase Finance
+        name: "NetEase Finance",
+        tier: 3,
+        language: "zh",
+    },
+    RssSource {
+        url: "https://rsshub.app/21caijing/channel/finance", // RSSHub proxy for 21st Century Business Herald
+        name: "21st Century Biz Herald",
+        tier: 2,
+        language: "zh",
+    },
+    RssSource {
+        url: "https://rsshub.app/eeo/15", // RSSHub proxy for Economic Observer (经济观察报)
+        name: "Economic Observer",
+        tier: 2,
+        language: "zh",
+    },
+    RssSource {
+        url: "https://rsshub.app/stcn/kuaixun", // RSSHub proxy for Securities Times (证券时报)
+        name: "Securities Times Express",
+        tier: 2,
+        language: "zh",
+    },
+    RssSource {
+        url: "https://rsshub.app/cs/news/rolling", // TODO: verify RSS availability — China Securities Journal (中国证券报)
+        name: "China Securities Journal",
+        tier: 2,
+        language: "zh",
+    },
+    RssSource {
+        url: "https://rsshub.app/cnstock/ssnews", // TODO: verify RSS availability — Shanghai Securities News (上海证券报)
+        name: "Shanghai Securities News",
+        tier: 2,
+        language: "zh",
+    },
+    RssSource {
+        url: "https://rsshub.app/nbd/daily", // RSSHub proxy for National Business Daily (每日经济新闻)
+        name: "National Business Daily",
+        tier: 2,
+        language: "zh",
+    },
+    RssSource {
+        url: "https://rsshub.app/jiemian/list/4", // RSSHub proxy for Jiemian Finance (界面新闻财经)
+        name: "Jiemian Finance",
+        tier: 3,
+        language: "zh",
+    },
+    RssSource {
+        url: "https://rsshub.app/thepaper/channel/25950", // RSSHub proxy for The Paper Finance (澎湃新闻财经)
+        name: "The Paper Finance",
+        tier: 2,
+        language: "zh",
+    },
+    RssSource {
+        url: "http://www.news.cn/feed/finance.xml", // TODO: verify RSS availability — Xinhua Finance (新华社财经)
+        name: "Xinhua Finance",
+        tier: 1,
+        language: "zh",
+    },
+    RssSource {
+        url: "https://rsshub.app/people/finance", // TODO: verify RSS availability — People's Daily Finance (人民网财经)
+        name: "People's Daily Finance",
+        tier: 1,
+        language: "zh",
+    },
+    RssSource {
+        url: "https://rsshub.app/ce/macro", // TODO: verify RSS availability — China Economy Net (中国经济网)
+        name: "China Economy Net",
+        tier: 2,
+        language: "zh",
+    },
+    RssSource {
+        url: "https://rsshub.app/huanqiu/finance", // TODO: verify RSS availability — Global Times Finance (环球时报财经)
+        name: "Global Times Finance",
+        tier: 3,
+        language: "zh",
+    },
+    RssSource {
+        url: "https://rsshub.app/gelonghui/home", // RSSHub proxy for Gelonghui (格隆汇)
+        name: "Gelonghui",
+        tier: 3,
+        language: "zh",
+    },
+    RssSource {
+        url: "https://rsshub.app/jin10", // RSSHub proxy for Jin10 (金十数据)
+        name: "Jin10 Data",
+        tier: 3,
+        language: "zh",
+    },
+    RssSource {
+        url: "https://rsshub.app/zhitongcaijing/recommend", // RSSHub proxy for Zhitong Finance (智通财经)
+        name: "Zhitong Finance",
+        tier: 3,
+        language: "zh",
     },
 ];
 
