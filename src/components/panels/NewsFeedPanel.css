@@ -81,6 +81,22 @@
   border-bottom: 1px solid var(--glass-border-subtle);
 }
 
+.news-feed__item--clickable {
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding-inline: var(--spacing-1);
+  margin-inline: calc(-1 * var(--spacing-1));
+  transition: background-color var(--duration-fast) var(--easing-default);
+}
+
+.news-feed__item--clickable:hover {
+  background: var(--color-bg-hover);
+}
+
+.news-feed__item--clickable:hover .news-feed__title {
+  color: var(--color-accent-hover);
+}
+
 .news-feed__category-dot {
   width: 5px;
   height: 5px;

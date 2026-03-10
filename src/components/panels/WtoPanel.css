@@ -60,6 +60,12 @@
   gap: var(--spacing-1);
 }
 
+.wto__event-item:hover {
+  background: var(--color-bg-hover);
+  transition: background-color var(--duration-fast) var(--easing-default);
+  border-radius: var(--radius-sm);
+}
+
 .wto__event-bullet {
   font-size: var(--font-size-xs);
   color: var(--color-intel-p1);

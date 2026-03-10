@@ -69,6 +69,12 @@
   border-bottom: 1px solid var(--glass-border-subtle);
 }
 
+.crypto-panel__asset-row:hover {
+  background: var(--color-bg-hover);
+  transition: background-color var(--duration-fast) var(--easing-default);
+  border-radius: var(--radius-sm);
+}
+
 .crypto-panel__asset-left {
   display: flex;
   flex-direction: column;
@@ -139,6 +145,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.crypto-panel__stable-row:hover {
+  background: var(--color-bg-hover);
+  transition: background-color var(--duration-fast) var(--easing-default);
+  border-radius: var(--radius-sm);
 }
 
 .crypto-panel__stable-symbol {

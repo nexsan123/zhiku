@@ -70,6 +70,12 @@
   border-bottom: none;
 }
 
+.fred__row:hover {
+  background: var(--color-bg-hover);
+  transition: background-color var(--duration-fast) var(--easing-default);
+  border-radius: var(--radius-sm);
+}
+
 /* ---- Left: name + period ---- */
 .fred__left {
   display: flex;

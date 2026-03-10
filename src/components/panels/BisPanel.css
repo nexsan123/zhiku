@@ -26,6 +26,12 @@
   border-bottom: none;
 }
 
+.bis__row:hover {
+  background: var(--color-bg-hover);
+  transition: background-color var(--duration-fast) var(--easing-default);
+  border-radius: var(--radius-sm);
+}
+
 /* ---- Left: flag + names ---- */
 .bis__left {
   display: flex;

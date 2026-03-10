@@ -62,6 +62,12 @@
   border-bottom: 1px solid var(--glass-border-subtle);
 }
 
+.oil-panel__row:hover {
+  background: var(--color-bg-hover);
+  transition: background-color var(--duration-fast) var(--easing-default);
+  border-radius: var(--radius-sm);
+}
+
 .oil-panel__left {
   display: flex;
   flex-direction: column;

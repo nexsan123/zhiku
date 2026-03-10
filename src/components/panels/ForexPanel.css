@@ -62,6 +62,12 @@
   border-bottom: 1px solid var(--glass-border-subtle);
 }
 
+.forex-panel__row:hover {
+  background: var(--color-bg-hover);
+  transition: background-color var(--duration-fast) var(--easing-default);
+  border-radius: var(--radius-sm);
+}
+
 .forex-panel__pair {
   font-size: var(--font-size-xs);
   font-family: var(--font-mono);

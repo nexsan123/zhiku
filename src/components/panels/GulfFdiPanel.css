@@ -25,6 +25,12 @@
   border-bottom: none;
 }
 
+.gulf-fdi__row:hover {
+  background: var(--color-bg-hover);
+  transition: background-color var(--duration-fast) var(--easing-default);
+  border-radius: var(--radius-sm);
+}
+
 /* ---- Left: flag + country ---- */
 .gulf-fdi__left {
   display: flex;

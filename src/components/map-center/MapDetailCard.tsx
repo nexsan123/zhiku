@@ -187,7 +187,20 @@ export function MapDetailCard({ selection, onClose }: Props) {
             {relatedNews.length > 0 ? (
               <ul className="map-detail__news-list">
                 {relatedNews.map((n) => (
-                  <li key={n.id} className="map-detail__news-item">
+                  <li
+                    key={n.id}
+                    className="map-detail__news-item map-detail__news-item--clickable"
+                    onClick={() => {
+                      if (n.sourceUrl) window.open(n.sourceUrl, '_blank', 'noopener,noreferrer');
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        if (n.sourceUrl) window.open(n.sourceUrl, '_blank', 'noopener,noreferrer');
+                      }
+                    }}
+                  >
                     <span className="map-detail__news-title">{n.title}</span>
                   </li>
                 ))}

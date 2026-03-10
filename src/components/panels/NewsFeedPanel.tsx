@@ -84,13 +84,23 @@ export function NewsFeedPanel() {
     );
   }
 
+  const openUrl = (url: string) => {
+    if (url) window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   // Loaded state — render list
   return (
     <ul className="news-feed" aria-label="News feed">
       {items.map((item, idx) => (
         <li
           key={item.id}
-          className={`news-feed__item ${idx < items.length - 1 ? 'news-feed__item--divider' : ''}`}
+          className={`news-feed__item news-feed__item--clickable ${idx < items.length - 1 ? 'news-feed__item--divider' : ''}`}
+          onClick={() => openUrl(item.sourceUrl)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') openUrl(item.sourceUrl);
+          }}
         >
           <div
             className="news-feed__category-dot"
