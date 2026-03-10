@@ -27,3 +27,20 @@
   - 敏感数据：发送外部 API 前必须弹窗授权
 - **阶段拆分**：6 大阶段，22 子阶段，每子阶段有完成标准 + 证据类型
 - **体系修复**：司礼监 SKILL.md v3.2 → v3.5（INT-01 七轮访谈 / BP-01 全景蓝图 / EM-01 证据矩阵）
+
+## [2026-03-08] 项目重塑决策 · edict-002
+
+- **触发原因**：皇上发现 World Monitor (koala73/worldmonitor, 33.9k stars)，决定借鉴其 UI 和产品设计重塑智库
+- **方案选择**：乙案 — 借鉴 WM 产品设计 + UI，用自己技术栈重写（非 fork）
+- **范围限定**：先做金融板块，供应 QuantTerminal
+- **定位确认**：情报辅助层（输出情报信号，非原始行情）
+- **关键变更**：
+  - 地图：react-simple-maps → deck.gl + MapLibre GL
+  - 布局：Sidebar 导航 → WM 风格三栏面板（左栏+地图+右栏）
+  - AI 引擎：双引擎 → 丙方案（Ollama→Groq兜底 + Claude深度）
+  - 新增：金融周期推理引擎（6类指标 → Claude推理 → 结构化JSON → QT）
+  - 新增：API 状态灯可视化
+  - 数据源：L1(FRED+RSS+Yahoo) / L2(EIA+BIS+F&G) / L3(WTO+CoinGecko+FDI)
+  - RSS 补充中文金融源
+- **现有代码处置**：保留60% / 修改25% / 删除15%（Sidebar + 5空页面）
+- **edict-001 状态**：被 edict-002 替代（方向一致，架构升级）

@@ -5,7 +5,7 @@
   "identifier": "com.zhiku.app",
   "build": {
     "frontendDist": "../dist",
-    "devUrl": "http://localhost:1420",
+    "devUrl": "http://localhost:1422",
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build"
   },
@@ -24,7 +24,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; connect-src 'self' http://localhost:11434 ws://localhost:9600; img-src 'self' data:; style-src 'self' 'unsafe-inline'"
+      "csp": "default-src 'self'; connect-src 'self' http://localhost:11434 http://localhost:9601 ws://localhost:9600 https://*.basemaps.cartocdn.com https://basemaps.cartocdn.com https://*.openstreetmap.org; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:"
     }
   }
 }

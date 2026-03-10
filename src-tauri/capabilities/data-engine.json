@@ -1,0 +1,9 @@
+{
+  "identifier": "data-engine",
+  "description": "Phase 2 data engine: store access for API keys, SQL for database",
+  "windows": ["main"],
+  "permissions": [
+    "store:default",
+    "sql:default"
+  ]
+}
