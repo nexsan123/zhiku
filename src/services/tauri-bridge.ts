@@ -178,13 +178,28 @@ export async function getMacroData(): Promise<MacroDataItem[]> {
   if (!isTauri()) {
     // Mock uses uppercase FRED series IDs to match what the backend actually stores.
     // fear_greed_index and oil indicators use lowercase (non-FRED sources).
+    const now = new Date().toISOString();
     return [
-      { id: 1, indicator: 'FEDFUNDS', value: 5.25, period: '2026-01', source: 'FRED', fetchedAt: new Date().toISOString() },
-      { id: 2, indicator: 'CPIAUCSL', value: 3.1, period: '2026-01', source: 'FRED', fetchedAt: new Date().toISOString() },
-      { id: 3, indicator: 'UNRATE', value: 3.9, period: '2026-01', source: 'FRED', fetchedAt: new Date().toISOString() },
-      { id: 4, indicator: 'fear_greed_index', value: 72, period: null, source: 'alternative.me', fetchedAt: new Date().toISOString() },
-      { id: 5, indicator: 'wti_crude', value: 72.43, period: null, source: 'EIA', fetchedAt: new Date().toISOString() },
-      { id: 6, indicator: 'brent_crude', value: 76.21, period: null, source: 'EIA', fetchedAt: new Date().toISOString() },
+      // FRED indicators
+      { id: 1,  indicator: 'FEDFUNDS',               value: 5.25,   period: '2026-01', source: 'FRED',         fetchedAt: now },
+      { id: 2,  indicator: 'CPIAUCSL',               value: 3.1,    period: '2026-01', source: 'FRED',         fetchedAt: now },
+      { id: 3,  indicator: 'UNRATE',                 value: 3.9,    period: '2026-01', source: 'FRED',         fetchedAt: now },
+      // Other macro indicators
+      { id: 4,  indicator: 'fear_greed_index',        value: 72,     period: null,      source: 'alternative.me', fetchedAt: now },
+      { id: 5,  indicator: 'wti_crude',               value: 72.43,  period: null,      source: 'EIA',         fetchedAt: now },
+      { id: 6,  indicator: 'brent_crude',             value: 76.21,  period: null,      source: 'EIA',         fetchedAt: now },
+      // BIS central bank policy rates (BIS_CBPOL_<country-code>)
+      { id: 10, indicator: 'BIS_CBPOL_US',            value: 5.25,   period: '2026-02', source: 'BIS',         fetchedAt: now },
+      { id: 11, indicator: 'BIS_CBPOL_EU',            value: 4.50,   period: '2026-02', source: 'BIS',         fetchedAt: now },
+      { id: 12, indicator: 'BIS_CBPOL_JP',            value: 0.10,   period: '2026-02', source: 'BIS',         fetchedAt: now },
+      { id: 13, indicator: 'BIS_CBPOL_UK',            value: 5.25,   period: '2026-02', source: 'BIS',         fetchedAt: now },
+      { id: 14, indicator: 'BIS_CBPOL_CN',            value: 3.45,   period: '2026-02', source: 'BIS',         fetchedAt: now },
+      // BTC network health (mempool.space)
+      { id: 20, indicator: 'BTC_HASHRATE',            value: 718.5,  period: null,      source: 'mempool',     fetchedAt: now },
+      { id: 21, indicator: 'BTC_FEE_MEDIUM',          value: 12,     period: null,      source: 'mempool',     fetchedAt: now },
+      { id: 22, indicator: 'BTC_FEE_FAST',            value: 18,     period: null,      source: 'mempool',     fetchedAt: now },
+      { id: 23, indicator: 'BTC_DIFFICULTY_PROGRESS', value: 67.3,   period: null,      source: 'mempool',     fetchedAt: now },
+      { id: 24, indicator: 'BTC_DIFFICULTY_CHANGE',   value: 2.41,   period: null,      source: 'mempool',     fetchedAt: now },
     ];
   }
   return invoke<MacroDataItem[]>('get_macro_data');

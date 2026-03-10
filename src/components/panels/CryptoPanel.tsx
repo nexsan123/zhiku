@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw } from 'lucide-react';
-import { getMarketData, isTauri } from '@services/tauri-bridge';
+import { getMarketData, getMacroData, isTauri } from '@services/tauri-bridge';
 import type { MarketDataItem } from '@services/tauri-bridge';
 import type { MockStablecoin } from '@utils/mocks/panel-data';
 import { MOCK_STABLECOINS } from '@utils/mocks/panel-data';
@@ -33,11 +33,45 @@ interface StablecoinDisplay {
   peg: PegStatus;
 }
 
+/** BTC network health metrics derived from macro_data BTC_* indicators. */
+interface BtcNetworkData {
+  hashrate: number | null;
+  feeMedium: number | null;
+  feeFast: number | null;
+  difficultyProgress: number | null;
+  difficultyChange: number | null;
+}
+
+/** Format hashrate: raw value from backend is in EH/s (exahashes/second). */
+function formatHashrate(v: number | null): string {
+  if (v === null || isNaN(v)) return '--';
+  if (v >= 1) return `${v.toFixed(1)} EH/s`;
+  // If value < 1, assume it's stored in TH/s scale
+  return `${(v * 1000).toFixed(0)} TH/s`;
+}
+
+function formatFee(v: number | null): string {
+  if (v === null || isNaN(v)) return '--';
+  return `${Math.round(v)} sat/vB`;
+}
+
+function formatDiffProgress(v: number | null): string {
+  if (v === null || isNaN(v)) return '--';
+  return `${v.toFixed(1)}%`;
+}
+
+function formatDiffChange(v: number | null): string {
+  if (v === null || isNaN(v)) return '--';
+  const sign = v >= 0 ? '+' : '';
+  return `${sign}${v.toFixed(2)}%`;
+}
+
 export function CryptoPanel() {
   const { t } = useTranslation();
   const [assets, setAssets] = useState<MarketDataItem[]>([]);
   const [stables, setStables] = useState<StablecoinDisplay[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
+  const [btcNetwork, setBtcNetwork] = useState<BtcNetworkData | null>(null);
 
   const load = useCallback(async () => {
     setLoadState('loading');
@@ -75,6 +109,21 @@ export function CryptoPanel() {
       setLoadState('loaded');
     } catch {
       setLoadState('error');
+    }
+
+    // BTC network health — independent fetch, silently degrades on failure
+    try {
+      const macro = await getMacroData();
+      const find = (key: string) => macro.find((d) => d.indicator === key)?.value ?? null;
+      setBtcNetwork({
+        hashrate: find('BTC_HASHRATE'),
+        feeMedium: find('BTC_FEE_MEDIUM'),
+        feeFast: find('BTC_FEE_FAST'),
+        difficultyProgress: find('BTC_DIFFICULTY_PROGRESS'),
+        difficultyChange: find('BTC_DIFFICULTY_CHANGE'),
+      });
+    } catch {
+      setBtcNetwork(null);
     }
   }, []);
 
@@ -165,6 +214,45 @@ export function CryptoPanel() {
                 </span>
               </li>
             ))}
+          </ul>
+        </>
+      )}
+
+      {/* BTC Network Health — shown only when macro_data has BTC_* entries */}
+      {btcNetwork && (
+        <>
+          <div className="crypto-panel__btc-header">
+            {t('btcNetwork.title')}
+          </div>
+          <ul className="crypto-panel__btc-list" aria-label="BTC network health">
+            <li className="crypto-panel__btc-row">
+              <span className="crypto-panel__btc-label">{t('btcNetwork.hashrate')}</span>
+              <span className="crypto-panel__btc-value">{formatHashrate(btcNetwork.hashrate)}</span>
+            </li>
+            <li className="crypto-panel__btc-row">
+              <span className="crypto-panel__btc-label">{t('btcNetwork.feeMedium')}</span>
+              <span className="crypto-panel__btc-value">{formatFee(btcNetwork.feeMedium)}</span>
+            </li>
+            <li className="crypto-panel__btc-row">
+              <span className="crypto-panel__btc-label">{t('btcNetwork.feeFast')}</span>
+              <span className="crypto-panel__btc-value">{formatFee(btcNetwork.feeFast)}</span>
+            </li>
+            <li className="crypto-panel__btc-row">
+              <span className="crypto-panel__btc-label">{t('btcNetwork.difficultyProgress')}</span>
+              <span className="crypto-panel__btc-value">{formatDiffProgress(btcNetwork.difficultyProgress)}</span>
+            </li>
+            <li className="crypto-panel__btc-row">
+              <span className="crypto-panel__btc-label">{t('btcNetwork.difficultyChange')}</span>
+              <span
+                className={`crypto-panel__btc-value ${
+                  btcNetwork.difficultyChange !== null && btcNetwork.difficultyChange >= 0
+                    ? 'crypto-panel__btc-value--up'
+                    : 'crypto-panel__btc-value--down'
+                }`}
+              >
+                {formatDiffChange(btcNetwork.difficultyChange)}
+              </span>
+            </li>
           </ul>
         </>
       )}

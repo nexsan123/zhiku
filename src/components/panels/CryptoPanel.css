@@ -203,3 +203,56 @@
 .crypto-panel__stable-status--depegged .crypto-panel__stable-dot {
   background: var(--color-semantic-error);
 }
+
+/* ---- BTC Network Health section ---- */
+.crypto-panel__btc-header {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.06em;
+  color: var(--color-text-disabled);
+  padding-top: var(--spacing-2);
+  border-top: 1px solid var(--glass-border-subtle);
+}
+
+.crypto-panel__btc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.crypto-panel__btc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+
+.crypto-panel__btc-row:hover {
+  background: var(--color-bg-hover);
+  transition: background-color var(--duration-fast) var(--easing-default);
+  border-radius: var(--radius-sm);
+}
+
+.crypto-panel__btc-label {
+  font-size: 10px;
+  color: var(--color-text-secondary);
+}
+
+.crypto-panel__btc-value {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.crypto-panel__btc-value--up {
+  color: var(--color-semantic-success);
+}
+
+.crypto-panel__btc-value--down {
+  color: var(--color-semantic-error);
+}

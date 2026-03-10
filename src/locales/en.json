@@ -134,9 +134,11 @@
     "staticNote": "Source: FRED"
   },
   "bis": {
-    "loading": "Loading...",
-    "failed": "Failed to load",
+    "loading": "Loading central bank rates...",
+    "failed": "Failed to load central bank rates",
+    "noData": "No live data, showing static reference",
     "staticNote": "Static data, pending BIS API",
+    "liveNote": "Source: BIS macro_data",
     "hold": "Hold",
     "up": "Hike",
     "down": "Cut",
@@ -144,18 +146,40 @@
     "ecb": "European Central Bank",
     "boj": "Bank of Japan",
     "boe": "Bank of England",
-    "pboc": "People's Bank of China"
+    "pboc": "People's Bank of China",
+    "rbi": "Reserve Bank of India",
+    "boc": "Bank of Canada",
+    "rba": "Reserve Bank of Australia",
+    "snb": "Swiss National Bank",
+    "bok": "Bank of Korea",
+    "bcb": "Banco Central do Brasil",
+    "sama": "Saudi Central Bank",
+    "cbuae": "Central Bank of UAE"
   },
   "wto": {
+    "loading": "Loading trade data...",
+    "failed": "Failed to load trade data",
+    "noData": "No trade data available",
+    "noApiKey": "WTO API Key required",
     "staticNote": "Pending WTO API",
     "title": "Global Trade Overview",
     "tradeEvents": "Trade Friction Events",
     "tradeVolume": "Global Trade Volume",
     "tradeVolumeValue": "+2.7% (2024)",
+    "exports": "Merchandise Exports",
+    "imports": "Merchandise Imports",
     "event1": "US additional tariffs on China extended",
     "event2": "EU EV tariffs on Chinese imports",
     "event3": "India steel & aluminum surcharges",
     "event4": "WTO dispute resolution reform ongoing"
+  },
+  "btcNetwork": {
+    "title": "BTC Network",
+    "hashrate": "Hashrate",
+    "feeMedium": "Med Fee",
+    "feeFast": "Fast Fee",
+    "difficultyProgress": "Diff Progress",
+    "difficultyChange": "Diff Change"
   },
   "supplyChain": {
     "title": "Supply Chain Health",

@@ -134,9 +134,11 @@
     "staticNote": "数据来自 FRED"
   },
   "bis": {
-    "loading": "正在加载...",
-    "failed": "加载失败",
+    "loading": "正在加载央行利率...",
+    "failed": "央行利率加载失败",
+    "noData": "暂无实时数据，显示静态参考值",
     "staticNote": "静态数据，待接入 BIS API",
+    "liveNote": "数据来自 BIS macro_data",
     "hold": "持平",
     "up": "加息",
     "down": "降息",
@@ -144,18 +146,40 @@
     "ecb": "欧央行",
     "boj": "日央行",
     "boe": "英央行",
-    "pboc": "中国央行"
+    "pboc": "中国央行",
+    "rbi": "印度储备银行",
+    "boc": "加拿大央行",
+    "rba": "澳大利亚储备银行",
+    "snb": "瑞士央行",
+    "bok": "韩国央行",
+    "bcb": "巴西央行",
+    "sama": "沙特央行",
+    "cbuae": "阿联酋央行"
   },
   "wto": {
+    "loading": "正在加载贸易数据...",
+    "failed": "贸易数据加载失败",
+    "noData": "暂无贸易数据",
+    "noApiKey": "需配置 WTO API Key",
     "staticNote": "待接入 WTO API",
     "title": "全球贸易概览",
     "tradeEvents": "贸易摩擦事件",
     "tradeVolume": "全球贸易量",
     "tradeVolumeValue": "+2.7% (2024年)",
+    "exports": "商品出口",
+    "imports": "商品进口",
     "event1": "美对华额外关税延续",
     "event2": "欧盟对华电动车关税",
     "event3": "印度对钢铝加征关税",
     "event4": "WTO 争端解决机制改革推进中"
+  },
+  "btcNetwork": {
+    "title": "BTC 网络",
+    "hashrate": "算力",
+    "feeMedium": "中位费率",
+    "feeFast": "快速费率",
+    "difficultyProgress": "难度进度",
+    "difficultyChange": "难度变化"
   },
   "supplyChain": {
     "title": "供应链健康指标",
