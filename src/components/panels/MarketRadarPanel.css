@@ -1,0 +1,141 @@
+/* MarketRadarPanel — 7-signal verdict display */
+
+/* ---- Three-state UI ---- */
+.market-radar__state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) 0;
+  color: var(--color-text-disabled);
+}
+
+.market-radar__state--error {
+  color: var(--color-semantic-error);
+}
+
+.market-radar__state-text {
+  font-size: var(--font-size-xs);
+  text-align: center;
+}
+
+.market-radar__retry-btn {
+  padding: var(--spacing-1) var(--spacing-3);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  color: var(--color-semantic-error);
+  background: var(--color-semantic-error-subtle);
+  border: 1px solid var(--color-semantic-error);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: opacity var(--duration-fast) var(--easing-default);
+}
+
+.market-radar__retry-btn:hover {
+  opacity: 0.8;
+}
+
+@keyframes market-radar-spin {
+  to { transform: rotate(360deg); }
+}
+
+.market-radar__spinner {
+  animation: market-radar-spin 1.2s linear infinite;
+  color: var(--color-accent-primary);
+}
+
+/* ---- Signal list ---- */
+.market-radar__signals {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.market-radar__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-1) 0;
+  border-bottom: 1px solid var(--glass-border-subtle);
+}
+
+.market-radar__row:last-child {
+  border-bottom: none;
+}
+
+.market-radar__signal-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.market-radar__name {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.market-radar__detail {
+  font-size: 10px;
+  color: var(--color-text-disabled);
+  font-family: var(--font-mono);
+}
+
+.market-radar__verdict {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  font-family: var(--font-mono);
+}
+
+.market-radar__verdict--bullish {
+  color: var(--color-semantic-success);
+}
+
+.market-radar__verdict--bearish {
+  color: var(--color-semantic-error);
+}
+
+.market-radar__verdict--neutral {
+  color: var(--color-text-tertiary);
+}
+
+.market-radar__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--spacing-2);
+  padding-top: var(--spacing-2);
+  border-top: 1px solid var(--glass-border-default);
+}
+
+.market-radar__counts {
+  display: flex;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+}
+
+.market-radar__count--bull {
+  color: var(--color-semantic-success);
+}
+
+.market-radar__count--bear {
+  color: var(--color-semantic-error);
+}
+
+.market-radar__overall {
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  color: var(--color-text-secondary);
+}
+
+.market-radar__overall--buy strong {
+  color: var(--color-semantic-success);
+}
+
+.market-radar__overall--cash strong {
+  color: var(--color-semantic-warning);
+}
+
+.market-radar__overall--sell strong {
+  color: var(--color-semantic-error);
+}

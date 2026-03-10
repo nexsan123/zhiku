@@ -1,9 +1,0 @@
-.page-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--color-text-tertiary);
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-medium);
-}

@@ -1,0 +1,107 @@
+/* BisPanel — Central bank policy rates (static curated data) */
+
+/* ---- Main container ---- */
+.bis {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+/* ---- Rate list ---- */
+.bis__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.bis__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-1) 0;
+  border-bottom: 1px solid var(--glass-border-subtle);
+}
+
+.bis__row:last-child {
+  border-bottom: none;
+}
+
+/* ---- Left: flag + names ---- */
+.bis__left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.bis__flag {
+  font-size: var(--font-size-md);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.bis__names {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.bis__name-en {
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.bis__label {
+  font-size: 10px;
+  color: var(--color-text-disabled);
+}
+
+/* ---- Right: rate + direction arrow ---- */
+.bis__right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.bis__rate {
+  font-size: var(--font-size-sm);
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.bis__dir {
+  font-size: var(--font-size-sm);
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-semibold);
+  width: 14px;
+  text-align: center;
+}
+
+.bis__dir--up {
+  color: var(--color-semantic-error);
+}
+
+.bis__dir--down {
+  color: var(--color-semantic-success);
+}
+
+.bis__dir--hold {
+  color: var(--color-text-disabled);
+}
+
+/* ---- Footer ---- */
+.bis__footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--spacing-1);
+  border-top: 1px solid var(--glass-border-subtle);
+}
+
+.bis__footer-note {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--color-text-disabled);
+  font-style: italic;
+}

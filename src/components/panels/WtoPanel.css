@@ -1,0 +1,89 @@
+/* WtoPanel — WTO trade data (static curated placeholder) */
+
+/* ---- Main container ---- */
+.wto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+/* ---- Overview card ---- */
+.wto__overview-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-2) var(--spacing-3);
+  background: var(--glass-bg-card);
+  border: 1px solid var(--glass-border-default);
+  border-radius: var(--radius-sm);
+}
+
+.wto__overview-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.wto__overview-value {
+  font-size: var(--font-size-sm);
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-semantic-success);
+}
+
+/* ---- Trade events section ---- */
+.wto__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.wto__section-title {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.wto__events {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.wto__event-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-1);
+}
+
+.wto__event-bullet {
+  font-size: var(--font-size-xs);
+  color: var(--color-intel-p1);
+  flex-shrink: 0;
+  line-height: var(--line-height-normal);
+}
+
+.wto__event-text {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-normal);
+}
+
+/* ---- Footer ---- */
+.wto__footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--spacing-1);
+  border-top: 1px solid var(--glass-border-subtle);
+}
+
+.wto__footer-note {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--color-text-disabled);
+  font-style: italic;
+}

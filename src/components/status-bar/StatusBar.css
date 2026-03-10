@@ -1,4 +1,4 @@
-/* StatusBar — bottom status bar */
+/* StatusBar — bottom API status light bar */
 
 .status-bar {
   height: var(--status-bar-height);
@@ -12,20 +12,24 @@
   border-top: 1px solid var(--glass-border-subtle);
   z-index: var(--z-status-bar);
   flex-shrink: 0;
+  overflow: hidden;
 }
 
-/* Left: connection indicators */
+/* Left: API service indicators */
 .status-bar__indicators {
   display: flex;
   align-items: center;
-  gap: var(--spacing-4);
+  gap: var(--spacing-3);
+  overflow: hidden;
 }
 
-/* Status dot item (dot + label) */
+/* Status dot item (dot + label) — position:relative for tooltip anchor */
 .status-dot-item {
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-1);
+  position: relative;
+  cursor: default;
 }
 
 .status-dot {
@@ -35,17 +39,20 @@
   flex-shrink: 0;
 }
 
-.status-dot--connected {
+/* Status colors */
+.status-dot--online {
   background: var(--color-semantic-success);
+  box-shadow: 0 0 6px var(--glass-glow-success);
 }
 
-.status-dot--fetching {
+.status-dot--checking {
   background: var(--color-semantic-warning);
   animation: status-pulse 1.5s ease-in-out infinite;
 }
 
-.status-dot--error {
+.status-dot--offline {
   background: var(--color-semantic-error);
+  box-shadow: 0 0 6px var(--glass-glow-error);
 }
 
 .status-dot--idle {
@@ -54,7 +61,7 @@
 
 @keyframes status-pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  50% { opacity: 0.35; }
 }
 
 .status-dot-label {
@@ -64,14 +71,79 @@
   white-space: nowrap;
 }
 
-/* Right: status text */
+/* Tooltip — appears above the dot on hover */
+.status-dot-tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--glass-bg-elevated);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-2) var(--spacing-3);
+  min-width: 160px;
+  z-index: var(--z-tooltip);
+  box-shadow: var(--shadow-lg);
+  pointer-events: none;
+}
+
+.status-dot-tooltip__service {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-1);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+}
+
+.status-dot-tooltip__status,
+.status-dot-tooltip__row {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+}
+
+.status-dot-tooltip__error {
+  font-size: var(--font-size-xs);
+  color: var(--color-semantic-error);
+  font-family: var(--font-mono);
+  margin-top: var(--spacing-1);
+}
+
+/* Per-status text color in tooltip */
+.tooltip-status--online { color: var(--color-semantic-success); }
+.tooltip-status--checking { color: var(--color-semantic-warning); }
+.tooltip-status--offline { color: var(--color-semantic-error); }
+.tooltip-status--idle { color: var(--color-text-disabled); }
+
+/* Right: ready status + separator + clock */
 .status-bar__right {
   display: flex;
   align-items: center;
   gap: var(--spacing-2);
+  flex-shrink: 0;
 }
 
-.status-bar__text {
+.status-bar__ready {
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-medium);
+}
+
+.status-bar__ready--ok {
+  color: var(--color-semantic-success);
+}
+
+.status-bar__ready--error {
+  color: var(--color-semantic-error);
+}
+
+.status-bar__separator {
+  color: var(--color-text-disabled);
+  font-size: var(--font-size-xs);
+}
+
+.status-bar__time {
   font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
   font-family: var(--font-mono);

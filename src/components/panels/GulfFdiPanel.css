@@ -1,0 +1,81 @@
+/* GulfFdiPanel — Gulf Cooperation Council FDI overview (static curated data) */
+
+/* ---- Main container ---- */
+.gulf-fdi {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- FDI list ---- */
+.gulf-fdi__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gulf-fdi__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-1) 0;
+  border-bottom: 1px solid var(--glass-border-subtle);
+}
+
+.gulf-fdi__row:last-child {
+  border-bottom: none;
+}
+
+/* ---- Left: flag + country ---- */
+.gulf-fdi__left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.gulf-fdi__flag {
+  font-size: var(--font-size-md);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.gulf-fdi__country {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+/* ---- Right: FDI amount + YoY ---- */
+.gulf-fdi__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.gulf-fdi__fdi {
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.gulf-fdi__unit {
+  font-size: 9px;
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-disabled);
+  margin-left: 2px;
+}
+
+.gulf-fdi__yoy {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-semibold);
+}
+
+.gulf-fdi__yoy--up {
+  color: var(--color-semantic-success);
+}
+
+.gulf-fdi__yoy--down {
+  color: var(--color-semantic-error);
+}

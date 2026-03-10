@@ -1,0 +1,178 @@
+/* AiBriefPanel — AI-generated news summary by category */
+
+/* ---- Three-state UI ---- */
+.ai-brief__state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) 0;
+  color: var(--color-text-disabled);
+}
+
+.ai-brief__state--error {
+  color: var(--color-semantic-error);
+}
+
+.ai-brief__state-text {
+  font-size: var(--font-size-xs);
+  text-align: center;
+}
+
+.ai-brief__retry-btn {
+  padding: var(--spacing-1) var(--spacing-3);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  color: var(--color-semantic-error);
+  background: var(--color-semantic-error-subtle);
+  border: 1px solid var(--color-semantic-error);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: opacity var(--duration-fast) var(--easing-default);
+}
+
+.ai-brief__retry-btn:hover {
+  opacity: 0.8;
+}
+
+@keyframes ai-brief-spin {
+  to { transform: rotate(360deg); }
+}
+
+.ai-brief__spinner {
+  animation: ai-brief-spin 1.2s linear infinite;
+  color: var(--color-accent-primary);
+}
+
+/* ---- Main container ---- */
+.ai-brief {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+/* ---- Card list ---- */
+.ai-brief__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+/* ---- Individual card ---- */
+.ai-brief__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  padding: var(--spacing-2) var(--spacing-2);
+  background: var(--glass-bg-card);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+/* ---- Card header ---- */
+.ai-brief__card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+}
+
+/* ---- Category tag ---- */
+.ai-brief__category {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.06em;
+  padding: 1px var(--spacing-1);
+  border-radius: var(--radius-sm);
+}
+
+.ai-brief__category--geopolitical {
+  color: var(--color-intel-geopolitical);
+  background: var(--color-intel-geopolitical-subtle);
+}
+
+.ai-brief__category--macro-policy {
+  color: var(--color-intel-macro-policy);
+  background: var(--color-intel-macro-policy-subtle);
+}
+
+.ai-brief__category--market {
+  color: var(--color-intel-market);
+  background: var(--color-intel-market-subtle);
+}
+
+.ai-brief__category--corporate {
+  color: var(--color-intel-corporate);
+  background: var(--color-intel-corporate-subtle);
+}
+
+/* ---- Sentiment indicator ---- */
+.ai-brief__sentiment {
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-semibold);
+}
+
+.ai-brief__sentiment--positive {
+  color: var(--color-semantic-success);
+}
+
+.ai-brief__sentiment--negative {
+  color: var(--color-semantic-error);
+}
+
+.ai-brief__sentiment--neutral {
+  color: var(--color-text-secondary);
+}
+
+/* ---- Time ---- */
+.ai-brief__time {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--color-text-disabled);
+  margin-left: auto;
+}
+
+/* ---- Summary text ---- */
+.ai-brief__summary {
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-text-secondary);
+}
+
+/* ---- Keyword pills ---- */
+.ai-brief__keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-1);
+  margin-top: var(--spacing-0-5);
+}
+
+.ai-brief__keyword {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--color-text-tertiary);
+  background: var(--color-bg-overlay);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 1px var(--spacing-1);
+}
+
+/* ---- Footer ---- */
+.ai-brief__footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--spacing-1);
+  border-top: 1px solid var(--glass-border-subtle);
+}
+
+.ai-brief__footer-label {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--color-intel-p2);
+  letter-spacing: 0.04em;
+}

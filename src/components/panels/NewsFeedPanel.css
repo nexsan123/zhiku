@@ -1,0 +1,126 @@
+/* NewsFeedPanel — news item list */
+
+/* ---- Three-state UI ---- */
+.news-feed__state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4) 0;
+  color: var(--color-text-disabled);
+}
+
+.news-feed__state--error {
+  color: var(--color-semantic-error);
+}
+
+.news-feed__state-text {
+  font-size: var(--font-size-xs);
+  text-align: center;
+}
+
+.news-feed__state-sub {
+  font-size: 10px;
+  color: var(--color-text-disabled);
+  text-align: center;
+}
+
+.news-feed__error-detail {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--color-semantic-error);
+  text-align: center;
+  word-break: break-all;
+  max-width: 100%;
+}
+
+.news-feed__empty-icon {
+  opacity: 0.5;
+}
+
+.news-feed__retry-btn {
+  margin-top: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-3);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  color: var(--color-semantic-error);
+  background: var(--color-semantic-error-subtle);
+  border: 1px solid var(--color-semantic-error);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: opacity var(--duration-fast) var(--easing-default);
+}
+
+.news-feed__retry-btn:hover {
+  opacity: 0.8;
+}
+
+@keyframes news-feed-spin {
+  to { transform: rotate(360deg); }
+}
+
+.news-feed__spinner {
+  animation: news-feed-spin 1.2s linear infinite;
+  color: var(--color-accent-primary);
+}
+
+/* ---- News list ---- */
+.news-feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.news-feed__item {
+  display: flex;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) 0;
+}
+
+.news-feed__item--divider {
+  border-bottom: 1px solid var(--glass-border-subtle);
+}
+
+.news-feed__category-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+
+.news-feed__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.news-feed__title {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-tight);
+  margin-bottom: var(--spacing-1);
+  /* Clamp to 2 lines */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.news-feed__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.news-feed__source {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--color-accent-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.news-feed__time {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--color-text-disabled);
+}

@@ -1,10 +1,9 @@
-/* TitleBar — custom window title bar */
+/* TitleBar — custom window title bar, WM-style */
 
 .title-bar {
   height: var(--title-bar-height);
   display: flex;
   align-items: center;
-  padding: 0 0 0 var(--spacing-4);
   background: var(--glass-bg-structural);
   backdrop-filter: blur(var(--blur-title-bar));
   -webkit-backdrop-filter: blur(var(--blur-title-bar));
@@ -12,23 +11,27 @@
   z-index: var(--z-title-bar);
   position: relative;
   flex-shrink: 0;
+  /* No left-padding: each section manages its own spacing */
 }
 
-/* Drag region — left side fills flex: 1 */
-.title-bar__drag-region {
+/* ---- LEFT SECTION ------------------------------------------------ */
+/* Logo + App name + FINANCE badge + left panel toggle               */
+
+.title-bar__left {
   display: flex;
   align-items: center;
-  flex: 1;
-  height: 100%;
   gap: var(--spacing-2);
+  padding: 0 var(--spacing-3);
+  height: 100%;
+  flex-shrink: 0;
+  /* drag region set via attribute on this div */
   -webkit-app-region: drag;
   app-region: drag;
 }
 
-/* Logo — "智" character */
 .title-bar__logo {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: var(--radius-sm);
   background: var(--color-accent-subtle);
   display: flex;
@@ -36,26 +39,149 @@
   justify-content: center;
   flex-shrink: 0;
   color: var(--color-accent-primary);
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
   line-height: 1;
+  pointer-events: none; /* part of drag region, no interaction */
 }
 
-/* App title */
-.title-bar__title {
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-medium);
+.title-bar__appname {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
   letter-spacing: -0.01em;
   white-space: nowrap;
+  pointer-events: none;
 }
 
-/* Actions area (notification bell) — no drag */
-.title-bar__actions {
+/* "FINANCE" variant badge */
+.title-bar__variant {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.08em;
+  color: var(--color-accent-primary);
+  background: var(--color-accent-subtle);
+  padding: 2px var(--spacing-2);
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+}
+
+/* Panel toggle buttons inside drag regions must be no-drag */
+.title-bar__panel-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background-color var(--duration-fast) var(--easing-default),
+              color var(--duration-fast) var(--easing-default);
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+.title-bar__panel-btn:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+/* ---- CENTER SECTION ---------------------------------------------- */
+/* Search + Sources + Intel — fills remaining space                   */
+
+.title-bar__center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: var(--spacing-2);
-  margin-right: var(--spacing-2);
+  height: 100%;
+  /* drag region — buttons inside are no-drag via -webkit-app-region on button */
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+.title-bar__action-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  height: 28px;
+  padding: 0 var(--spacing-2);
+  border: 1px solid var(--glass-border-default);
+  background: var(--glass-bg-card);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color var(--duration-fast) var(--easing-default),
+              border-color var(--duration-fast) var(--easing-default),
+              color var(--duration-fast) var(--easing-default);
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+.title-bar__action-btn:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--glass-border-strong);
+  color: var(--color-text-primary);
+}
+
+.title-bar__action-label {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.06em;
+}
+
+.title-bar__action-count {
+  font-size: var(--font-size-xs);
+  color: var(--color-accent-primary);
+  font-family: var(--font-mono);
+}
+
+.title-bar__kbd {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--color-text-disabled);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--glass-border-default);
+  border-radius: 3px;
+  padding: 0 4px;
+}
+
+/* Intel badge — count bubble */
+.title-bar__badge {
+  min-width: 16px;
+  height: 16px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent-subtle);
+  color: var(--color-accent-primary);
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+  font-family: var(--font-mono);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+/* ---- RIGHT SECTION ----------------------------------------------- */
+/* Right panel toggle + notification + window controls               */
+
+.title-bar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  flex-shrink: 0;
+  height: 100%;
+  padding-left: var(--spacing-2);
   -webkit-app-region: no-drag;
   app-region: no-drag;
 }
@@ -83,26 +209,31 @@
   color: var(--color-text-primary);
 }
 
-/* Notification badge (red dot) — Phase 1 static */
 .title-bar__notification-badge {
   position: absolute;
   top: 5px;
   right: 5px;
-  width: 7px;
-  height: 7px;
+  min-width: 14px;
+  height: 14px;
   border-radius: var(--radius-full);
   background: var(--color-intel-p0);
   border: 1.5px solid var(--color-bg-base);
+  font-size: 9px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 2px;
 }
 
-/* Window controls — no drag */
+/* ---- WINDOW CONTROLS -------------------------------------------- */
+
 .title-bar__controls {
   display: flex;
   align-items: center;
   flex-shrink: 0;
   height: 100%;
-  -webkit-app-region: no-drag;
-  app-region: no-drag;
 }
 
 .window-control {
