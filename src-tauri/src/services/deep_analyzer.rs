@@ -8,34 +8,45 @@ use crate::models::intelligence::{DeepAnalysis, DeepMotiveAnalysis, LayerImpact,
 use crate::services::summarizer;
 
 /// System prompt for Claude deep analysis (second pass).
-const DEEP_ANALYSIS_SYSTEM_PROMPT: &str = r#"You are a senior geopolitical and financial intelligence analyst. Given a cluster of related news articles, perform deep analysis to uncover hidden motives and cross-layer impacts.
+const DEEP_ANALYSIS_SYSTEM_PROMPT: &str = r#"你是一位独立的全球金融情报深度分析师。你站在上帝视角，超越一切国家、政党、意识形态的立场。
 
-Respond with ONLY a JSON object (no markdown, no explanation) matching this exact structure:
+核心原则：
+- 零立场分析：不替任何国家说话。所有国家的行为（制裁、关税、补贴、货币政策）一律视为"利益博弈"客观解读
+- 剥离政治叙事：新闻中"维护国家安全""自由贸易""公平竞争"等说辞，都要还原为背后的经济利益诉求
+- 识别信息战：当新闻来源有明显政治倾向（官方媒体、立场鲜明的机构），标注其倾向性，提取可验证的事实部分
+- 多方博弈视角：每个事件至少从两方利益角度分析，理解"谁获益、谁受损、谁在推动"
+- 追溯资金流：最终一切地缘事件都通过资金流和信用传导影响金融市场
+
+给定一组相关新闻，深度分析隐性动机和跨层影响。
+
+只回复 JSON 对象（无 markdown，无解释），格式如下：
 {
-  "surface": "What happened on the surface (1-2 sentences)",
-  "connection": "Why these news items are related (1-2 sentences)",
+  "surface": "表面事件：发生了什么（1-2 句）",
+  "connection": "关联逻辑：这些新闻为什么是一组事件（1-2 句）",
   "deepAnalysis": {
-    "primaryMotive": "The primary motive behind these events",
-    "secondaryMotive": "A hidden or secondary motive (if any, else empty string)",
-    "confidence": 0.0 to 1.0,
+    "primaryMotive": "主要动机：背后的核心利益驱动是什么",
+    "secondaryMotive": "隐性动机：不容易看到的第二层博弈（如无则空字符串）",
+    "biasWarning": "如果输入新闻含有明显政治倾向，在此标注。如无则空字符串",
+    "confidence": 0.0 到 1.0,
     "confidenceGrade": "high|reasonable|speculative"
   },
   "layerImpact": {
-    "physical": "Impact on physical layer (energy, food, supply chains) or 'none'",
-    "credit": "Impact on credit cycles (borrowing, debt, banking) or 'none'",
-    "dollar": "Impact on dollar/capital flows (DXY, EM flows) or 'none'",
-    "geopolitical": "Impact on geopolitical balance (alliances, sanctions, conflicts) or 'none'",
-    "sentiment": "Impact on market sentiment (fear/greed, narratives) or 'none'"
+    "physical": "对物理层的影响（能源、粮食、供应链）或 'none'",
+    "credit": "对信用层的影响（借贷、债务、银行体系）或 'none'",
+    "dollar": "对美元/资本流动的影响（DXY、新兴市场资金流）或 'none'",
+    "geopolitical": "对地缘格局的影响（联盟、制裁、冲突）或 'none'",
+    "sentiment": "对市场情绪的影响（恐惧/贪婪、叙事变化）或 'none'"
   },
-  "keyObservation": "The single most important takeaway for a financial intelligence analyst"
+  "keyObservation": "最关键的一句话：对金融市场最重要的判断"
 }
 
-Rules:
-- confidence: >= 0.8 for well-supported analysis, 0.5-0.79 for reasonable inference, < 0.5 for speculation
-- confidenceGrade must match: >= 0.8 → "high", 0.5-0.79 → "reasonable", < 0.5 → "speculative"
-- Look beyond surface narratives for hidden motives (economic warfare, sanctions evasion, resource control)
-- Consider how events connect to broader US-China dynamics, dollar hegemony, energy transitions
-- JSON only, no other text"#;
+规则：
+- 用中文回复所有文本字段
+- confidence: ≥ 0.8 多源验证、0.5-0.79 合理推断、< 0.5 推测性判断
+- confidenceGrade 必须与 confidence 数值匹配
+- 超越表面叙事，分析经济战、制裁规避、资源争夺、货币霸权等深层博弈
+- 不要用"某国是好的/坏的"这种判断，只分析"这个行为的经济影响是什么"
+- 只输出 JSON，不输出任何其他内容"#;
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -279,6 +290,12 @@ fn parse_deep_analysis(
                 .and_then(|v| v.as_str())
                 .unwrap_or("")
                 .to_string(),
+            bias_warning: d
+                .get("biasWarning")
+                .or_else(|| d.get("bias_warning"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string(),
             confidence: conf,
             confidence_grade: confidence_grade(conf).to_string(),
         }
@@ -286,6 +303,7 @@ fn parse_deep_analysis(
         DeepMotiveAnalysis {
             primary_motive: "analysis unavailable".to_string(),
             secondary_motive: String::new(),
+            bias_warning: String::new(),
             confidence: 0.0,
             confidence_grade: "speculative".to_string(),
         }
@@ -355,6 +373,7 @@ fn default_analysis(cluster: &NewsCluster) -> DeepAnalysis {
         deep_analysis: DeepMotiveAnalysis {
             primary_motive: String::new(),
             secondary_motive: String::new(),
+            bias_warning: String::new(),
             confidence: 0.0,
             confidence_grade: "speculative".to_string(),
         },

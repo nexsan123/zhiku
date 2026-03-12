@@ -19,6 +19,13 @@ pub struct NewsSummary {
     /// Key entities mentioned (countries, orgs, companies, people).
     #[serde(default)]
     pub entities: Vec<String>,
+    /// Political bias detected in source: "none", "pro_west", "pro_east", "nationalist", "other".
+    #[serde(default = "default_bias")]
+    pub political_bias: String,
+}
+
+fn default_bias() -> String {
+    "none".to_string()
 }
 
 /// Default Ollama model for batch summarization.
@@ -26,23 +33,26 @@ const OLLAMA_MODEL: &str = "llama3.1:8b";
 
 /// Prompt template for news summarization.
 /// Requests structured JSON output with summary, sentiment, keywords, category.
-const SUMMARIZE_PROMPT_TEMPLATE: &str = r#"You are a financial news analyst. Analyze the following news article and respond with ONLY a JSON object (no markdown, no explanation):
+const SUMMARIZE_PROMPT_TEMPLATE: &str = r#"你是一位独立的金融新闻分析师。你不带任何政治立场，只提取事实和金融影响。
 
-Title: {title}
-Content: {description}
+分析以下新闻，只回复 JSON 对象（无 markdown，无解释）：
 
-Respond with exactly this JSON structure:
-{"summary":"2-3 sentence summary","sentiment":0.0,"keywords":["keyword1","keyword2","keyword3"],"category":"market","region":["east_asia"],"entities":["China","PBOC"]}
+标题: {title}
+内容: {description}
 
-Rules:
-- summary: 2-3 concise sentences capturing the key point
-- sentiment: a float from -1.0 (extremely negative) to 1.0 (extremely positive)
-- keywords: 3-5 relevant financial keywords
-- category: one of: macro_policy, market, geopolitical, central_bank, trade, crypto, energy, supply_chain
-- region: 1-3 regions from: east_asia, southeast_asia, south_asia, middle_east, europe, north_america, latin_america, africa, oceania, global
-- entities: 1-5 key entities (country names, organizations, companies, or key figures mentioned)
+格式：
+{"summary":"2-3句中文摘要，提取核心事实","sentiment":0.0,"keywords":["关键词1","关键词2"],"category":"market","region":["east_asia"],"entities":["中国","央行"],"politicalBias":"none"}
 
-JSON only, no other text:"#;
+规则：
+- summary: 2-3 句中文，只陈述事实和金融影响，剥离政治叙事和情绪化用词
+- sentiment: -1.0（极度负面）到 1.0（极度正面），基于对金融市场的实际影响而非政治立场
+- keywords: 3-5 个金融相关关键词（中文）
+- category: macro_policy, market, geopolitical, central_bank, trade, crypto, energy, supply_chain 之一
+- region: 1-3 个区域: east_asia, southeast_asia, south_asia, middle_east, europe, north_america, latin_america, africa, oceania, global
+- entities: 1-5 个关键实体（国家、机构、公司、人物）
+- politicalBias: 如果原文有明显政治倾向，标注 "pro_west"/"pro_east"/"nationalist"/"other"，否则 "none"
+
+只输出 JSON，不输出任何其他内容:"#;
 
 /// Summarize a single news article using AI.
 ///

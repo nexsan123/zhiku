@@ -36,6 +36,9 @@ pub struct DeepMotiveAnalysis {
     pub primary_motive: String,
     /// Secondary/hidden motive (if detected).
     pub secondary_motive: String,
+    /// Political bias warning: flags if source news had detectable political bias.
+    #[serde(default)]
+    pub bias_warning: String,
     /// Confidence in this analysis (0.0-1.0).
     pub confidence: f64,
     /// Confidence grade: "high", "reasonable", "speculative".
