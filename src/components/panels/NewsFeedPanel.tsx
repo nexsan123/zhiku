@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, Inbox } from 'lucide-react';
-import { getNews, listenNewsUpdated, listenAiSummaryCompleted, hostnameFromUrl, formatTimeAgo } from '@services/tauri-bridge';
+import { RefreshCw, Inbox, ChevronDown, ChevronRight } from 'lucide-react';
+import { getNews, getAiBrief, listenNewsUpdated, listenAiSummaryCompleted, hostnameFromUrl, formatTimeAgo } from '@services/tauri-bridge';
+import type { AiBriefCategory } from '@services/tauri-bridge';
 import type { NewsItem } from '@contracts/api-news';
 import { NewsDetailModal } from '@components/news-detail';
 import './NewsFeedPanel.css';
@@ -33,6 +34,8 @@ export function NewsFeedPanel() {
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+  const [briefData, setBriefData] = useState<AiBriefCategory[]>([]);
+  const [briefExpanded, setBriefExpanded] = useState(true);
 
   const load = useCallback(async () => {
     setLoadState('loading');
@@ -74,6 +77,15 @@ export function NewsFeedPanel() {
       }
     };
   }, [load]);
+
+  // Load AI brief independently — failure is silent (overview bar just hides)
+  useEffect(() => {
+    let cancelled = false;
+    getAiBrief()
+      .then((data) => { if (!cancelled) setBriefData(data); })
+      .catch(() => { /* silent — Phase 3 may not be implemented yet */ });
+    return () => { cancelled = true; };
+  }, []);
 
   // Loading state
   if (loadState === 'loading') {
@@ -117,7 +129,8 @@ export function NewsFeedPanel() {
     return 0; // preserve backend order (already by time) within each group
   });
 
-  const aiCount = sorted.filter(i => i.aiSummary).length;
+  const displayed = sorted.slice(0, 6);
+  const aiCount = displayed.filter(i => i.aiSummary).length;
 
   // Loaded state — render list
   return (
@@ -126,17 +139,51 @@ export function NewsFeedPanel() {
         <div className="news-feed__ai-header">
           <span className="news-feed__ai-header-badge">AI</span>
           <span className="news-feed__ai-header-text">
-            {aiCount} / {sorted.length} analyzed
+            {aiCount} / {displayed.length} analyzed
           </span>
         </div>
       )}
+
+      {briefData.length > 0 && (
+        <div className="news-feed-overview">
+          <button
+            className="news-feed-overview__toggle"
+            onClick={() => setBriefExpanded((prev) => !prev)}
+            aria-expanded={briefExpanded}
+          >
+            <span className="news-feed-overview__title">{t('newsFeed.aiOverview')}</span>
+            <span className="news-feed-overview__chevron">
+              {briefExpanded ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
+            </span>
+          </button>
+          {briefExpanded && (
+            <div className="news-feed-overview__body">
+              {briefData.map((cat) => (
+                <div key={cat.category} className="news-feed-overview__row">
+                  <span
+                    className="news-feed-overview__dot"
+                    style={{ background: CATEGORY_COLORS[cat.category] ?? 'var(--color-text-disabled)' }}
+                    aria-hidden="true"
+                  />
+                  <span className="news-feed-overview__cat">{cat.category.replace('_', ' ')}</span>
+                  <span className={`news-feed-overview__sentiment news-feed-overview__sentiment--${getSentimentClass(cat.avgSentiment)}`}>
+                    {getSentimentLabel(cat.avgSentiment).charAt(0)}
+                  </span>
+                  <span className="news-feed-overview__count">{cat.count}{t('newsFeed.articles')}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       <ul className="news-feed" aria-label="News feed">
-        {sorted.map((item, idx) => {
+        {displayed.map((item, idx) => {
           const hasAi = !!item.aiSummary;
           return (
             <li
               key={item.id}
-              className={`news-feed__item news-feed__item--clickable ${hasAi ? 'news-feed__item--ai' : ''} ${idx < sorted.length - 1 ? 'news-feed__item--divider' : ''}`}
+              className={`news-feed__item news-feed__item--clickable ${hasAi ? 'news-feed__item--ai' : ''} ${idx < displayed.length - 1 ? 'news-feed__item--divider' : ''}`}
               onClick={() => setSelectedNews(item)}
               role="button"
               tabIndex={0}

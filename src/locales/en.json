@@ -35,7 +35,18 @@
     "gulfFdi": "Gulf FDI",
     "creditCycle": "Credit Cycle Compass",
     "intelBrief": "Intel Brief",
-    "gameMap": "US Game Map"
+    "gameMap": "US Game Map",
+    "situationCenter": "Situation Center"
+  },
+  "situation": {
+    "cycleTab": "Cycle",
+    "creditTab": "Credit",
+    "intelTab": "Intel",
+    "gameMapTab": "GameMap"
+  },
+  "newsFeed": {
+    "aiOverview": "AI Overview",
+    "articles": " articles"
   },
   "state": {
     "loading": "Loading...",

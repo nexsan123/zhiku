@@ -22,6 +22,7 @@ const ALL_PANEL_IDS: PanelId[] = [
   'credit-cycle',
   'intel-brief',
   'game-map',
+  'situation-center',
 ];
 
 // 初始面板状态 — 全部展开

@@ -35,7 +35,18 @@
     "gulfFdi": "海湾 FDI",
     "creditCycle": "信用周期罗盘",
     "intelBrief": "情报简报",
-    "gameMap": "美国博弈图谱"
+    "gameMap": "美国博弈图谱",
+    "situationCenter": "态势中枢"
+  },
+  "situation": {
+    "cycleTab": "周期",
+    "creditTab": "信用",
+    "intelTab": "情报",
+    "gameMapTab": "博弈"
+  },
+  "newsFeed": {
+    "aiOverview": "AI 概览",
+    "articles": "篇"
   },
   "state": {
     "loading": "加载中...",

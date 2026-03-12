@@ -1,0 +1,50 @@
+/* SituationCenterPanel — Tab 容器，毛玻璃风格 */
+
+.situation-center {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Tab 栏 ---- */
+.situation-center__tabs {
+  display: flex;
+  gap: 1px;
+  padding-bottom: var(--spacing-1);
+  margin-bottom: var(--spacing-2);
+  border-bottom: 1px solid var(--glass-border-subtle);
+}
+
+.situation-center__tab {
+  flex: 1;
+  height: 26px;
+  padding: 0 var(--spacing-1);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  letter-spacing: 0.02em;
+  transition:
+    color var(--duration-fast) var(--easing-default),
+    border-color var(--duration-fast) var(--easing-default),
+    background-color var(--duration-fast) var(--easing-default);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.situation-center__tab:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-hover);
+}
+
+.situation-center__tab--active {
+  color: var(--color-accent-primary);
+  border-bottom-color: var(--color-accent-primary);
+}
+
+/* ---- 内容区 ---- */
+.situation-center__content {
+  flex: 1;
+}

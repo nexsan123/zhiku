@@ -2,7 +2,6 @@ import { Component, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Newspaper,
-  Brain,
   Activity,
   BarChart3,
   DollarSign,
@@ -13,10 +12,7 @@ import {
   Landmark,
   Link2,
   Building2,
-  Zap,
   Compass,
-  Target,
-  FileSearch,
 } from 'lucide-react';
 import { useAppStore } from '@stores/app-store';
 import { TitleBar } from '@components/title-bar';
@@ -25,9 +21,9 @@ import { PanelStack } from '@components/panel-stack';
 import { Panel } from '@components/panel';
 import { MapCenter } from '@components/map-center';
 import { NewsFeedPanel } from '@components/panels/NewsFeedPanel';
-import { AiBriefPanel } from '@components/panels/AiBriefPanel';
 import { FredPanel } from '@components/panels/FredPanel';
 import { BisPanel } from '@components/panels/BisPanel';
+import { SituationCenterPanel } from '@components/panels/SituationCenterPanel';
 import { MarketRadarPanel } from '@components/panels/MarketRadarPanel';
 import { IndicesPanel } from '@components/panels/IndicesPanel';
 import { ForexPanel } from '@components/panels/ForexPanel';
@@ -37,10 +33,6 @@ import { FearGreedPanel } from '@components/panels/FearGreedPanel';
 import { WtoPanel } from '@components/panels/WtoPanel';
 import { SupplyChainPanel } from '@components/panels/SupplyChainPanel';
 import { GulfFdiPanel } from '@components/panels/GulfFdiPanel';
-import { CycleReasoningPanel } from '@components/panels/CycleReasoningPanel';
-import { CreditCyclePanel } from '@components/panels/CreditCyclePanel';
-import { IntelBriefPanel } from '@components/panels/IntelBriefPanel';
-import { GameMapPanel } from '@components/panels/GameMapPanel';
 import { CmdKModal } from '@components/cmd-k';
 import { SettingsPage } from './components/settings/SettingsPage';
 import { listenApiStatusChanged } from '@services/tauri-bridge';
@@ -134,36 +126,16 @@ function App() {
       <TitleBar onOpenSettings={() => setSettingsOpen(true)} />
 
       <div className="app__body">
-        {/* Left Panel Stack — Cycle Reasoning (L1), News Feed (L1), AI Brief (L1), FRED Indicators (L2), BIS Rates (L2) */}
+        {/* Left Panel Stack — 态势中枢 (L1), News Feed (L1), FRED Indicators (L2), BIS Rates (L2) */}
         <PanelStack side="left" collapsed={leftPanelCollapsed}>
-          <Panel title={t('panel.cycleReasoning')} icon={<Zap size={13} />} panelId="cycle-reasoning">
+          <Panel title={t('panel.situationCenter')} icon={<Compass size={13} />} panelId="situation-center">
             <ErrorBoundary>
-              <CycleReasoningPanel />
-            </ErrorBoundary>
-          </Panel>
-          <Panel title={t('panel.creditCycle')} icon={<Compass size={13} />} panelId="credit-cycle">
-            <ErrorBoundary>
-              <CreditCyclePanel />
-            </ErrorBoundary>
-          </Panel>
-          <Panel title={t('panel.intelBrief')} icon={<FileSearch size={13} />} panelId="intel-brief">
-            <ErrorBoundary>
-              <IntelBriefPanel />
-            </ErrorBoundary>
-          </Panel>
-          <Panel title={t('panel.gameMap')} icon={<Target size={13} />} panelId="game-map">
-            <ErrorBoundary>
-              <GameMapPanel />
+              <SituationCenterPanel />
             </ErrorBoundary>
           </Panel>
           <Panel title={t('panel.newsFeed')} icon={<Newspaper size={13} />} panelId="news-feed">
             <ErrorBoundary>
               <NewsFeedPanel />
-            </ErrorBoundary>
-          </Panel>
-          <Panel title={t('panel.aiBrief')} icon={<Brain size={13} />} panelId="ai-brief">
-            <ErrorBoundary>
-              <AiBriefPanel />
             </ErrorBoundary>
           </Panel>
           <Panel title={t('panel.fredIndicators')} icon={<Activity size={13} />} panelId="fred-indicators">

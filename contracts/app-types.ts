@@ -45,7 +45,8 @@ export type PanelId =
   | 'gulf-fdi'
   | 'credit-cycle'
   | 'intel-brief'
-  | 'game-map';
+  | 'game-map'
+  | 'situation-center';
 
 // API 服务名称
 export type ApiServiceName =
