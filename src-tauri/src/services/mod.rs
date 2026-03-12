@@ -28,3 +28,4 @@ pub mod news_cluster;
 pub mod deep_analyzer;
 pub mod game_map;
 pub mod scenario_engine;
+pub mod news_heatmap;

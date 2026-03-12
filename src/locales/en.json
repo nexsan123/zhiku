@@ -117,6 +117,8 @@
     "layerCentralBanks": "Central Banks",
     "layerGulfFdi": "Gulf FDI",
     "layerCreditCycle": "Credit Cycle",
+    "layerNewsHeatmap": "News Pulse",
+    "layerTensionArcs": "Tension Arcs",
     "globalPhase": "Global",
     "rate": "Rate",
     "marketData": "Market Data",

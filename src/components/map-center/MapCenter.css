@@ -193,10 +193,9 @@
   flex-shrink: 0;
 }
 
-.map-detail__dot--exchange { background: #00d4aa; }
-.map-detail__dot--centralBank { background: #bf5af2; }
-.map-detail__dot--gulfFdi { background: #ffb800; }
 .map-detail__dot--creditCycle { background: #ff6b35; }
+.map-detail__dot--newsHeatmap { background: var(--color-accent-yellow, #ffcc00); }
+.map-detail__dot--tensionArcs { background: var(--color-semantic-error, #ff453a); }
 
 .map-detail__close {
   background: none;

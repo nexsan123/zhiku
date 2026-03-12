@@ -3,13 +3,17 @@ import { useTranslation } from 'react-i18next';
 import DeckGL from '@deck.gl/react';
 import type { PickingInfo, Color } from '@deck.gl/core';
 import { Map } from 'react-map-gl/maplibre';
-import { ScatterplotLayer, TextLayer } from '@deck.gl/layers';
+import { ScatterplotLayer, TextLayer, ArcLayer } from '@deck.gl/layers';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './MapCenter.css';
 import {
   getCreditCycleOverview,
+  getBilateralDynamics,
+  getNewsHeatmap,
   type GlobalCycleOverview,
   type CountryCyclePosition,
+  type BilateralDynamic,
+  type NewsHeatmapEntry,
 } from '@services/tauri-bridge';
 
 function isWebGLAvailable(): boolean {
@@ -35,56 +39,6 @@ const INITIAL_VIEW_STATE = {
   bearing: 0,
 };
 
-// Static data: 19 major financial centers
-const FINANCIAL_CENTERS = [
-  { name: 'New York', coordinates: [-74.006, 40.7128], type: 'exchange', size: 'major', country: 'US', keywords: ['NYSE', 'NASDAQ', 'Wall Street', 'S&P', '纽约', '美股'] },
-  { name: 'London', coordinates: [-0.1276, 51.5074], type: 'exchange', size: 'major', country: 'UK', keywords: ['LSE', 'FTSE', '伦敦', '英国'] },
-  { name: 'Tokyo', coordinates: [139.6917, 35.6895], type: 'exchange', size: 'major', country: 'JP', keywords: ['Nikkei', 'TSE', '日经', '东京', '日本'] },
-  { name: 'Shanghai', coordinates: [121.4737, 31.2304], type: 'exchange', size: 'major', country: 'CN', keywords: ['SSE', 'CSI', '上证', '上海', 'A股'] },
-  { name: 'Hong Kong', coordinates: [114.1694, 22.3193], type: 'exchange', size: 'major', country: 'HK', keywords: ['HSI', 'Hang Seng', '恒生', '港股'] },
-  { name: 'Singapore', coordinates: [103.8198, 1.3521], type: 'exchange', size: 'major', country: 'SG', keywords: ['SGX', 'STI', '新加坡'] },
-  { name: 'Frankfurt', coordinates: [8.6821, 50.1109], type: 'exchange', size: 'medium', country: 'DE', keywords: ['DAX', 'Frankfurt', '法兰克福', '德国'] },
-  { name: 'Sydney', coordinates: [151.2093, -33.8688], type: 'exchange', size: 'medium', country: 'AU', keywords: ['ASX', 'Sydney', '悉尼', '澳大利亚'] },
-  { name: 'Toronto', coordinates: [-79.3832, 43.6532], type: 'exchange', size: 'medium', country: 'CA', keywords: ['TSX', 'Toronto', '多伦多', '加拿大'] },
-  { name: 'Mumbai', coordinates: [72.8777, 19.076], type: 'exchange', size: 'medium', country: 'IN', keywords: ['BSE', 'NSE', 'Sensex', 'Nifty', '孟买', '印度'] },
-  { name: 'Zurich', coordinates: [8.5417, 47.3769], type: 'exchange', size: 'medium', country: 'CH', keywords: ['SIX', 'SMI', '苏黎世', '瑞士'] },
-  { name: 'Dubai', coordinates: [55.2708, 25.2048], type: 'exchange', size: 'medium', country: 'AE', keywords: ['DFM', 'ADX', '迪拜', '阿联酋'] },
-  { name: 'Seoul', coordinates: [126.978, 37.5665], type: 'exchange', size: 'medium', country: 'KR', keywords: ['KOSPI', '首尔', '韩国'] },
-  { name: 'São Paulo', coordinates: [-46.6333, -23.5505], type: 'exchange', size: 'medium', country: 'BR', keywords: ['Bovespa', 'B3', '圣保罗', '巴西'] },
-  { name: 'Paris', coordinates: [2.3522, 48.8566], type: 'exchange', size: 'medium', country: 'FR', keywords: ['CAC', 'Euronext', '巴黎', '法国'] },
-  { name: 'Chicago', coordinates: [-87.6298, 41.8781], type: 'exchange', size: 'medium', country: 'US', keywords: ['CME', 'CBOE', 'VIX', '芝加哥'] },
-  { name: 'Johannesburg', coordinates: [28.0473, -26.2041], type: 'exchange', size: 'small', country: 'ZA', keywords: ['JSE', '南非'] },
-  { name: 'Taipei', coordinates: [121.5654, 25.033], type: 'exchange', size: 'small', country: 'TW', keywords: ['TWSE', 'TSMC', '台湾', '台北'] },
-  { name: 'Jakarta', coordinates: [106.8456, -6.2088], type: 'exchange', size: 'small', country: 'ID', keywords: ['IDX', '雅加达', '印尼'] },
-];
-
-// 13 central banks
-const CENTRAL_BANKS = [
-  { name: 'Federal Reserve', coordinates: [-77.0469, 38.8951], rate: '5.25%', country: 'US', keywords: ['Fed', 'FOMC', '美联储', '联邦基金'] },
-  { name: 'ECB', coordinates: [8.6724, 50.1109], rate: '4.50%', country: 'EU', keywords: ['ECB', '欧央行', '欧元区'] },
-  { name: 'Bank of Japan', coordinates: [139.7671, 35.6812], rate: '0.10%', country: 'JP', keywords: ['BOJ', '日银', '日本央行', '日本银行'] },
-  { name: 'Bank of England', coordinates: [-0.0886, 51.5142], rate: '5.25%', country: 'UK', keywords: ['BOE', '英国央行', '英格兰银行'] },
-  { name: "People's Bank of China", coordinates: [116.3912, 39.9042], rate: '3.45%', country: 'CN', keywords: ['PBOC', '央行', '人民银行', '中国人民银行'] },
-  { name: 'Reserve Bank of India', coordinates: [72.8347, 18.9322], rate: '6.50%', country: 'IN', keywords: ['RBI', '印度央行', '印度储备银行'] },
-  { name: 'Bank of Canada', coordinates: [-75.6972, 45.4215], rate: '5.00%', country: 'CA', keywords: ['BOC', '加拿大央行', 'Bank of Canada'] },
-  { name: 'Reserve Bank of Australia', coordinates: [149.1300, -35.2809], rate: '4.35%', country: 'AU', keywords: ['RBA', '澳联储', '澳大利亚央行'] },
-  { name: 'Swiss National Bank', coordinates: [7.4474, 46.948], rate: '1.75%', country: 'CH', keywords: ['SNB', '瑞士央行', '瑞士国家银行'] },
-  { name: 'Bank of Korea', coordinates: [126.978, 37.5518], rate: '3.50%', country: 'KR', keywords: ['BOK', '韩国央行', '韩国银行'] },
-  { name: 'Central Bank of Brazil', coordinates: [-47.8825, -15.7942], rate: '11.75%', country: 'BR', keywords: ['BCB', '巴西央行', 'Banco Central do Brasil'] },
-  { name: 'Saudi Central Bank', coordinates: [46.6753, 24.7136], rate: '6.00%', country: 'SA', keywords: ['SAMA', '沙特央行', '沙特阿拉伯货币局'] },
-  { name: 'Central Bank of UAE', coordinates: [54.3773, 24.4539], rate: '5.40%', country: 'AE', keywords: ['CBUAE', '阿联酋央行', 'UAE央行'] },
-];
-
-// Gulf FDI zones
-const GULF_FDI_ZONES = [
-  { name: 'DIFC Dubai', coordinates: [55.2819, 25.2135], type: 'fdi', country: 'AE', keywords: ['DIFC', '迪拜', '阿联酋', 'Dubai'] },
-  { name: 'ADGM Abu Dhabi', coordinates: [54.6515, 24.4539], type: 'fdi', country: 'AE', keywords: ['ADGM', '阿布扎比', 'Abu Dhabi'] },
-  { name: 'KAFD Riyadh', coordinates: [46.6359, 24.7649], type: 'fdi', country: 'SA', keywords: ['KAFD', '利雅得', '沙特', 'Riyadh'] },
-  { name: 'QFC Doha', coordinates: [51.4316, 25.2854], type: 'fdi', country: 'QA', keywords: ['QFC', '多哈', '卡塔尔', 'Qatar'] },
-  { name: 'Bahrain Financial Harbour', coordinates: [50.5577, 26.2285], type: 'fdi', country: 'BH', keywords: ['BFH', '巴林', 'Bahrain'] },
-  { name: 'Kuwait Financial Centre', coordinates: [47.9783, 29.3759], type: 'fdi', country: 'KW', keywords: ['科威特', 'Kuwait', 'KFC'] },
-];
-
 // Phase-to-RGBA color mapping for credit cycle dots
 const PHASE_COLORS: Record<string, [number, number, number, number]> = {
   easing:       [52,  199, 89,  200],
@@ -101,7 +55,6 @@ function getPhaseColor(phase: string): [number, number, number, number] {
 }
 
 // Coordinates for the 15 BIS credit cycle countries
-// Reuses existing FINANCIAL_CENTERS / CENTRAL_BANKS coords where available
 const CREDIT_CYCLE_LOCATIONS: Record<string, [number, number]> = {
   US: [-77.0469, 38.8951],       // Federal Reserve (Washington DC)
   CN: [116.3912, 39.9042],       // PBoC (Beijing)
@@ -128,7 +81,33 @@ const COUNTRY_NAMES: Record<string, string> = {
   ZA: 'South Africa', SA: 'Saudi Arabia', AE: 'UAE',
 };
 
-type LayerId = 'exchanges' | 'centralBanks' | 'gulfFdi' | 'creditCycle';
+// Alias mapping: bilateral id tokens → CREDIT_CYCLE_LOCATIONS keys
+// 'eu' from 'us-eu' maps to XM (Euro Area); 'me' maps to SA (Saudi Arabia as proxy)
+const COUNTRY_ALIASES: Record<string, string> = {
+  EU: 'XM',
+  ME: 'SA',
+};
+
+function resolveCountryCode(raw: string): string {
+  const upper = raw.toUpperCase();
+  return COUNTRY_ALIASES[upper] ?? upper;
+}
+
+// Parse bilateral id (e.g. 'us-cn', 'us_eu') into source/target coordinates
+function parseBilateralEndpoints(
+  id: string,
+): { source: [number, number]; target: [number, number] } | null {
+  const parts = id.split(/[-_]/);
+  if (parts.length < 2) return null;
+  const srcKey = resolveCountryCode(parts[0]);
+  const tgtKey = resolveCountryCode(parts[1]);
+  const src = CREDIT_CYCLE_LOCATIONS[srcKey];
+  const tgt = CREDIT_CYCLE_LOCATIONS[tgtKey];
+  if (!src || !tgt) return null;
+  return { source: src, target: tgt };
+}
+
+type LayerId = 'creditCycle' | 'newsHeatmap' | 'tensionArcs';
 
 interface HoverInfo {
   x: number;
@@ -136,10 +115,6 @@ interface HoverInfo {
   name: string;
   detail: string;
 }
-
-type FinancialCenter = typeof FINANCIAL_CENTERS[0];
-type CentralBank = typeof CENTRAL_BANKS[0];
-type GulfFdiZone = typeof GULF_FDI_ZONES[0];
 
 // Shape of each data item fed to the credit cycle ScatterplotLayer
 interface CreditCycleDot {
@@ -149,6 +124,17 @@ interface CreditCycleDot {
   phaseLabel: string;
   confidence: number;
   tier: string;
+}
+
+// ArcLayer data item (bilateral + resolved endpoints)
+interface ArcDatum extends BilateralDynamic {
+  source: [number, number];
+  target: [number, number];
+}
+
+// ScatterplotLayer data item for news heatmap (entry + resolved coordinates)
+interface HeatmapDot extends NewsHeatmapEntry {
+  coordinates: [number, number];
 }
 
 export function MapCenter() {
@@ -161,15 +147,14 @@ export function MapCenter() {
   }, []);
 
   const [activeLayers, setActiveLayers] = useState<Record<LayerId, boolean>>({
-    exchanges: true,
-    centralBanks: true,
-    gulfFdi: false,
-    creditCycle: false,
+    creditCycle: true,
+    newsHeatmap: true,
+    tensionArcs: true,
   });
   const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
   const [selection, setSelection] = useState<MapSelection | null>(null);
 
-  // Credit cycle live data
+  // ---- Credit cycle live data ----
   const [creditCycleData, setCreditCycleData] = useState<GlobalCycleOverview | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -197,6 +182,64 @@ export function MapCenter() {
     };
   }, []);
 
+  // ---- Bilateral dynamics (tension arcs) ----
+  const [bilateralData, setBilateralData] = useState<BilateralDynamic[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchBilaterals() {
+      try {
+        const data = await getBilateralDynamics();
+        if (!cancelled) setBilateralData(data);
+      } catch {
+        // Silent fail
+      }
+    }
+
+    void fetchBilaterals();
+    const interval = setInterval(() => { void fetchBilaterals(); }, 120_000); // 2 min
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
+
+  // ---- News heatmap ----
+  const [newsHeatmapData, setNewsHeatmapData] = useState<NewsHeatmapEntry[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchHeatmap() {
+      try {
+        const data = await getNewsHeatmap(1);
+        if (!cancelled) setNewsHeatmapData(data);
+      } catch {
+        // Silent fail
+      }
+    }
+
+    void fetchHeatmap();
+    const interval = setInterval(() => { void fetchHeatmap(); }, 60_000); // 1 min
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
+
+  // ---- Pulse animation for news heatmap (800ms toggle) ----
+  const [pulseScale, setPulseScale] = useState(1.0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPulseScale((prev) => (prev === 1.0 ? 1.3 : 1.0));
+    }, 800);
+    return () => clearInterval(interval);
+  }, []);
+
   const toggleLayer = useCallback((id: LayerId) => {
     setActiveLayers((prev) => ({ ...prev, [id]: !prev[id] }));
   }, []);
@@ -216,76 +259,31 @@ export function MapCenter() {
       }));
   }, [creditCycleData]);
 
+  // Build arc data from bilateral dynamics
+  const arcData = useMemo<ArcDatum[]>(() => {
+    return bilateralData
+      .map((b) => {
+        const endpoints = parseBilateralEndpoints(b.id);
+        if (!endpoints) return null;
+        return { ...b, ...endpoints } as ArcDatum;
+      })
+      .filter((d): d is ArcDatum => d !== null);
+  }, [bilateralData]);
+
+  // Build heatmap dots from news heatmap data
+  const heatmapDots = useMemo<HeatmapDot[]>(() => {
+    return newsHeatmapData
+      .filter((e) => e.countryCode in CREDIT_CYCLE_LOCATIONS)
+      .map((e) => ({
+        ...e,
+        coordinates: CREDIT_CYCLE_LOCATIONS[e.countryCode],
+      }));
+  }, [newsHeatmapData]);
+
   const layers = useMemo(() => {
     const result = [];
 
-    if (activeLayers.exchanges) {
-      result.push(
-        new ScatterplotLayer<FinancialCenter>({
-          id: 'exchanges',
-          data: FINANCIAL_CENTERS,
-          getPosition: (d) => d.coordinates as [number, number],
-          getRadius: (d) =>
-            d.size === 'major' ? 80000 : d.size === 'medium' ? 50000 : 30000,
-          getFillColor: [0, 212, 170, 180] as Color,
-          getLineColor: [0, 212, 170, 255] as Color,
-          lineWidthMinPixels: 1,
-          stroked: true,
-          pickable: true,
-          radiusMinPixels: 4,
-          radiusMaxPixels: 20,
-        }),
-        new TextLayer<FinancialCenter>({
-          id: 'exchange-labels',
-          data: FINANCIAL_CENTERS.filter((d) => d.size === 'major'),
-          getPosition: (d) => d.coordinates as [number, number],
-          getText: (d) => d.name,
-          getSize: 11,
-          getColor: [200, 220, 240, 200] as Color,
-          getTextAnchor: 'start',
-          getAlignmentBaseline: 'center',
-          getPixelOffset: [10, 0] as [number, number],
-          fontFamily: 'monospace',
-        })
-      );
-    }
-
-    if (activeLayers.centralBanks) {
-      result.push(
-        new ScatterplotLayer<CentralBank>({
-          id: 'central-banks',
-          data: CENTRAL_BANKS,
-          getPosition: (d) => d.coordinates as [number, number],
-          getRadius: 60000,
-          getFillColor: [191, 90, 242, 160] as Color,
-          getLineColor: [191, 90, 242, 255] as Color,
-          lineWidthMinPixels: 1,
-          stroked: true,
-          pickable: true,
-          radiusMinPixels: 5,
-          radiusMaxPixels: 15,
-        })
-      );
-    }
-
-    if (activeLayers.gulfFdi) {
-      result.push(
-        new ScatterplotLayer<GulfFdiZone>({
-          id: 'gulf-fdi',
-          data: GULF_FDI_ZONES,
-          getPosition: (d) => d.coordinates as [number, number],
-          getRadius: 40000,
-          getFillColor: [255, 184, 0, 160] as Color,
-          getLineColor: [255, 184, 0, 255] as Color,
-          lineWidthMinPixels: 1,
-          stroked: true,
-          pickable: true,
-          radiusMinPixels: 4,
-          radiusMaxPixels: 12,
-        })
-      );
-    }
-
+    // ---- Credit cycle: ScatterplotLayer + TextLayer ----
     if (activeLayers.creditCycle && creditCycleDots.length > 0) {
       result.push(
         new ScatterplotLayer<CreditCycleDot>({
@@ -316,19 +314,70 @@ export function MapCenter() {
           getAlignmentBaseline: 'center',
           getPixelOffset: [10, 0] as [number, number],
           fontFamily: 'monospace',
-        })
+        }),
+      );
+    }
+
+    // ---- News heatmap: pulsing ScatterplotLayer ----
+    if (activeLayers.newsHeatmap && heatmapDots.length > 0) {
+      result.push(
+        new ScatterplotLayer<HeatmapDot>({
+          id: 'news-heatmap',
+          data: heatmapDots,
+          getPosition: (d) => d.coordinates,
+          getRadius: (d) => 40000 + d.newsCount * 15000,
+          getFillColor: (d) => {
+            if (d.avgSentiment < 0.4) return [255, 69, 58, 120] as Color;
+            if (d.avgSentiment > 0.6) return [52, 199, 89, 120] as Color;
+            return [255, 204, 0, 120] as Color;
+          },
+          radiusScale: pulseScale,
+          radiusMinPixels: 8,
+          radiusMaxPixels: 40,
+          pickable: true,
+          transitions: {
+            getRadius: 800,
+          },
+        }),
+      );
+    }
+
+    // ---- Tension arcs: ArcLayer ----
+    if (activeLayers.tensionArcs && arcData.length > 0) {
+      result.push(
+        new ArcLayer<ArcDatum>({
+          id: 'tension-arcs',
+          data: arcData,
+          getSourcePosition: (d) => d.source,
+          getTargetPosition: (d) => d.target,
+          getSourceColor: (d) =>
+            d.tension > 0.6
+              ? ([255, 69, 58, 200] as Color)
+              : d.tension > 0.3
+                ? ([255, 159, 10, 200] as Color)
+                : ([52, 199, 89, 200] as Color),
+          getTargetColor: (d) =>
+            d.tension > 0.6
+              ? ([255, 69, 58, 200] as Color)
+              : d.tension > 0.3
+                ? ([255, 159, 10, 200] as Color)
+                : ([52, 199, 89, 200] as Color),
+          getWidth: (d) => 1 + d.tension * 5,
+          greatCircle: true,
+          pickable: true,
+        }),
       );
     }
 
     return result;
-  }, [activeLayers, creditCycleDots]);
+  }, [activeLayers, creditCycleDots, heatmapDots, arcData, pulseScale]);
 
   const onHover = useCallback((info: PickingInfo) => {
     if (info.object) {
       const obj = info.object as Record<string, unknown>;
 
       // Credit cycle dot
-      if ('countryCode' in obj) {
+      if ('countryCode' in obj && 'phaseLabel' in obj) {
         const code = obj['countryCode'] as string;
         const phaseLabel = obj['phaseLabel'] as string;
         const countryName = COUNTRY_NAMES[code] ?? code;
@@ -336,12 +385,24 @@ export function MapCenter() {
         return;
       }
 
-      const name = obj['name'] as string;
-      const rate = obj['rate'] as string | undefined;
-      const size = obj['size'] as string | undefined;
-      const type = obj['type'] as string | undefined;
-      const detail = rate ? `Rate: ${rate}` : size ? size.toUpperCase() : type ?? '';
-      setHoverInfo({ x: info.x, y: info.y, name, detail });
+      // News heatmap dot
+      if ('newsCount' in obj) {
+        const code = obj['countryCode'] as string;
+        const count = obj['newsCount'] as number;
+        const latestTitle = obj['latestTitle'] as string;
+        const countryName = COUNTRY_NAMES[code] ?? code;
+        setHoverInfo({ x: info.x, y: info.y, name: countryName, detail: `${count} news · ${latestTitle}` });
+        return;
+      }
+
+      // Tension arc
+      if ('tension' in obj) {
+        const name = obj['name'] as string;
+        const tension = obj['tension'] as number;
+        const tensionLabel = obj['tensionLabel'] as string;
+        setHoverInfo({ x: info.x, y: info.y, name, detail: `${tensionLabel} (${Math.round(tension * 100)}%)` });
+        return;
+      }
     } else {
       setHoverInfo(null);
     }
@@ -352,7 +413,7 @@ export function MapCenter() {
       const obj = info.object as Record<string, unknown>;
 
       // Credit cycle dot click
-      if ('countryCode' in obj) {
+      if ('countryCode' in obj && 'phaseLabel' in obj) {
         const code = obj['countryCode'] as string;
         const phaseLabel = obj['phaseLabel'] as string;
         const confidence = obj['confidence'] as number;
@@ -370,27 +431,40 @@ export function MapCenter() {
         return;
       }
 
-      const name = obj['name'] as string;
-      const country = obj['country'] as string;
-      const keywords = (obj['keywords'] as string[]) || [];
-      const rate = obj['rate'] as string | undefined;
-      const size = obj['size'] as string | undefined;
-      const type = obj['type'] as string | undefined;
+      // News heatmap dot click
+      if ('newsCount' in obj) {
+        const code = obj['countryCode'] as string;
+        const count = obj['newsCount'] as number;
+        const keywords = obj['topKeywords'] as string[];
+        const countryName = COUNTRY_NAMES[code] ?? code;
+        setSelection({
+          name: countryName,
+          layerType: 'newsHeatmap',
+          country: code,
+          keywords: [code, countryName, ...keywords],
+          detail: `${count} news in 1h`,
+          x: info.x,
+          y: info.y,
+        });
+        return;
+      }
 
-      let layerType: MapSelection['layerType'] = 'exchange';
-      if (rate) layerType = 'centralBank';
-      else if (type === 'fdi') layerType = 'gulfFdi';
-
-      setSelection({
-        name,
-        layerType,
-        country,
-        keywords,
-        rate,
-        size,
-        x: info.x,
-        y: info.y,
-      });
+      // Tension arc click
+      if ('tension' in obj) {
+        const name = obj['name'] as string;
+        const tensionLabel = obj['tensionLabel'] as string;
+        const headlines = obj['recentHeadlines'] as string[];
+        setSelection({
+          name,
+          layerType: 'tensionArcs',
+          country: '',
+          keywords: headlines ?? [],
+          detail: tensionLabel,
+          x: info.x,
+          y: info.y,
+        });
+        return;
+      }
     } else {
       // Click on empty map → close detail card
       setSelection(null);
@@ -461,10 +535,9 @@ export function MapCenter() {
       <div className="map-center__controls">
         <span className="map-center__controls-title">{t('map.layers')}</span>
         {([
-          { id: 'exchanges' as LayerId, label: t('map.layerExchanges'), color: '#00d4aa' },
-          { id: 'centralBanks' as LayerId, label: t('map.layerCentralBanks'), color: '#bf5af2' },
-          { id: 'gulfFdi' as LayerId, label: t('map.layerGulfFdi'), color: '#ffb800' },
           { id: 'creditCycle' as LayerId, label: t('map.layerCreditCycle'), color: '#ff6b35' },
+          { id: 'newsHeatmap' as LayerId, label: t('map.layerNewsHeatmap'), color: '#ffcc00' },
+          { id: 'tensionArcs' as LayerId, label: t('map.layerTensionArcs'), color: '#ff453a' },
         ]).map(({ id, label, color }) => (
           <button
             key={id}

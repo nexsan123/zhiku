@@ -18,6 +18,7 @@ pub fn run() {
             commands::news::get_news,
             commands::news::get_news_count,
             commands::news::fetch_rss,
+            commands::news::get_news_heatmap,
             commands::macro_data::get_macro_data,
             commands::macro_data::fetch_fred,
             commands::api_status::get_api_status,

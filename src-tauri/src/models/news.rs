@@ -79,3 +79,16 @@ pub struct ApiStatus {
     pub last_error: Option<String>,
     pub response_ms: Option<i64>,
 }
+
+/// Per-country news heatmap aggregation for the map pulse layer.
+/// Used by: get_news_heatmap command
+/// Fields: 5 (country_code, news_count, avg_sentiment, top_keywords, latest_title)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NewsHeatmapEntry {
+    pub country_code: String,
+    pub news_count: u32,
+    pub avg_sentiment: f64,
+    pub top_keywords: Vec<String>,
+    pub latest_title: String,
+}

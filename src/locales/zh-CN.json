@@ -117,6 +117,8 @@
     "layerCentralBanks": "央行",
     "layerGulfFdi": "海湾 FDI",
     "layerCreditCycle": "信用周期",
+    "layerNewsHeatmap": "新闻脉冲",
+    "layerTensionArcs": "博弈弧线",
     "globalPhase": "全球",
     "rate": "利率",
     "marketData": "市场数据",

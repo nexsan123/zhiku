@@ -8,7 +8,7 @@ import { NewsDetailModal } from '@components/news-detail';
 
 export interface MapSelection {
   name: string;
-  layerType: 'exchange' | 'centralBank' | 'gulfFdi' | 'creditCycle';
+  layerType: 'creditCycle' | 'newsHeatmap' | 'tensionArcs';
   country: string;
   keywords: string[];
   rate?: string;

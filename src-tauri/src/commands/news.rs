@@ -1,8 +1,8 @@
 use sqlx::SqlitePool;
 use tauri::State;
 
-use crate::models::news::{NewsItem, NewsRow};
-use crate::services::rss_fetcher;
+use crate::models::news::{NewsHeatmapEntry, NewsItem, NewsRow};
+use crate::services::{news_heatmap, rss_fetcher};
 
 /// Get all news articles from the database, ordered by published date descending.
 /// Aligns with: contracts/api-news.ts :: NewsItem
@@ -39,6 +39,20 @@ pub async fn get_news_count(pool: State<'_, SqlitePool>) -> Result<i64, String> 
 #[tauri::command]
 pub async fn fetch_rss(pool: State<'_, SqlitePool>) -> Result<usize, String> {
     rss_fetcher::fetch_all_rss(pool.inner())
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Get per-country news heatmap aggregation for the map pulse layer.
+/// Aggregates news from the last N hours by country keyword matching.
+/// Frontend: invoke('get_news_heatmap', { hours: 1 })
+#[tauri::command]
+pub async fn get_news_heatmap(
+    pool: State<'_, SqlitePool>,
+    hours: Option<u32>,
+) -> Result<Vec<NewsHeatmapEntry>, String> {
+    let h = hours.unwrap_or(1);
+    news_heatmap::aggregate_news_heatmap(pool.inner(), h)
         .await
         .map_err(|e| e.to_string())
 }

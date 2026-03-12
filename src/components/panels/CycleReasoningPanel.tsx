@@ -199,12 +199,12 @@ export function CycleReasoningPanel() {
             </div>
           </div>
 
-          {/* Market */}
+          {/* Market — brief ref only; detail available in Market Radar panel */}
           <div className="cycle-indicator-row">
             <span className="cycle-indicator-row__name">{t('cycle.market')}</span>
             <div className="cycle-indicator-row__values">
-              <span className="cycle-indicator-row__detail">
-                VIX {indicators.market.vixLevel} · DXY {indicators.market.dxyTrend > 0 ? '+' : ''}{indicators.market.dxyTrend}%
+              <span className="cycle-indicator-row__detail" title="See Market Radar panel for details">
+                VIX · DXY ▸ Market Radar
               </span>
               <span className={`cycle-phase cycle-phase--sm ${phaseClass(indicators.market.phase)}`}>
                 {t(phaseKey(indicators.market.phase))}

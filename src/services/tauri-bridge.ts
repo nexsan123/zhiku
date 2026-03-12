@@ -928,6 +928,35 @@ export async function getBilateralDynamics(): Promise<BilateralDynamic[]> {
   return invoke<BilateralDynamic[]>('get_bilateral_dynamics');
 }
 
+// ============================================================
+// News Heatmap — geographic distribution of news by country
+// ============================================================
+
+export interface NewsHeatmapEntry {
+  countryCode: string;
+  newsCount: number;
+  avgSentiment: number;
+  topKeywords: string[];
+  latestTitle: string;
+}
+
+const MOCK_NEWS_HEATMAP: NewsHeatmapEntry[] = [
+  { countryCode: 'US', newsCount: 8, avgSentiment: 0.45, topKeywords: ['Fed', 'rates', 'inflation'], latestTitle: 'Fed signals rate pause...' },
+  { countryCode: 'CN', newsCount: 5, avgSentiment: 0.35, topKeywords: ['trade', 'tariff', 'PBoC'], latestTitle: 'China trade surplus narrows...' },
+  { countryCode: 'JP', newsCount: 3, avgSentiment: 0.62, topKeywords: ['BOJ', 'yen', 'Nikkei'], latestTitle: 'BOJ maintains policy...' },
+  { countryCode: 'GB', newsCount: 2, avgSentiment: 0.50, topKeywords: ['BOE', 'inflation', 'gilt'], latestTitle: 'UK CPI data released...' },
+];
+
+/**
+ * Fetch news heatmap aggregated by country for the past N hours.
+ * Backend: invoke('get_news_heatmap', { hours }) → Vec<NewsHeatmapEntry>
+ * Rust struct uses snake_case; serde(rename_all="camelCase") converts on the wire.
+ */
+export async function getNewsHeatmap(hours?: number): Promise<NewsHeatmapEntry[]> {
+  if (!isTauri()) return MOCK_NEWS_HEATMAP;
+  return invoke<NewsHeatmapEntry[]>('get_news_heatmap', { hours: hours ?? 1 });
+}
+
 export async function getDecisionCalendar(days?: number): Promise<CalendarEvent[]> {
   if (!isTauri()) return MOCK_CALENDAR;
   return invoke<CalendarEvent[]>('get_decision_calendar', { days: days ?? 90 });
