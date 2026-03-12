@@ -21,6 +21,8 @@ pub mod wto_client;
 pub mod mempool_client;
 pub mod ai_provider;
 pub mod ai_config;
+pub mod ai_router;
+pub mod openai_compat;
 pub mod credit_cycle_engine;
 pub mod dollar_tide;
 pub mod global_aggregator;

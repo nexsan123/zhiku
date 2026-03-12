@@ -89,3 +89,81 @@ pub fn resolve_provider_config(app: &tauri::AppHandle, provider: &str) -> Resolv
 pub fn resolve_provider_key(app: &tauri::AppHandle, provider: &str) -> String {
     resolve_provider_config(app, provider).api_key
 }
+
+/// Resolve config + provider name for deep reasoning.
+///
+/// Checks `ai_models` for the first enabled model (in priority order: claude, deepseek,
+/// groq, ollama, then any other). Returns (config, provider_name).
+///
+/// This allows users to configure any model for reasoning — the system will
+/// use whichever is available.
+pub fn resolve_reasoning_config(app: &tauri::AppHandle) -> (ResolvedAiConfig, String) {
+    let store = match app.store("settings.json") {
+        Ok(s) => s,
+        Err(_) => {
+            return (
+                ResolvedAiConfig {
+                    api_key: String::new(),
+                    model_name: String::new(),
+                    endpoint_url: String::new(),
+                },
+                "claude".to_string(),
+            );
+        }
+    };
+
+    // Check ai_models array for first enabled model with key (priority order)
+    if let Some(val) = store.get("ai_models") {
+        if let Ok(models) = serde_json::from_value::<Vec<StoredAiModel>>(val.clone()) {
+            let priority = ["claude", "deepseek", "groq", "openai", "mistral", "ollama"];
+
+            // First pass: check priority providers in order
+            for &provider in &priority {
+                let needs_key = provider != "ollama";
+                if let Some(m) = models
+                    .iter()
+                    .find(|m| m.provider == provider && m.enabled && (!needs_key || !m.api_key.is_empty()))
+                {
+                    return (
+                        ResolvedAiConfig {
+                            api_key: m.api_key.clone(),
+                            model_name: m.model_name.clone(),
+                            endpoint_url: m.endpoint_url.clone(),
+                        },
+                        m.provider.clone(),
+                    );
+                }
+            }
+
+            // Second pass: any enabled model not in priority list
+            if let Some(m) = models
+                .iter()
+                .find(|m| m.enabled && !m.api_key.is_empty())
+            {
+                return (
+                    ResolvedAiConfig {
+                        api_key: m.api_key.clone(),
+                        model_name: m.model_name.clone(),
+                        endpoint_url: m.endpoint_url.clone(),
+                    },
+                    m.provider.clone(),
+                );
+            }
+        }
+    }
+
+    // Fallback: try legacy claude key
+    let api_key = store
+        .get("claude_api_key")
+        .and_then(|v| v.as_str().map(|s| s.to_string()))
+        .unwrap_or_default();
+
+    (
+        ResolvedAiConfig {
+            api_key,
+            model_name: String::new(),
+            endpoint_url: String::new(),
+        },
+        "claude".to_string(),
+    )
+}

@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 use crate::errors::AppError;
 use crate::models::credit::confidence_grade;
-use crate::services::{claude_client, game_map};
+use crate::services::game_map;
 
 // ---------------------------------------------------------------------------
 // Scenario data structures
@@ -94,9 +94,10 @@ pub async fn get_active_scenarios(pool: &SqlitePool) -> Result<ScenarioMatrix, A
 pub async fn update_scenarios(
     pool: &SqlitePool,
     config: &crate::services::ai_config::ResolvedAiConfig,
+    provider: &str,
 ) -> Result<ScenarioMatrix, AppError> {
-    if config.api_key.is_empty() {
-        log::warn!("Claude API key not configured — returning empty scenario matrix");
+    if provider != "ollama" && config.api_key.is_empty() {
+        log::warn!("AI API key not configured — returning empty scenario matrix");
         return Ok(ScenarioMatrix {
             scenarios: Vec::new(),
             active_vectors: Vec::new(),
@@ -128,7 +129,7 @@ pub async fn update_scenarios(
     // Build prompt
     let prompt = build_scenario_prompt(&active, &dynamics, &previous);
 
-    let response = claude_client::analyze(&prompt, Some(SCENARIO_SYSTEM_PROMPT), config)
+    let response = crate::services::ai_router::reason(&prompt, Some(SCENARIO_SYSTEM_PROMPT), config, provider)
         .await?;
 
     if response.is_empty() {

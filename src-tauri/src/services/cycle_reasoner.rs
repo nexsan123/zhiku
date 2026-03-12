@@ -8,7 +8,7 @@ use crate::models::ai::{
 };
 use crate::models::credit::{confidence_grade, GlobalCycleOverview};
 use crate::services::ai_config::ResolvedAiConfig;
-use crate::services::{claude_client, summarizer};
+use crate::services::{ai_router, summarizer};
 
 // ===========================================================================
 // Legacy cycle reasoning (kept for backward compat)
@@ -44,9 +44,10 @@ Rules:
 pub async fn reason_cycle(
     indicators: &CycleIndicators,
     config: &ResolvedAiConfig,
+    provider: &str,
 ) -> Result<CycleReasoning, AppError> {
-    if config.api_key.is_empty() {
-        log::warn!("Claude API key not configured — returning default cycle reasoning");
+    if provider != "ollama" && config.api_key.is_empty() {
+        log::warn!("AI API key not configured — returning default cycle reasoning");
         return Ok(default_reasoning("No API key configured"));
     }
 
@@ -58,7 +59,7 @@ pub async fn reason_cycle(
         indicators_json
     );
 
-    let response = claude_client::analyze(&user_prompt, Some(CYCLE_SYSTEM_PROMPT), config)
+    let response = ai_router::reason(&user_prompt, Some(CYCLE_SYSTEM_PROMPT), config, provider)
         .await?;
 
     if response.is_empty() {
@@ -218,16 +219,17 @@ pub async fn reason_five_layer(
     _pool: &SqlitePool,
     input: &FiveLayerInput,
     config: &ResolvedAiConfig,
+    provider: &str,
 ) -> Result<FiveLayerReasoning, AppError> {
-    if config.api_key.is_empty() {
-        log::warn!("Claude API key not configured — returning default five-layer reasoning");
+    if provider != "ollama" && config.api_key.is_empty() {
+        log::warn!("AI API key not configured — returning default five-layer reasoning");
         return Ok(default_five_layer(&input.cycle_overview, "No API key configured"));
     }
 
     let prompt = build_five_layer_prompt(input)?;
 
     let response =
-        claude_client::analyze(&prompt, Some(FIVE_LAYER_SYSTEM_PROMPT), config).await?;
+        ai_router::reason(&prompt, Some(FIVE_LAYER_SYSTEM_PROMPT), config, provider).await?;
 
     if response.is_empty() {
         return Ok(default_five_layer(&input.cycle_overview, "Claude returned empty response"));

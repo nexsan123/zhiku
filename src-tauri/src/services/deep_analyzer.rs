@@ -5,7 +5,7 @@ use uuid::Uuid;
 use crate::errors::AppError;
 use crate::models::credit::confidence_grade;
 use crate::models::intelligence::{DeepAnalysis, DeepMotiveAnalysis, LayerImpact, NewsCluster};
-use crate::services::{claude_client, summarizer};
+use crate::services::summarizer;
 
 /// System prompt for Claude deep analysis (second pass).
 const DEEP_ANALYSIS_SYSTEM_PROMPT: &str = r#"You are a senior geopolitical and financial intelligence analyst. Given a cluster of related news articles, perform deep analysis to uncover hidden motives and cross-layer impacts.
@@ -49,9 +49,10 @@ pub async fn analyze_cluster(
     pool: &SqlitePool,
     cluster: &NewsCluster,
     config: &crate::services::ai_config::ResolvedAiConfig,
+    provider: &str,
 ) -> Result<DeepAnalysis, AppError> {
-    if config.api_key.is_empty() {
-        log::warn!("Claude API key not configured — returning default deep analysis");
+    if provider != "ollama" && config.api_key.is_empty() {
+        log::warn!("AI API key not configured — returning default deep analysis");
         return Ok(default_analysis(cluster));
     }
 
@@ -61,7 +62,7 @@ pub async fn analyze_cluster(
     let user_prompt = build_prompt(cluster, &news_details);
 
     let response =
-        claude_client::analyze(&user_prompt, Some(DEEP_ANALYSIS_SYSTEM_PROMPT), config)
+        crate::services::ai_router::reason(&user_prompt, Some(DEEP_ANALYSIS_SYSTEM_PROMPT), config, provider)
             .await?;
 
     if response.is_empty() {

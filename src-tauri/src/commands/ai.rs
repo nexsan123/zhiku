@@ -154,20 +154,20 @@ pub async fn trigger_cycle_reasoning(
     pool: State<'_, SqlitePool>,
     app: tauri::AppHandle,
 ) -> Result<CycleReasoning, String> {
-    let claude_config = crate::services::ai_config::resolve_provider_config(&app, "claude");
+    let (ai_config, provider) = crate::services::ai_config::resolve_reasoning_config(&app);
 
     // Layer 2: compute indicators
     let indicators = indicator_engine::calculate_cycle_indicators(pool.inner())
         .await
         .map_err(|e| e.to_string())?;
 
-    // Layer 3: AI reasoning (uses user-configured model/endpoint)
-    let reasoning = cycle_reasoner::reason_cycle(&indicators, &claude_config)
+    // Layer 3: AI reasoning (uses user-configured provider/model/endpoint)
+    let reasoning = cycle_reasoner::reason_cycle(&indicators, &ai_config, &provider)
         .await
         .map_err(|e| e.to_string())?;
 
     // Layer 4: persist with model label
-    let model_label = claude_config.model_label("claude");
+    let model_label = ai_config.model_label(&provider);
     cycle_reasoner::persist_reasoning(pool.inner(), &reasoning, &model_label)
         .await
         .map_err(|e| e.to_string())?;
@@ -201,7 +201,7 @@ pub async fn trigger_five_layer_reasoning(
     pool: State<'_, SqlitePool>,
     app: tauri::AppHandle,
 ) -> Result<FiveLayerReasoning, String> {
-    let claude_config = crate::services::ai_config::resolve_provider_config(&app, "claude");
+    let (ai_config, provider) = crate::services::ai_config::resolve_reasoning_config(&app);
 
     // Gather all five layers
     let cycle_overview = global_aggregator::compute_global_overview(pool.inner())
@@ -238,11 +238,11 @@ pub async fn trigger_five_layer_reasoning(
         active_scenarios,
     };
 
-    let reasoning = cycle_reasoner::reason_five_layer(pool.inner(), &input, &claude_config)
+    let reasoning = cycle_reasoner::reason_five_layer(pool.inner(), &input, &ai_config, &provider)
         .await
         .map_err(|e| e.to_string())?;
 
-    let model_label = claude_config.model_label("claude");
+    let model_label = ai_config.model_label(&provider);
     cycle_reasoner::persist_five_layer(pool.inner(), &reasoning, &model_label)
         .await
         .map_err(|e| e.to_string())?;

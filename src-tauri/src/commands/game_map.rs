@@ -48,10 +48,10 @@ pub async fn trigger_scenario_update(
     pool: State<'_, SqlitePool>,
     app: tauri::AppHandle,
 ) -> Result<scenario_engine::ScenarioMatrix, String> {
-    // Read Claude config from store (uses user-configured model/endpoint)
-    let claude_config = crate::services::ai_config::resolve_provider_config(&app, "claude");
+    // Read reasoning config from store (uses user-configured provider/model/endpoint)
+    let (ai_config, provider) = crate::services::ai_config::resolve_reasoning_config(&app);
 
-    scenario_engine::update_scenarios(&pool, &claude_config)
+    scenario_engine::update_scenarios(&pool, &ai_config, &provider)
         .await
         .map_err(|e| e.to_string())
 }
