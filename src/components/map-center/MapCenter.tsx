@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import DeckGL from '@deck.gl/react';
 import type { PickingInfo, Color } from '@deck.gl/core';
@@ -6,6 +6,11 @@ import { Map } from 'react-map-gl/maplibre';
 import { ScatterplotLayer, TextLayer } from '@deck.gl/layers';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './MapCenter.css';
+import {
+  getCreditCycleOverview,
+  type GlobalCycleOverview,
+  type CountryCyclePosition,
+} from '@services/tauri-bridge';
 
 function isWebGLAvailable(): boolean {
   try {
@@ -80,7 +85,50 @@ const GULF_FDI_ZONES = [
   { name: 'Kuwait Financial Centre', coordinates: [47.9783, 29.3759], type: 'fdi', country: 'KW', keywords: ['科威特', 'Kuwait', 'KFC'] },
 ];
 
-type LayerId = 'exchanges' | 'centralBanks' | 'gulfFdi';
+// Phase-to-RGBA color mapping for credit cycle dots
+const PHASE_COLORS: Record<string, [number, number, number, number]> = {
+  easing:       [52,  199, 89,  200],
+  leveraging:   [0,   212, 170, 200],
+  overheating:  [255, 69,  58,  200],
+  tightening:   [191, 90,  242, 200],
+  deleveraging: [255, 159, 10,  200],
+  clearing:     [90,  200, 250, 200],
+  unknown:      [100, 100, 100, 160],
+};
+
+function getPhaseColor(phase: string): [number, number, number, number] {
+  return PHASE_COLORS[phase] ?? PHASE_COLORS['unknown'];
+}
+
+// Coordinates for the 15 BIS credit cycle countries
+// Reuses existing FINANCIAL_CENTERS / CENTRAL_BANKS coords where available
+const CREDIT_CYCLE_LOCATIONS: Record<string, [number, number]> = {
+  US: [-77.0469, 38.8951],       // Federal Reserve (Washington DC)
+  CN: [116.3912, 39.9042],       // PBoC (Beijing)
+  XM: [8.6821, 50.1109],         // Frankfurt (Euro Area proxy)
+  JP: [139.7671, 35.6812],       // Bank of Japan (Tokyo)
+  GB: [-0.0886, 51.5142],        // Bank of England (London)
+  CA: [-75.6972, 45.4215],       // Bank of Canada (Ottawa)
+  AU: [149.1300, -35.2809],      // Reserve Bank of Australia (Canberra)
+  KR: [126.978, 37.5518],        // Bank of Korea (Seoul)
+  IN: [72.8347, 18.9322],        // Reserve Bank of India (Mumbai)
+  BR: [-47.8825, -15.7942],      // Central Bank of Brazil (Brasília)
+  TR: [32.8597, 39.9334],        // Ankara, Turkey
+  AR: [-58.3816, -34.6037],      // Buenos Aires, Argentina
+  ZA: [28.0473, -26.2041],       // Johannesburg, South Africa (JSE)
+  SA: [46.6753, 24.7136],        // Saudi Central Bank (Riyadh)
+  AE: [54.3773, 24.4539],        // Central Bank of UAE (Abu Dhabi)
+};
+
+// Human-readable country names
+const COUNTRY_NAMES: Record<string, string> = {
+  US: 'United States', CN: 'China', XM: 'Euro Area', JP: 'Japan',
+  GB: 'United Kingdom', CA: 'Canada', AU: 'Australia', KR: 'South Korea',
+  IN: 'India', BR: 'Brazil', TR: 'Turkey', AR: 'Argentina',
+  ZA: 'South Africa', SA: 'Saudi Arabia', AE: 'UAE',
+};
+
+type LayerId = 'exchanges' | 'centralBanks' | 'gulfFdi' | 'creditCycle';
 
 interface HoverInfo {
   x: number;
@@ -93,6 +141,16 @@ type FinancialCenter = typeof FINANCIAL_CENTERS[0];
 type CentralBank = typeof CENTRAL_BANKS[0];
 type GulfFdiZone = typeof GULF_FDI_ZONES[0];
 
+// Shape of each data item fed to the credit cycle ScatterplotLayer
+interface CreditCycleDot {
+  countryCode: string;
+  coordinates: [number, number];
+  phase: string;
+  phaseLabel: string;
+  confidence: number;
+  tier: string;
+}
+
 export function MapCenter() {
   const { t } = useTranslation();
   const [webglOk, setWebglOk] = useState(true);
@@ -101,17 +159,62 @@ export function MapCenter() {
   useEffect(() => {
     setWebglOk(isWebGLAvailable());
   }, []);
+
   const [activeLayers, setActiveLayers] = useState<Record<LayerId, boolean>>({
     exchanges: true,
     centralBanks: true,
     gulfFdi: false,
+    creditCycle: false,
   });
   const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null);
   const [selection, setSelection] = useState<MapSelection | null>(null);
 
+  // Credit cycle live data
+  const [creditCycleData, setCreditCycleData] = useState<GlobalCycleOverview | null>(null);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchCreditCycle() {
+      try {
+        const data = await getCreditCycleOverview();
+        if (!cancelled) setCreditCycleData(data);
+      } catch {
+        // Silent fail — layer simply won't render
+      }
+    }
+
+    void fetchCreditCycle();
+    pollingRef.current = setInterval(() => { void fetchCreditCycle(); }, 60_000);
+
+    return () => {
+      cancelled = true;
+      if (pollingRef.current !== null) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    };
+  }, []);
+
   const toggleLayer = useCallback((id: LayerId) => {
     setActiveLayers((prev) => ({ ...prev, [id]: !prev[id] }));
   }, []);
+
+  // Build credit cycle dot data from live backend response
+  const creditCycleDots = useMemo<CreditCycleDot[]>(() => {
+    if (!creditCycleData) return [];
+    return creditCycleData.countries
+      .filter((c: CountryCyclePosition) => c.countryCode in CREDIT_CYCLE_LOCATIONS)
+      .map((c: CountryCyclePosition) => ({
+        countryCode: c.countryCode,
+        coordinates: CREDIT_CYCLE_LOCATIONS[c.countryCode],
+        phase: c.phase,
+        phaseLabel: c.phaseLabel,
+        confidence: c.confidence,
+        tier: c.tier,
+      }));
+  }, [creditCycleData]);
 
   const layers = useMemo(() => {
     const result = [];
@@ -183,12 +286,56 @@ export function MapCenter() {
       );
     }
 
+    if (activeLayers.creditCycle && creditCycleDots.length > 0) {
+      result.push(
+        new ScatterplotLayer<CreditCycleDot>({
+          id: 'credit-cycle',
+          data: creditCycleDots,
+          getPosition: (d) => d.coordinates,
+          getRadius: (d) =>
+            d.tier === 'core' ? 100000 : d.tier === 'important' ? 70000 : 50000,
+          getFillColor: (d) => getPhaseColor(d.phase) as Color,
+          getLineColor: (d) => {
+            const c = getPhaseColor(d.phase);
+            return [c[0], c[1], c[2], 255] as Color;
+          },
+          lineWidthMinPixels: 1,
+          stroked: true,
+          pickable: true,
+          radiusMinPixels: 4,
+          radiusMaxPixels: 24,
+        }),
+        new TextLayer<CreditCycleDot>({
+          id: 'credit-cycle-labels',
+          data: creditCycleDots,
+          getPosition: (d) => d.coordinates,
+          getText: (d) => d.countryCode,
+          getSize: 10,
+          getColor: [220, 230, 245, 210] as Color,
+          getTextAnchor: 'start',
+          getAlignmentBaseline: 'center',
+          getPixelOffset: [10, 0] as [number, number],
+          fontFamily: 'monospace',
+        })
+      );
+    }
+
     return result;
-  }, [activeLayers]);
+  }, [activeLayers, creditCycleDots]);
 
   const onHover = useCallback((info: PickingInfo) => {
     if (info.object) {
       const obj = info.object as Record<string, unknown>;
+
+      // Credit cycle dot
+      if ('countryCode' in obj) {
+        const code = obj['countryCode'] as string;
+        const phaseLabel = obj['phaseLabel'] as string;
+        const countryName = COUNTRY_NAMES[code] ?? code;
+        setHoverInfo({ x: info.x, y: info.y, name: countryName, detail: phaseLabel });
+        return;
+      }
+
       const name = obj['name'] as string;
       const rate = obj['rate'] as string | undefined;
       const size = obj['size'] as string | undefined;
@@ -203,6 +350,26 @@ export function MapCenter() {
   const onClick = useCallback((info: PickingInfo) => {
     if (info.object) {
       const obj = info.object as Record<string, unknown>;
+
+      // Credit cycle dot click
+      if ('countryCode' in obj) {
+        const code = obj['countryCode'] as string;
+        const phaseLabel = obj['phaseLabel'] as string;
+        const confidence = obj['confidence'] as number;
+        const countryName = COUNTRY_NAMES[code] ?? code;
+        setSelection({
+          name: countryName,
+          layerType: 'creditCycle',
+          country: code,
+          keywords: [code, countryName, phaseLabel],
+          detail: phaseLabel,
+          confidence,
+          x: info.x,
+          y: info.y,
+        });
+        return;
+      }
+
       const name = obj['name'] as string;
       const country = obj['country'] as string;
       const keywords = (obj['keywords'] as string[]) || [];
@@ -279,6 +446,17 @@ export function MapCenter() {
         />
       )}
 
+      {/* Global phase badge — top-left, only when credit cycle layer is active and data loaded */}
+      {activeLayers.creditCycle && creditCycleData && (
+        <div className="map-center__global-badge">
+          <span className="map-center__global-badge-label">{t('map.globalPhase')}</span>
+          <span className="map-center__global-badge-phase">{creditCycleData.globalPhaseLabel}</span>
+          <span className="map-center__global-badge-confidence">
+            {Math.round(creditCycleData.confidence * 100)}%
+          </span>
+        </div>
+      )}
+
       {/* Layer toggle controls */}
       <div className="map-center__controls">
         <span className="map-center__controls-title">{t('map.layers')}</span>
@@ -286,6 +464,7 @@ export function MapCenter() {
           { id: 'exchanges' as LayerId, label: t('map.layerExchanges'), color: '#00d4aa' },
           { id: 'centralBanks' as LayerId, label: t('map.layerCentralBanks'), color: '#bf5af2' },
           { id: 'gulfFdi' as LayerId, label: t('map.layerGulfFdi'), color: '#ffb800' },
+          { id: 'creditCycle' as LayerId, label: t('map.layerCreditCycle'), color: '#ff6b35' },
         ]).map(({ id, label, color }) => (
           <button
             key={id}

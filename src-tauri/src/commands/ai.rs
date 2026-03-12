@@ -1,8 +1,11 @@
 use sqlx::SqlitePool;
 use tauri::{Emitter, State};
 
-use crate::models::ai::{AiBriefItem, CycleIndicators, CycleReasoning};
-use crate::services::{cycle_reasoner, indicator_engine, summarizer};
+use crate::models::ai::{AiBriefItem, CycleIndicators, CycleReasoning, FiveLayerReasoning};
+use crate::services::{
+    cycle_reasoner, deep_analyzer, global_aggregator, indicator_engine, scenario_engine,
+    summarizer,
+};
 
 /// Summarize all pending (unsummarized) news articles using AI.
 ///
@@ -18,7 +21,7 @@ pub async fn summarize_pending_news(
     pool: State<'_, SqlitePool>,
     app: tauri::AppHandle,
 ) -> Result<usize, String> {
-    let groq_key = read_store_key(&app, "groq_api_key");
+    let groq_key = crate::services::ai_config::resolve_provider_key(&app, "groq");
 
     summarizer::summarize_pending_batch(pool.inner(), &groq_key)
         .await
@@ -86,7 +89,16 @@ pub async fn get_ai_brief(pool: State<'_, SqlitePool>) -> Result<Vec<AiBriefItem
 
         let mut all_keywords: Vec<String> = Vec::new();
         for (kw_json,) in &keywords_rows {
-            if let Ok(kws) = serde_json::from_str::<Vec<String>>(kw_json) {
+            // New format: {"keywords":[...],"region":[...],"entities":[...]}
+            if let Ok(meta) = serde_json::from_str::<serde_json::Value>(kw_json) {
+                if let Some(kws) = meta.get("keywords").and_then(|v| v.as_array()) {
+                    all_keywords.extend(
+                        kws.iter().filter_map(|v| v.as_str().map(|s| s.to_string())),
+                    );
+                }
+            }
+            // Legacy format: ["keyword1","keyword2"] (backward compat)
+            else if let Ok(kws) = serde_json::from_str::<Vec<String>>(kw_json) {
                 all_keywords.extend(kws);
             }
         }
@@ -142,7 +154,7 @@ pub async fn trigger_cycle_reasoning(
     pool: State<'_, SqlitePool>,
     app: tauri::AppHandle,
 ) -> Result<CycleReasoning, String> {
-    let claude_key = read_store_key(&app, "claude_api_key");
+    let claude_key = crate::services::ai_config::resolve_provider_key(&app, "claude");
 
     // Layer 2: compute indicators
     let indicators = indicator_engine::calculate_cycle_indicators(pool.inner())
@@ -165,21 +177,89 @@ pub async fn trigger_cycle_reasoning(
     Ok(reasoning)
 }
 
-/// Read a key from tauri-plugin-store settings.json.
-/// Returns empty string if key not found or store unavailable.
-fn read_store_key(app: &tauri::AppHandle, key: &str) -> String {
-    use tauri_plugin_store::StoreExt;
+/// Get the latest five-layer reasoning.
+///
+/// Frontend: invoke('get_five_layer_reasoning')
+#[tauri::command]
+pub async fn get_five_layer_reasoning(
+    pool: State<'_, SqlitePool>,
+) -> Result<Option<FiveLayerReasoning>, String> {
+    cycle_reasoner::get_latest_five_layer(pool.inner())
+        .await
+        .map_err(|e| e.to_string())
+}
 
-    let store = match app.store("settings.json") {
-        Ok(s) => s,
-        Err(e) => {
-            log::warn!("Failed to open settings store for {}: {}", key, e);
-            return String::new();
-        }
+/// Trigger a full five-layer reasoning pass.
+///
+/// Gathers data from all layers (credit cycle, dollar tide, indicators,
+/// deep analysis, scenarios) and sends to Claude for integrated reasoning.
+///
+/// Frontend: invoke('trigger_five_layer_reasoning')
+#[tauri::command]
+pub async fn trigger_five_layer_reasoning(
+    pool: State<'_, SqlitePool>,
+    app: tauri::AppHandle,
+) -> Result<FiveLayerReasoning, String> {
+    let claude_key = crate::services::ai_config::resolve_provider_key(&app, "claude");
+
+    // Gather all five layers
+    let cycle_overview = global_aggregator::compute_global_overview(pool.inner())
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let indicators = indicator_engine::calculate_cycle_indicators(pool.inner())
+        .await
+        .map_err(|e| e.to_string())?;
+
+    // Deep analysis summaries (latest 5)
+    let deep_analyses = deep_analyzer::get_recent_analyses(pool.inner(), 5)
+        .await
+        .unwrap_or_default();
+    let intelligence_summaries: Vec<String> = deep_analyses
+        .iter()
+        .map(|a| format!("{}: {}", a.cluster_topic, a.key_observation))
+        .collect();
+
+    // Active scenarios
+    let scenarios = scenario_engine::get_active_scenarios(pool.inner())
+        .await
+        .unwrap_or_default();
+    let active_scenarios: Vec<String> = scenarios
+        .scenarios
+        .iter()
+        .map(|s| format!("[{}] {} (p={:.0}%)", s.policy_vector, s.title, s.probability * 100.0))
+        .collect();
+
+    let input = cycle_reasoner::FiveLayerInput {
+        cycle_overview,
+        indicators,
+        intelligence_summaries,
+        active_scenarios,
     };
 
-    store
-        .get(key)
-        .and_then(|v| v.as_str().map(|s| s.to_string()))
-        .unwrap_or_default()
+    let reasoning = cycle_reasoner::reason_five_layer(pool.inner(), &input, &claude_key)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    cycle_reasoner::persist_five_layer(pool.inner(), &reasoning)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let _ = app.emit("five-layer-reasoning-updated", &reasoning);
+
+    Ok(reasoning)
 }
+
+/// Get recent deep analyses (intelligence briefing).
+///
+/// Frontend: invoke('get_deep_analyses', { limit })
+#[tauri::command]
+pub async fn get_deep_analyses(
+    pool: State<'_, SqlitePool>,
+    limit: Option<i64>,
+) -> Result<Vec<crate::models::intelligence::DeepAnalysis>, String> {
+    deep_analyzer::get_recent_analyses(pool.inner(), limit.unwrap_or(10))
+        .await
+        .map_err(|e| e.to_string())
+}
+

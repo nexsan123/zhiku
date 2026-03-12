@@ -33,6 +33,9 @@ export function CmdKModal({ open, onClose }: { open: boolean; onClose: () => voi
     { id: 'wto-trade', type: 'panel', label: t('panel.wtoTrade') },
     { id: 'supply-chain', type: 'panel', label: t('panel.supplyChain') },
     { id: 'gulf-fdi', type: 'panel', label: t('panel.gulfFdi') },
+    { id: 'credit-cycle', type: 'panel', label: t('panel.creditCycle'), detail: t('creditCycle.globalPhase') },
+    { id: 'intel-brief', type: 'panel', label: t('panel.intelBrief'), detail: t('intel.aiGenerated') },
+    { id: 'game-map', type: 'panel', label: t('panel.gameMap'), detail: t('gameMap.policyVectors') },
     // Countries
     { id: 'us', type: 'country', label: 'United States', detail: 'NYSE, NASDAQ, Fed' },
     { id: 'uk', type: 'country', label: 'United Kingdom', detail: 'LSE, BoE' },

@@ -4,7 +4,10 @@ use axum::{extract::State, routing::get, Json, Router};
 use sqlx::SqlitePool;
 use tokio::net::TcpListener;
 
-use crate::services::{cycle_reasoner, indicator_engine, market_radar};
+use crate::services::{
+    cycle_reasoner, deep_analyzer, dollar_tide, game_map,
+    global_aggregator, indicator_engine, market_radar, scenario_engine,
+};
 
 /// Shared state for the REST server.
 struct RestState {
@@ -23,6 +26,11 @@ pub fn start_rest_server(pool: SqlitePool) {
             .route("/api/v1/market-radar", get(get_market_radar))
             .route("/api/v1/ai-brief", get(get_ai_brief))
             .route("/api/v1/cycle", get(get_cycle))
+            // Phase F: new edict-004 endpoints
+            .route("/api/v1/credit-cycle", get(get_credit_cycle))
+            .route("/api/v1/dollar-tide", get(get_dollar_tide))
+            .route("/api/v1/game-map", get(get_game_map))
+            .route("/api/v1/intelligence", get(get_intelligence))
             .with_state(state);
 
         let listener = match TcpListener::bind("127.0.0.1:9601").await {
@@ -156,5 +164,58 @@ async fn get_cycle(State(state): State<Arc<RestState>>) -> Json<serde_json::Valu
     Json(serde_json::json!({
         "indicators": indicators,
         "reasoning": reasoning,
+    }))
+}
+
+/// GET /api/v1/credit-cycle -- 15-country credit cycle overview + global phase + dollar tide
+async fn get_credit_cycle(State(state): State<Arc<RestState>>) -> Json<serde_json::Value> {
+    match global_aggregator::compute_global_overview(&state.pool).await {
+        Ok(overview) => Json(serde_json::to_value(&overview).unwrap_or_default()),
+        Err(e) => Json(serde_json::json!({ "error": e.to_string() })),
+    }
+}
+
+/// GET /api/v1/dollar-tide -- dollar tide state
+async fn get_dollar_tide(State(state): State<Arc<RestState>>) -> Json<serde_json::Value> {
+    match dollar_tide::compute_dollar_tide(&state.pool).await {
+        Ok(tide) => Json(serde_json::to_value(&tide).unwrap_or_default()),
+        Err(e) => Json(serde_json::json!({ "error": e.to_string() })),
+    }
+}
+
+/// GET /api/v1/game-map -- policy vectors + scenarios + decision calendar
+async fn get_game_map(State(state): State<Arc<RestState>>) -> Json<serde_json::Value> {
+    let vectors = game_map::get_policy_vectors(&state.pool)
+        .await
+        .unwrap_or_default();
+
+    let bilaterals = game_map::get_bilateral_dynamics(&state.pool)
+        .await
+        .unwrap_or_default();
+
+    let calendar = game_map::get_calendar_events(90)
+        .unwrap_or_default();
+
+    let scenarios = scenario_engine::get_active_scenarios(&state.pool)
+        .await
+        .unwrap_or_default();
+
+    Json(serde_json::json!({
+        "policyVectors": vectors,
+        "bilateralDynamics": bilaterals,
+        "decisionCalendar": calendar,
+        "scenarios": scenarios,
+    }))
+}
+
+/// GET /api/v1/intelligence -- deep analysis briefs (two-pass intelligence)
+async fn get_intelligence(State(state): State<Arc<RestState>>) -> Json<serde_json::Value> {
+    let analyses = deep_analyzer::get_recent_analyses(&state.pool, 10)
+        .await
+        .unwrap_or_default();
+
+    Json(serde_json::json!({
+        "analyses": analyses,
+        "count": analyses.len(),
     }))
 }

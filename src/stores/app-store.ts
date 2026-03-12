@@ -19,6 +19,9 @@ const ALL_PANEL_IDS: PanelId[] = [
   'btc-etf',
   'fear-greed',
   'gulf-fdi',
+  'credit-cycle',
+  'intel-brief',
+  'game-map',
 ];
 
 // 初始面板状态 — 全部展开

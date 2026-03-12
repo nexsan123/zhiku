@@ -117,3 +117,53 @@ pub struct CycleReasoning {
     pub reasoning_chain: String,
     pub timestamp: String,
 }
+
+// ---------------------------------------------------------------------------
+// Five-Layer Reasoning (edict-004 enhanced output)
+// ---------------------------------------------------------------------------
+
+/// A single step in the five-layer reasoning chain.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReasoningStep {
+    pub step: u8,
+    pub layer: String,
+    pub finding: String,
+    pub evidence: Vec<String>,
+    pub confidence: f64,
+}
+
+/// Five-layer reasoning output — the enhanced replacement for CycleReasoning.
+/// Persisted in `ai_analysis` with analysis_type = "five_layer_reasoning".
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FiveLayerReasoning {
+    /// Global credit cycle position (from GlobalCycleOverview).
+    pub global_cycle_phase: String,
+    pub global_cycle_phase_zh: String,
+    /// Dollar tide state.
+    pub dollar_tide_state: String,
+    pub dollar_tide_label: String,
+    /// Overall cycle position assessment.
+    pub cycle_position: String,
+    /// Monetary policy stage.
+    pub monetary_policy_stage: String,
+    /// Sentiment stage.
+    pub sentiment_stage: String,
+    /// Structured reasoning chain — one step per layer.
+    pub reasoning_steps: Vec<ReasoningStep>,
+    /// Turning signals detected.
+    pub turning_signals: Vec<TurningSignal>,
+    /// Sector recommendations.
+    pub sector_recommendations: Vec<String>,
+    /// Tail risks.
+    pub tail_risks: Vec<String>,
+    /// Risk alerts from credit engine.
+    pub risk_alerts: Vec<String>,
+    /// Overall confidence.
+    pub confidence: f64,
+    pub confidence_grade: String,
+    /// Narrative summary (2-3 paragraphs for human consumption).
+    pub narrative: String,
+    pub timestamp: String,
+}

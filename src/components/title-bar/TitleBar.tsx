@@ -1,10 +1,14 @@
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useTranslation } from 'react-i18next';
-import { Search, Radio, Zap, Bell, Minus, Square, X, PanelLeft, PanelRight } from 'lucide-react';
+import { Search, Radio, Zap, Bell, Minus, Square, X, PanelLeft, PanelRight, Settings } from 'lucide-react';
 import { useAppStore } from '@stores/app-store';
 import './TitleBar.css';
 
-export function TitleBar() {
+interface TitleBarProps {
+  onOpenSettings?: () => void;
+}
+
+export function TitleBar({ onOpenSettings }: TitleBarProps) {
   const { t, i18n } = useTranslation();
   const toggleLeftPanel = useAppStore((s) => s.toggleLeftPanel);
   const toggleRightPanel = useAppStore((s) => s.toggleRightPanel);
@@ -84,6 +88,13 @@ export function TitleBar() {
           aria-label={t('titleBar.toggleRightPanel')}
         >
           <PanelRight size={14} />
+        </button>
+        <button
+          className="title-bar__notification-btn"
+          onClick={onOpenSettings}
+          aria-label={t('titleBar.settings')}
+        >
+          <Settings size={16} />
         </button>
         <button
           className="title-bar__notification-btn"

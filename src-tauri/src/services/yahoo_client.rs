@@ -28,6 +28,10 @@ pub const YAHOO_SYMBOLS: &[(&str, &str)] = &[
     ("GC=F", "Gold"),
     ("CL=F", "WTI Crude Oil"),
     ("SI=F", "Silver"),
+    ("NG=F", "Natural Gas"),
+    ("HG=F", "Copper"),
+    // Dollar index (for dollar tide calculation)
+    ("DX-Y.NYB", "US Dollar Index"),
 ];
 
 /// Yahoo v8 chart response (only fields we need).

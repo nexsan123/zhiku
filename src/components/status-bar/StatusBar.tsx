@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '@stores/app-store';
+import { listAiModels } from '@services/tauri-bridge';
+import type { AiModelConfig } from '@contracts/app-types';
 import './StatusBar.css';
 
 // Loosened type to accommodate backend services not yet in ApiServiceName contract
@@ -96,6 +98,19 @@ export function StatusBar() {
   const [currentTime, setCurrentTime] = useState(
     () => new Date().toLocaleTimeString()
   );
+  const [aiModels, setAiModels] = useState<AiModelConfig[]>([]);
+
+  const loadAiModels = useCallback(async () => {
+    const models = await listAiModels();
+    setAiModels(models.filter(m => m.enabled));
+  }, []);
+
+  // Load AI models on mount and refresh every 30s
+  useEffect(() => {
+    void loadAiModels();
+    const id = setInterval(() => void loadAiModels(), 30_000);
+    return () => clearInterval(id);
+  }, [loadAiModels]);
 
   // Clock: update every second, cleanup on unmount
   useEffect(() => {
@@ -130,6 +145,22 @@ export function StatusBar() {
           );
         })}
       </div>
+
+      {aiModels.length > 0 && (
+        <div className="status-bar__ai-models">
+          <span className="status-bar__ai-label">AI</span>
+          {aiModels.map((m) => {
+            const providerStatus = apiStatus[m.provider] as ServiceStatusItem | undefined;
+            const dotClass = providerStatus?.status ?? 'idle';
+            return (
+              <span key={m.id} className="status-dot-item" title={`${m.displayName} · ${m.modelName}`}>
+                <span className={`status-dot status-dot--${dotClass}`} role="status" />
+                <span className="status-dot-label">{m.displayName}</span>
+              </span>
+            );
+          })}
+        </div>
+      )}
 
       <div className="status-bar__right">
         <span className={`status-bar__ready ${readyClass}`}>{readyLabel}</span>

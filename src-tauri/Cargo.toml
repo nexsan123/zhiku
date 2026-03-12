@@ -32,3 +32,4 @@ futures-util = { version = "0.3", default-features = false, features = ["sink"] 
 opener = "0.7"
 log = "0.4"
 env_logger = "0.11"
+async-trait = "0.1"

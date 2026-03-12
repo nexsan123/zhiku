@@ -4,8 +4,9 @@ use tauri::{Emitter, Manager};
 
 use crate::models::news::ApiStatus;
 use crate::services::{
-    bis_client, coingecko_client, cycle_reasoner, db, eia_client, fear_greed_client,
-    indicator_engine, market_context, mempool_client, rss_fetcher, summarizer, yahoo_client,
+    bis_client, coingecko_client, cycle_reasoner, db, deep_analyzer, eia_client,
+    fear_greed_client, game_map, indicator_engine, market_context, mempool_client, news_cluster,
+    rss_fetcher, scenario_engine, summarizer, yahoo_client,
 };
 
 /// Configuration for poll intervals per data source.
@@ -72,7 +73,7 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
                 update_and_emit(&pool, &app, "rss", &status, error.as_deref(), elapsed_ms).await;
 
                 // Phase 3: AI summarization of pending news after RSS fetch
-                let groq_key = read_store_key(&app, "groq_api_key");
+                let groq_key = crate::services::ai_config::resolve_provider_key(&app, "groq");
                 let ai_start = std::time::Instant::now();
                 match summarizer::summarize_pending_batch(&pool, &groq_key).await {
                     Ok(count) => {
@@ -295,7 +296,7 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
                 };
 
                 // Layer 3: Claude reasoning
-                let claude_key = read_store_key(&app, "claude_api_key");
+                let claude_key = crate::services::ai_config::resolve_provider_key(&app, "claude");
                 let reasoning = match cycle_reasoner::reason_cycle(&indicators, &claude_key).await {
                     Ok(r) => r,
                     Err(e) => {
@@ -359,6 +360,9 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
                     Ok(()) => {
                         let elapsed_ms = start.elapsed().as_millis() as i64;
                         update_and_emit(&pool, &app, "qt_rest", "online", None, elapsed_ms).await;
+
+                        // Push WS alerts to QuantTerminal
+                        push_ws_alerts(&pool, &app).await;
                     }
                     Err(e) => {
                         log::warn!("PollLoop [MarketContext] error: {}", e);
@@ -371,6 +375,89 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         });
     }
 
+    // Two-pass intelligence analysis: clustering + Claude deep analysis (edict-004 Phase C)
+    {
+        let pool = pool.clone();
+        let app = app_handle.clone();
+        let deep_interval = Duration::from_secs(12 * 60 * 60); // 12 hours
+        tauri::async_runtime::spawn(async move {
+            // Wait 5 minutes for RSS + summarization to produce initial data
+            tokio::time::sleep(Duration::from_secs(5 * 60)).await;
+            loop {
+                log::info!("PollLoop [DeepAnalysis]: starting clustering + deep analysis pass");
+                let claude_key = crate::services::ai_config::resolve_provider_key(&app, "claude");
+
+                // Step 1: Build clusters from recently analyzed news
+                match news_cluster::build_clusters(&pool).await {
+                    Ok(clusters) => {
+                        if clusters.is_empty() {
+                            log::info!("PollLoop [DeepAnalysis]: no clusters formed (insufficient data)");
+                        } else {
+                            log::info!("PollLoop [DeepAnalysis]: {} clusters formed, analyzing...", clusters.len());
+                            // Step 2: Deep-analyze each cluster via Claude
+                            let mut analyzed = 0usize;
+                            for cluster in &clusters {
+                                match deep_analyzer::analyze_cluster(&pool, cluster, &claude_key).await {
+                                    Ok(analysis) => {
+                                        if let Err(e) = deep_analyzer::persist_analysis(&pool, &analysis).await {
+                                            log::warn!("PollLoop [DeepAnalysis]: persist failed for cluster {}: {}", cluster.cluster_id, e);
+                                        } else {
+                                            analyzed += 1;
+                                        }
+                                    }
+                                    Err(e) => {
+                                        log::warn!("PollLoop [DeepAnalysis]: analysis failed for cluster {}: {}", cluster.cluster_id, e);
+                                    }
+                                }
+                            }
+                            log::info!("PollLoop [DeepAnalysis]: completed, {}/{} clusters analyzed", analyzed, clusters.len());
+
+                            // Notify frontend
+                            if analyzed > 0 {
+                                let _ = app.emit("deep-analysis-completed", analyzed);
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        log::warn!("PollLoop [DeepAnalysis]: clustering failed: {}", e);
+                    }
+                }
+
+                tokio::time::sleep(deep_interval).await;
+            }
+        });
+    }
+
+    // Scenario engine auto-update: Claude updates scenario probabilities weekly (edict-004 Phase D)
+    {
+        let pool = pool.clone();
+        let app = app_handle.clone();
+        let scenario_interval = Duration::from_secs(7 * 24 * 60 * 60); // 7 days
+        tauri::async_runtime::spawn(async move {
+            // Wait 10 minutes for initial data
+            tokio::time::sleep(Duration::from_secs(10 * 60)).await;
+            loop {
+                log::info!("PollLoop [ScenarioUpdate]: starting weekly scenario probability update");
+                let claude_key = crate::services::ai_config::resolve_provider_key(&app, "claude");
+
+                match scenario_engine::update_scenarios(&pool, &claude_key).await {
+                    Ok(matrix) => {
+                        log::info!(
+                            "PollLoop [ScenarioUpdate]: updated {} scenarios",
+                            matrix.scenarios.len()
+                        );
+                        let _ = app.emit("scenario-updated", matrix.scenarios.len());
+                    }
+                    Err(e) => {
+                        log::warn!("PollLoop [ScenarioUpdate]: failed: {}", e);
+                    }
+                }
+
+                tokio::time::sleep(scenario_interval).await;
+            }
+        });
+    }
+
     // BIS central bank policy rates polling (no API key required)
     {
         let pool = pool.clone();
@@ -379,15 +466,32 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         tauri::async_runtime::spawn(async move {
             loop {
                 let start = std::time::Instant::now();
-                let (status, error) = match bis_client::fetch_bis_rates(&pool).await {
-                    Ok(count) => {
-                        log::info!("PollLoop [BIS]: {} rate observations", count);
-                        ("online".to_string(), None)
-                    }
+                // Fetch policy rates + credit datasets in one pass
+                let mut total = 0usize;
+                let mut any_error: Option<String> = None;
+
+                match bis_client::fetch_bis_rates(&pool).await {
+                    Ok(n) => total += n,
                     Err(e) => {
-                        log::warn!("PollLoop [BIS] error: {}", e);
-                        ("offline".to_string(), Some(e.to_string()))
+                        log::warn!("PollLoop [BIS CBPOL] error: {}", e);
+                        any_error = Some(e.to_string());
                     }
+                }
+                match bis_client::fetch_all_credit_data(&pool).await {
+                    Ok(n) => total += n,
+                    Err(e) => {
+                        log::warn!("PollLoop [BIS Credit] error: {}", e);
+                        if any_error.is_none() {
+                            any_error = Some(e.to_string());
+                        }
+                    }
+                }
+
+                log::info!("PollLoop [BIS]: {} total observations", total);
+                let (status, error) = if any_error.is_some() && total == 0 {
+                    ("offline".to_string(), any_error)
+                } else {
+                    ("online".to_string(), None)
                 };
                 let elapsed_ms = start.elapsed().as_millis() as i64;
                 update_and_emit(&pool, &app, "bis", &status, error.as_deref(), elapsed_ms).await;
@@ -454,6 +558,57 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
     }
 
     log::info!("SmartPollLoop: all 12 tasks spawned (9 data sources + 1 cleanup + AI summarization + cycle reasoning + market context)");
+}
+
+/// Push WS alerts to QuantTerminal after MarketContext write.
+///
+/// Three event types (edict-004 Phase F):
+/// 1. `turning.signal` — high-confidence turning signals from cycle reasoning
+/// 2. `calendar.alert` — decision calendar events within 48 hours
+/// 3. `scenario.update` — current scenario matrix for QT to track changes
+async fn push_ws_alerts(pool: &SqlitePool, app: &tauri::AppHandle) {
+    let broadcaster = match app.try_state::<crate::services::qt_ws::WsBroadcaster>() {
+        Some(b) => b,
+        None => return,
+    };
+
+    // 1. High-confidence turning signals
+    if let Ok(Some(reasoning)) = cycle_reasoner::get_latest_reasoning(pool).await {
+        // Only push if confidence >= 0.7 and there are turning signals
+        if reasoning.confidence >= 0.7 && !reasoning.turning_signals.is_empty() {
+            let msg = crate::services::qt_ws::format_ws_event(
+                "turning.signal",
+                &serde_json::json!({
+                    "signals": reasoning.turning_signals,
+                    "confidence": reasoning.confidence,
+                }),
+            );
+            let _ = broadcaster.inner().send(msg);
+        }
+    }
+
+    // 2. Decision calendar alerts — events within 48 hours
+    if let Ok(events) = game_map::get_calendar_events(2) {
+        if !events.is_empty() {
+            let msg = crate::services::qt_ws::format_ws_event(
+                "calendar.alert",
+                &serde_json::json!({
+                    "events": events,
+                    "count": events.len(),
+                    "horizon": "48h",
+                }),
+            );
+            let _ = broadcaster.inner().send(msg);
+        }
+    }
+
+    // 3. Scenario matrix update — push current state for QT to track changes
+    if let Ok(scenarios) = scenario_engine::get_active_scenarios(pool).await {
+        if !scenarios.scenarios.is_empty() {
+            let msg = crate::services::qt_ws::format_ws_event("scenario.update", &scenarios);
+            let _ = broadcaster.inner().send(msg);
+        }
+    }
 }
 
 /// Update api_status table and emit event to frontend.

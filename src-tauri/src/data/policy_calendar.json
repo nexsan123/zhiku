@@ -1,0 +1,114 @@
+{
+  "_comment": "US policy decision calendar. Static base + Claude weekly updates. See edict-004.",
+  "_updated": "2026-03-10",
+  "events": [
+    {
+      "date": "2026-03-19",
+      "eventType": "fomc",
+      "title": "FOMC Meeting (Mar 18-19)",
+      "description": "Federal Reserve interest rate decision + press conference + updated dot plot",
+      "affectedAssets": ["^GSPC", "^DJI", "^IXIC", "DX-Y.NYB", "GC=F", "BTC-USD", "DGS10", "DGS2"],
+      "impactDirection": "uncertain",
+      "policyVector": "financial"
+    },
+    {
+      "date": "2026-05-07",
+      "eventType": "fomc",
+      "title": "FOMC Meeting (May 6-7)",
+      "description": "Federal Reserve interest rate decision + press conference",
+      "affectedAssets": ["^GSPC", "DX-Y.NYB", "GC=F", "BTC-USD"],
+      "impactDirection": "uncertain",
+      "policyVector": "financial"
+    },
+    {
+      "date": "2026-06-18",
+      "eventType": "fomc",
+      "title": "FOMC Meeting (Jun 17-18)",
+      "description": "Federal Reserve interest rate decision + updated SEP + dot plot",
+      "affectedAssets": ["^GSPC", "DX-Y.NYB", "GC=F", "BTC-USD", "DGS10", "DGS2"],
+      "impactDirection": "uncertain",
+      "policyVector": "financial"
+    },
+    {
+      "date": "2026-07-30",
+      "eventType": "fomc",
+      "title": "FOMC Meeting (Jul 29-30)",
+      "description": "Federal Reserve interest rate decision + press conference",
+      "affectedAssets": ["^GSPC", "DX-Y.NYB", "GC=F", "BTC-USD"],
+      "impactDirection": "uncertain",
+      "policyVector": "financial"
+    },
+    {
+      "date": "2026-09-17",
+      "eventType": "fomc",
+      "title": "FOMC Meeting (Sep 16-17)",
+      "description": "Federal Reserve interest rate decision + updated SEP + dot plot",
+      "affectedAssets": ["^GSPC", "DX-Y.NYB", "GC=F", "BTC-USD", "DGS10", "DGS2"],
+      "impactDirection": "uncertain",
+      "policyVector": "financial"
+    },
+    {
+      "date": "2026-11-05",
+      "eventType": "fomc",
+      "title": "FOMC Meeting (Nov 4-5)",
+      "description": "Federal Reserve interest rate decision + press conference",
+      "affectedAssets": ["^GSPC", "DX-Y.NYB", "GC=F", "BTC-USD"],
+      "impactDirection": "uncertain",
+      "policyVector": "financial"
+    },
+    {
+      "date": "2026-12-17",
+      "eventType": "fomc",
+      "title": "FOMC Meeting (Dec 16-17)",
+      "description": "Federal Reserve interest rate decision + updated SEP + dot plot (year-end)",
+      "affectedAssets": ["^GSPC", "DX-Y.NYB", "GC=F", "BTC-USD", "DGS10", "DGS2"],
+      "impactDirection": "uncertain",
+      "policyVector": "financial"
+    },
+    {
+      "date": "2026-04-15",
+      "eventType": "treasury_report",
+      "title": "Treasury FX Report (Spring)",
+      "description": "Semi-annual report to Congress on international economic and exchange rate policies. May label trading partners as currency manipulators.",
+      "affectedAssets": ["USDCNY=X", "USDJPY=X", "DX-Y.NYB"],
+      "impactDirection": "uncertain",
+      "policyVector": "trade"
+    },
+    {
+      "date": "2026-10-15",
+      "eventType": "treasury_report",
+      "title": "Treasury FX Report (Fall)",
+      "description": "Semi-annual report to Congress on international economic and exchange rate policies.",
+      "affectedAssets": ["USDCNY=X", "USDJPY=X", "DX-Y.NYB"],
+      "impactDirection": "uncertain",
+      "policyVector": "trade"
+    },
+    {
+      "date": "2026-04-01",
+      "eventType": "sec_deadline",
+      "title": "SEC Crypto Custody Rule Compliance",
+      "description": "SAB 121 successor rule compliance deadline for banks holding crypto assets",
+      "affectedAssets": ["BTC-USD", "ETH-USD"],
+      "impactDirection": "uncertain",
+      "policyVector": "crypto"
+    },
+    {
+      "date": "2026-06-30",
+      "eventType": "trade_review",
+      "title": "Section 301 Tariff Annual Review",
+      "description": "Annual review of China Section 301 tariffs. Potential for expansion or reduction.",
+      "affectedAssets": ["000001.SS", "^GSPC", "USDCNY=X", "HG=F"],
+      "impactDirection": "uncertain",
+      "policyVector": "trade"
+    },
+    {
+      "date": "2026-05-01",
+      "eventType": "sanctions",
+      "title": "Russia Energy Sanctions Review",
+      "description": "Periodic review of Russian oil price cap and energy sanctions effectiveness",
+      "affectedAssets": ["CL=F", "NG=F"],
+      "impactDirection": "uncertain",
+      "policyVector": "energy"
+    }
+  ]
+}

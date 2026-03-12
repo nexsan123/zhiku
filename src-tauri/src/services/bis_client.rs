@@ -1,75 +1,119 @@
 use chrono::Utc;
 use sqlx::SqlitePool;
+use std::collections::HashSet;
 
 use crate::errors::AppError;
 
-/// BIS Data Portal REST API for central bank policy rates (CBPOL).
+/// BIS Data Portal REST API base (SDMX REST v2).
 /// Free, no API key required.
-/// Docs: https://data.bis.org/topics/CBPOL
+/// Docs: https://data.bis.org/
+
+/// Central bank policy rates (monthly).
 const BIS_CBPOL_URL: &str =
     "https://data.bis.org/api/v2/data/WS_CBPOL/M..?detail=dataonly&format=csv";
 
-/// Target countries: (BIS ref_area code, human label).
+/// Credit to non-financial sector (% of GDP, quarterly).
+const BIS_CREDIT_URL: &str =
+    "https://data.bis.org/api/v2/data/WS_CREDIT/Q..\
+.A.M.XDC.A?detail=dataonly&format=csv";
+
+/// Credit-to-GDP gap (percentage points, quarterly). Basel III early warning.
+const BIS_CREDIT_GAP_URL: &str =
+    "https://data.bis.org/api/v2/data/WS_CREDIT_GAP/Q..B.G?detail=dataonly&format=csv";
+
+/// Debt service ratio for private non-financial sector (%, quarterly).
+const BIS_DSR_URL: &str =
+    "https://data.bis.org/api/v2/data/WS_DSR/Q..B?detail=dataonly&format=csv";
+
+/// Selected property prices (nominal, YoY %, quarterly).
+/// Kuznets cycle reference for real estate-driven credit risk.
+const BIS_SPP_URL: &str =
+    "https://data.bis.org/api/v2/data/WS_SPP/Q..N.628?detail=dataonly&format=csv";
+
+/// Target countries for edict-004 (15 countries/areas, 3 tiers).
+/// (BIS ref_area code, human label).
 const COUNTRIES: &[(&str, &str)] = &[
+    // Core tier
     ("US", "United States"),
     ("XM", "Euro Area"),
     ("JP", "Japan"),
-    ("GB", "United Kingdom"),
     ("CN", "China"),
-    ("IN", "India"),
+    // Important tier
+    ("GB", "United Kingdom"),
     ("CA", "Canada"),
     ("AU", "Australia"),
-    ("CH", "Switzerland"),
     ("KR", "South Korea"),
+    ("IN", "India"),
     ("BR", "Brazil"),
+    // Monitor tier
+    ("TR", "Turkey"),
+    ("AR", "Argentina"),
+    ("ZA", "South Africa"),
     ("SA", "Saudi Arabia"),
     ("AE", "UAE"),
 ];
 
-/// Fetch BIS central bank policy rates and insert into `macro_data`.
+// ---------------------------------------------------------------------------
+// Generic BIS dataset fetcher
+// ---------------------------------------------------------------------------
+
+/// Fetch a BIS SDMX CSV dataset and insert into `macro_data`.
 ///
-/// Requests CSV format from the BIS SDMX REST API.
-/// Each row maps to indicator `BIS_CBPOL_{country_code}` in `macro_data`.
-/// Deduplicates by (indicator, period) combination.
+/// Generic over any BIS dataset that returns REF_AREA, TIME_PERIOD, OBS_VALUE.
+/// Indicator stored as `{prefix}_{ref_area}` (e.g. "BIS_CBPOL_US").
 ///
-/// # Returns
-/// Count of newly inserted data points, or `AppError` on failure.
-pub async fn fetch_bis_rates(pool: &SqlitePool) -> Result<usize, AppError> {
+/// # Arguments
+/// * `pool` - SQLite connection pool
+/// * `url` - Full BIS SDMX REST API URL
+/// * `indicator_prefix` - Prefix for indicator name (e.g. "BIS_CBPOL")
+/// * `dataset_label` - Human label for logging (e.g. "CBPOL")
+async fn fetch_bis_dataset(
+    pool: &SqlitePool,
+    url: &str,
+    indicator_prefix: &str,
+    dataset_label: &str,
+) -> Result<usize, AppError> {
     let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(30))
+        .timeout(std::time::Duration::from_secs(60))
         .build()
         .map_err(|e| AppError::Network(format!("HTTP client error: {}", e)))?;
 
     let response = client
-        .get(BIS_CBPOL_URL)
+        .get(url)
         .header("User-Agent", "ZhiKu/0.1 (Financial Intelligence)")
         .header("Accept", "text/csv")
         .send()
         .await
-        .map_err(|e| AppError::Network(format!("BIS request failed: {}", e)))?;
+        .map_err(|e| {
+            AppError::Network(format!("BIS {} request failed: {}", dataset_label, e))
+        })?;
 
     if !response.status().is_success() {
         return Err(AppError::Network(format!(
-            "BIS API returned status {}",
+            "BIS {} API returned status {}",
+            dataset_label,
             response.status()
         )));
     }
 
     let body = response.text().await.map_err(|e| {
-        AppError::Parse(format!("BIS response body read error: {}", e))
+        AppError::Parse(format!("BIS {} response body read error: {}", dataset_label, e))
     })?;
 
     let rows = parse_bis_csv(&body);
     if rows.is_empty() {
-        log::warn!("BIS: 0 valid rates parsed from response ({} bytes)", body.len());
+        log::warn!(
+            "BIS {}: 0 valid rows parsed from response ({} bytes)",
+            dataset_label,
+            body.len()
+        );
         return Ok(0);
     }
 
     let now = Utc::now().to_rfc3339();
     let mut inserted: usize = 0;
 
-    // Build a set of target country codes for fast lookup
-    let target_codes: std::collections::HashSet<&str> =
+    let target_codes: HashSet<&str> =
         COUNTRIES.iter().map(|(code, _)| *code).collect();
 
     for (ref_area, period, value) in &rows {
@@ -77,7 +121,7 @@ pub async fn fetch_bis_rates(pool: &SqlitePool) -> Result<usize, AppError> {
             continue;
         }
 
-        let indicator = format!("BIS_CBPOL_{}", ref_area);
+        let indicator = format!("{}_{}", indicator_prefix, ref_area);
 
         // Dedup: skip if (indicator, period) already exists
         let exists: i64 = sqlx::query_scalar(
@@ -88,7 +132,10 @@ pub async fn fetch_bis_rates(pool: &SqlitePool) -> Result<usize, AppError> {
         .fetch_one(pool)
         .await
         .map_err(|e| {
-            AppError::Database(format!("Check existing BIS data failed: {}", e))
+            AppError::Database(format!(
+                "Check existing BIS {} data failed: {}",
+                dataset_label, e
+            ))
         })?;
 
         if exists > 0 {
@@ -106,14 +153,74 @@ pub async fn fetch_bis_rates(pool: &SqlitePool) -> Result<usize, AppError> {
         .execute(pool)
         .await
         .map_err(|e| {
-            AppError::Database(format!("Insert BIS data failed: {}", e))
+            AppError::Database(format!("Insert BIS {} data failed: {}", dataset_label, e))
         })?;
 
         inserted += 1;
     }
 
-    log::info!("BIS CBPOL: {} new rate observations inserted", inserted);
+    log::info!("BIS {}: {} new observations inserted", dataset_label, inserted);
     Ok(inserted)
+}
+
+// ---------------------------------------------------------------------------
+// Public fetchers for each BIS dataset
+// ---------------------------------------------------------------------------
+
+/// Fetch BIS central bank policy rates (WS_CBPOL, monthly).
+pub async fn fetch_bis_rates(pool: &SqlitePool) -> Result<usize, AppError> {
+    fetch_bis_dataset(pool, BIS_CBPOL_URL, "BIS_CBPOL", "CBPOL").await
+}
+
+/// Fetch BIS credit to non-financial sector as % of GDP (WS_CREDIT, quarterly).
+/// Indicator: BIS_CREDIT_{country_code}
+pub async fn fetch_bis_credit(pool: &SqlitePool) -> Result<usize, AppError> {
+    fetch_bis_dataset(pool, BIS_CREDIT_URL, "BIS_CREDIT", "CREDIT").await
+}
+
+/// Fetch BIS credit-to-GDP gap (WS_CREDIT_GAP, quarterly).
+/// Basel III early warning indicator. >+10pp = danger zone.
+/// Indicator: BIS_CREDIT_GAP_{country_code}
+pub async fn fetch_bis_credit_gap(pool: &SqlitePool) -> Result<usize, AppError> {
+    fetch_bis_dataset(pool, BIS_CREDIT_GAP_URL, "BIS_CREDIT_GAP", "CREDIT_GAP").await
+}
+
+/// Fetch BIS debt service ratio (WS_DSR, quarterly).
+/// Indicator: BIS_DSR_{country_code}
+pub async fn fetch_bis_dsr(pool: &SqlitePool) -> Result<usize, AppError> {
+    fetch_bis_dataset(pool, BIS_DSR_URL, "BIS_DSR", "DSR").await
+}
+
+/// Fetch BIS selected property prices (WS_SPP, quarterly, nominal YoY %).
+/// Indicator: BIS_SPP_{country_code}
+pub async fn fetch_bis_spp(pool: &SqlitePool) -> Result<usize, AppError> {
+    fetch_bis_dataset(pool, BIS_SPP_URL, "BIS_SPP", "SPP").await
+}
+
+/// Fetch all BIS credit-related datasets (CREDIT + CREDIT_GAP + DSR + SPP).
+/// Returns total newly inserted observations across all datasets.
+pub async fn fetch_all_credit_data(pool: &SqlitePool) -> Result<usize, AppError> {
+    let mut total = 0;
+
+    match fetch_bis_credit(pool).await {
+        Ok(n) => total += n,
+        Err(e) => log::warn!("BIS CREDIT fetch failed: {}", e),
+    }
+    match fetch_bis_credit_gap(pool).await {
+        Ok(n) => total += n,
+        Err(e) => log::warn!("BIS CREDIT_GAP fetch failed: {}", e),
+    }
+    match fetch_bis_dsr(pool).await {
+        Ok(n) => total += n,
+        Err(e) => log::warn!("BIS DSR fetch failed: {}", e),
+    }
+    match fetch_bis_spp(pool).await {
+        Ok(n) => total += n,
+        Err(e) => log::warn!("BIS SPP fetch failed: {}", e),
+    }
+
+    log::info!("BIS credit data: {} total new observations", total);
+    Ok(total)
 }
 
 /// Parse BIS SDMX-CSV response into (ref_area, period, value) tuples.

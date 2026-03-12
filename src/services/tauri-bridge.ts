@@ -559,3 +559,432 @@ export function listenCycleUpdated(callback: (reasoning: CycleReasoning) => void
   if (!isTauri()) return Promise.resolve(() => undefined);
   return listen<CycleReasoning>('cycle-reasoning-updated', (event) => callback(event.payload));
 }
+
+// ==================== Settings ====================
+
+export async function getSettings(): Promise<Record<string, string>> {
+  if (!isTauri()) return {};
+  try {
+    return await invoke<Record<string, string>>('get_settings');
+  } catch {
+    return {};
+  }
+}
+
+export async function setSetting(key: string, value: string): Promise<void> {
+  if (!isTauri()) return;
+  await invoke('set_setting', { key, value });
+}
+
+export async function deleteSetting(key: string): Promise<void> {
+  if (!isTauri()) return;
+  await invoke('delete_setting', { key });
+}
+
+export async function testConnection(service: string, apiKey?: string): Promise<{ success: boolean; message: string; responseMs: number }> {
+  if (!isTauri()) {
+    return { success: true, message: 'Mock OK (browser mode)', responseMs: 42 };
+  }
+  try {
+    return await invoke<{ success: boolean; message: string; responseMs: number }>('test_connection', {
+      service,
+      ...(apiKey ? { apiKey } : {}),
+    });
+  } catch (e) {
+    return { success: false, message: String(e), responseMs: 0 };
+  }
+}
+
+export async function getRssSources(): Promise<import('@contracts/app-types').RssSource[]> {
+  if (!isTauri()) {
+    return [
+      { url: 'https://feeds.reuters.com/reuters/businessNews', name: 'Reuters Business', tier: 1, language: 'en', enabled: true },
+      { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', name: 'BBC Business', tier: 1, language: 'en', enabled: true },
+      { url: 'https://rss.nytimes.com/services/xml/rss/nyt/Business.xml', name: 'NYT Business', tier: 2, language: 'en', enabled: true },
+    ];
+  }
+  try {
+    return await invoke<import('@contracts/app-types').RssSource[]>('get_rss_sources');
+  } catch {
+    return [];
+  }
+}
+
+// ==================== AI Model Management ====================
+
+export async function listAiModels(): Promise<import('@contracts/app-types').AiModelConfig[]> {
+  if (!isTauri()) {
+    return [
+      { id: 'default-ollama', provider: 'ollama', displayName: 'Ollama', apiKey: '', modelName: 'llama3.1:8b', endpointUrl: 'http://localhost:11434', enabled: true },
+      { id: 'default-groq', provider: 'groq', displayName: 'Groq', apiKey: '', modelName: 'llama-3.1-8b-instant', endpointUrl: '', enabled: true },
+    ];
+  }
+  try {
+    return await invoke<import('@contracts/app-types').AiModelConfig[]>('list_ai_models');
+  } catch {
+    return [];
+  }
+}
+
+export async function saveAiModel(model: import('@contracts/app-types').AiModelConfig): Promise<void> {
+  if (!isTauri()) return;
+  await invoke('save_ai_model', { model });
+}
+
+export async function removeAiModel(id: string): Promise<void> {
+  if (!isTauri()) return;
+  await invoke('remove_ai_model', { id });
+}
+
+export async function testAiModel(modelId: string): Promise<{ success: boolean; message: string; responseMs: number }> {
+  if (!isTauri()) {
+    return { success: true, message: 'Mock OK (browser mode)', responseMs: 42 };
+  }
+  try {
+    return await invoke<{ success: boolean; message: string; responseMs: number }>('test_ai_model', { modelId });
+  } catch (e) {
+    return { success: false, message: String(e), responseMs: 0 };
+  }
+}
+
+export async function summarizePendingNews(): Promise<number> {
+  if (!isTauri()) return 0;
+  try {
+    return await invoke<number>('summarize_pending_news');
+  } catch {
+    return 0;
+  }
+}
+
+export async function listenAiSummaryCompleted(callback: () => void): Promise<() => void> {
+  if (!isTauri()) return () => {};
+  const { listen: tauriListen } = await import('@tauri-apps/api/event');
+  const unlisten = await tauriListen('ai-summary-completed', () => callback());
+  return unlisten;
+}
+
+// ============================================================
+// Credit Cycle types (edict-004 Phase E)
+// ============================================================
+
+export interface CountryCreditData {
+  creditGdpGap: number | null;
+  debtServiceRatio: number | null;
+  creditGrowthYoy: number | null;
+  creditImpulse: number | null;
+  propertyPriceTrend: number | null;
+  policyRate: number | null;
+  rateDirection: string;
+}
+
+export interface CountryCyclePosition {
+  countryCode: string;
+  countryName: string;
+  tier: string; // "core" | "important" | "monitor"
+  indicators: CountryCreditData;
+  phase: string; // "easing" | "leveraging" | "overheating" | "tightening" | "deleveraging" | "clearing" | "unknown"
+  phaseLabel: string;
+  confidence: number;
+  confidenceGrade: string;
+  reliability: number;
+  dollarTideRiskModifier: number;
+  dataPeriod: string;
+}
+
+export interface DollarTide {
+  dxyTrend3m: number;
+  dxyTrend6m: number;
+  fedPolicy: string;
+  m2Growth: number;
+  yieldSpread: number;
+  tideState: string; // "rising" | "neutral" | "ebbing"
+  tideLabel: string;
+  confidence: number;
+}
+
+export interface TierSummary {
+  tier: string;
+  dominantPhase: string;
+  dominantPhaseLabel: string;
+  avgCreditGap: number;
+  warningCount: number;
+}
+
+export interface RiskAlert {
+  countryCode: string;
+  alert: string;
+  severity: string;
+  confidenceGrade: string;
+}
+
+export interface GlobalCycleOverview {
+  countries: CountryCyclePosition[];
+  globalPhase: string;
+  globalPhaseLabel: string;
+  globalPercentile: number;
+  dollarTide: DollarTide;
+  coreSummary: TierSummary;
+  importantSummary: TierSummary;
+  monitorSummary: TierSummary;
+  riskAlerts: RiskAlert[];
+  confidence: number;
+  calculatedAt: string;
+  dataPeriod: string;
+}
+
+const MOCK_GLOBAL_CYCLE: GlobalCycleOverview = {
+  countries: [
+    { countryCode: 'US', countryName: 'United States', tier: 'core', indicators: { creditGdpGap: 2.1, debtServiceRatio: 15.3, creditGrowthYoy: 3.2, creditImpulse: 0.5, propertyPriceTrend: 4.1, policyRate: 5.25, rateDirection: 'pausing' }, phase: 'tightening', phaseLabel: '收水期', confidence: 0.75, confidenceGrade: 'reasonable', reliability: 0.95, dollarTideRiskModifier: 0, dataPeriod: '2025-Q3' },
+    { countryCode: 'CN', countryName: 'China', tier: 'core', indicators: { creditGdpGap: -3.5, debtServiceRatio: 20.1, creditGrowthYoy: 8.5, creditImpulse: -1.2, propertyPriceTrend: -2.3, policyRate: 3.45, rateDirection: 'cutting' }, phase: 'deleveraging', phaseLabel: '去杠杆', confidence: 0.60, confidenceGrade: 'reasonable', reliability: 0.70, dollarTideRiskModifier: 1, dataPeriod: '2025-Q3' },
+    { countryCode: 'XM', countryName: 'Euro Area', tier: 'core', indicators: { creditGdpGap: -1.2, debtServiceRatio: 12.0, creditGrowthYoy: 1.8, creditImpulse: 0.3, propertyPriceTrend: -0.5, policyRate: 4.50, rateDirection: 'pausing' }, phase: 'tightening', phaseLabel: '收水期', confidence: 0.72, confidenceGrade: 'reasonable', reliability: 0.92, dollarTideRiskModifier: 0, dataPeriod: '2025-Q3' },
+    { countryCode: 'JP', countryName: 'Japan', tier: 'core', indicators: { creditGdpGap: 5.2, debtServiceRatio: 8.5, creditGrowthYoy: 2.1, creditImpulse: 0.8, propertyPriceTrend: 3.2, policyRate: 0.10, rateDirection: 'hiking' }, phase: 'leveraging', phaseLabel: '加杠杆', confidence: 0.68, confidenceGrade: 'reasonable', reliability: 0.93, dollarTideRiskModifier: 0, dataPeriod: '2025-Q3' },
+    { countryCode: 'GB', countryName: 'United Kingdom', tier: 'important', indicators: { creditGdpGap: -0.8, debtServiceRatio: 14.2, creditGrowthYoy: 1.5, creditImpulse: -0.2, propertyPriceTrend: -1.1, policyRate: 5.25, rateDirection: 'pausing' }, phase: 'tightening', phaseLabel: '收水期', confidence: 0.74, confidenceGrade: 'reasonable', reliability: 0.91, dollarTideRiskModifier: 0, dataPeriod: '2025-Q3' },
+    { countryCode: 'KR', countryName: 'South Korea', tier: 'important', indicators: { creditGdpGap: 3.8, debtServiceRatio: 22.5, creditGrowthYoy: 5.2, creditImpulse: -0.5, propertyPriceTrend: -3.1, policyRate: 3.50, rateDirection: 'cutting' }, phase: 'overheating', phaseLabel: '过热期', confidence: 0.65, confidenceGrade: 'reasonable', reliability: 0.88, dollarTideRiskModifier: 1, dataPeriod: '2025-Q3' },
+    { countryCode: 'TR', countryName: 'Turkey', tier: 'monitor', indicators: { creditGdpGap: 8.5, debtServiceRatio: 28.3, creditGrowthYoy: 42.0, creditImpulse: 3.2, propertyPriceTrend: 15.0, policyRate: 45.00, rateDirection: 'pausing' }, phase: 'overheating', phaseLabel: '过热期', confidence: 0.45, confidenceGrade: 'speculative', reliability: 0.55, dollarTideRiskModifier: 2, dataPeriod: '2025-Q3' },
+    { countryCode: 'SA', countryName: 'Saudi Arabia', tier: 'monitor', indicators: { creditGdpGap: 1.2, debtServiceRatio: 5.1, creditGrowthYoy: 8.0, creditImpulse: 1.5, propertyPriceTrend: 6.2, policyRate: 6.00, rateDirection: 'pausing' }, phase: 'leveraging', phaseLabel: '加杠杆', confidence: 0.50, confidenceGrade: 'reasonable', reliability: 0.60, dollarTideRiskModifier: 0, dataPeriod: '2025-Q3' },
+  ],
+  globalPhase: 'tightening',
+  globalPhaseLabel: '收水期',
+  globalPercentile: 62,
+  dollarTide: { dxyTrend3m: 1.2, dxyTrend6m: 2.5, fedPolicy: 'pausing', m2Growth: -1.8, yieldSpread: -0.15, tideState: 'ebbing', tideLabel: '退潮', confidence: 0.70 },
+  coreSummary: { tier: 'core', dominantPhase: 'tightening', dominantPhaseLabel: '收水期', avgCreditGap: 0.65, warningCount: 0 },
+  importantSummary: { tier: 'important', dominantPhase: 'tightening', dominantPhaseLabel: '收水期', avgCreditGap: -0.5, warningCount: 0 },
+  monitorSummary: { tier: 'monitor', dominantPhase: 'leveraging', dominantPhaseLabel: '加杠杆', avgCreditGap: 3.2, warningCount: 1 },
+  riskAlerts: [
+    { countryCode: 'TR', alert: 'Monitor tier overheating + dollar ebbing — EM stress risk', severity: 'warning', confidenceGrade: 'reasonable' },
+  ],
+  confidence: 0.68,
+  calculatedAt: new Date().toISOString(),
+  dataPeriod: '2025-Q3',
+};
+
+export async function getCreditCycleOverview(): Promise<GlobalCycleOverview> {
+  if (!isTauri()) return MOCK_GLOBAL_CYCLE;
+  return invoke<GlobalCycleOverview>('get_credit_cycle_overview');
+}
+
+export async function getDollarTide(): Promise<DollarTide> {
+  if (!isTauri()) return MOCK_GLOBAL_CYCLE.dollarTide;
+  return invoke<DollarTide>('get_dollar_tide');
+}
+
+// ============================================================
+// Deep Analysis / Intelligence types (edict-004 Phase E)
+// ============================================================
+
+export interface DeepMotiveAnalysis {
+  primaryMotive: string;
+  secondaryMotive: string;
+  confidence: number;
+  confidenceGrade: string;
+}
+
+export interface LayerImpact {
+  physical: string;
+  credit: string;
+  dollar: string;
+  geopolitical: string;
+  sentiment: string;
+}
+
+export interface DeepAnalysis {
+  clusterId: string;
+  clusterTopic: string;
+  newsCount: number;
+  surface: string;
+  connection: string;
+  deepAnalysis: DeepMotiveAnalysis;
+  layerImpact: LayerImpact;
+  keyObservation: string;
+  sourceUrls: string[];
+  analyzedAt: string;
+}
+
+const MOCK_DEEP_ANALYSES: DeepAnalysis[] = [
+  {
+    clusterId: 'c001',
+    clusterTopic: 'US-China Tech Decoupling',
+    newsCount: 5,
+    surface: 'US restricts chip exports to China, China retaliates with rare earth controls.',
+    connection: 'Escalating tech decoupling with direct supply chain implications.',
+    deepAnalysis: { primaryMotive: 'Tech supremacy and economic containment', secondaryMotive: 'Domestic political signaling ahead of elections', confidence: 0.72, confidenceGrade: 'reasonable' },
+    layerImpact: { physical: 'Rare earth supply disruption', credit: 'Minimal direct credit impact', dollar: 'USD slightly bullish on safe-haven flows', geopolitical: 'Major escalation in bilateral tensions', sentiment: 'Risk-off sentiment in Asia' },
+    keyObservation: 'Semiconductor supply chain bifurcation accelerating — watch TSMC capex and inventory data.',
+    sourceUrls: ['https://reuters.com/tech/1', 'https://reuters.com/tech/2'],
+    analyzedAt: new Date(Date.now() - 3600000).toISOString(),
+  },
+  {
+    clusterId: 'c002',
+    clusterTopic: 'Middle East Energy Supply Risk',
+    newsCount: 4,
+    surface: 'Red Sea shipping disruptions continue, Houthi attacks escalate.',
+    connection: 'Persistent threat to global energy transit routes.',
+    deepAnalysis: { primaryMotive: 'Regional power projection and proxy warfare', secondaryMotive: 'Oil price floor maintenance by producing nations', confidence: 0.58, confidenceGrade: 'reasonable' },
+    layerImpact: { physical: 'Oil supply routes disrupted', credit: 'Energy sector credit spreads widening', dollar: 'Oil priced in USD supports dollar', geopolitical: 'Multi-party regional conflict', sentiment: 'Energy sector fear premium' },
+    keyObservation: 'Insurance premiums for Red Sea transit at 10-year high — rerouting adds 7-14 days to Asia-Europe shipping.',
+    sourceUrls: ['https://bbc.com/news/1'],
+    analyzedAt: new Date(Date.now() - 7200000).toISOString(),
+  },
+];
+
+export async function getDeepAnalyses(limit?: number): Promise<DeepAnalysis[]> {
+  if (!isTauri()) return MOCK_DEEP_ANALYSES;
+  return invoke<DeepAnalysis[]>('get_deep_analyses', { limit: limit ?? 10 });
+}
+
+// ============================================================
+// Game Map / Policy Vector types (edict-004 Phase E)
+// ============================================================
+
+export interface PolicyVector {
+  id: string;
+  name: string;
+  nameZh: string;
+  activity: number;
+  activityLabel: string;
+  affectedAssets: string[];
+  latestHeadline: string;
+  newsCount7d: number;
+}
+
+export interface BilateralDynamic {
+  id: string;
+  name: string;
+  nameZh: string;
+  tension: number;
+  tensionLabel: string;
+  recentHeadlines: string[];
+  newsCount7d: number;
+}
+
+export interface CalendarEvent {
+  date: string;
+  eventType: string;
+  title: string;
+  description: string;
+  affectedAssets: string[];
+  impactDirection: string;
+  policyVector: string;
+}
+
+export interface Scenario {
+  id: string;
+  policyVector: string;
+  title: string;
+  description: string;
+  probability: number;
+  previousProbability: number;
+  changeReason: string;
+  assetImpacts: { symbol: string; direction: string; magnitude: string }[];
+  confidenceGrade: string;
+  updatedAt: string;
+}
+
+export interface ScenarioMatrix {
+  scenarios: Scenario[];
+  activeVectors: string[];
+  generatedAt: string;
+}
+
+const MOCK_POLICY_VECTORS: PolicyVector[] = [
+  { id: 'trade', name: 'Trade Policy', nameZh: '贸易政策', activity: 0.72, activityLabel: 'high', affectedAssets: ['^GSPC', 'USDCNY=X'], latestHeadline: 'US considering additional tariffs on Chinese EVs', newsCount7d: 8 },
+  { id: 'tech', name: 'Tech Controls', nameZh: '科技管制', activity: 0.65, activityLabel: 'high', affectedAssets: ['^IXIC', '000001.SS'], latestHeadline: 'New chip export restrictions announced', newsCount7d: 6 },
+  { id: 'financial', name: 'Financial/Monetary', nameZh: '金融货币', activity: 0.55, activityLabel: 'moderate', affectedAssets: ['^GSPC', 'DX-Y.NYB', 'GC=F'], latestHeadline: 'Fed signals patience on rate cuts', newsCount7d: 12 },
+  { id: 'energy', name: 'Energy Policy', nameZh: '能源政策', activity: 0.30, activityLabel: 'low', affectedAssets: ['CL=F', 'NG=F'], latestHeadline: 'SPR refill continues at steady pace', newsCount7d: 3 },
+  { id: 'crypto', name: 'Crypto Regulation', nameZh: '加密监管', activity: 0.45, activityLabel: 'moderate', affectedAssets: ['BTC-USD', 'ETH-USD'], latestHeadline: 'SEC approves spot ETH ETF applications', newsCount7d: 5 },
+  { id: 'military', name: 'Military/Security', nameZh: '军事安全', activity: 0.40, activityLabel: 'moderate', affectedAssets: ['GC=F', 'CL=F'], latestHeadline: 'NATO exercises in Baltic Sea expand', newsCount7d: 4 },
+];
+
+const MOCK_CALENDAR: CalendarEvent[] = [
+  { date: '2026-03-19', eventType: 'fomc_meeting', title: 'FOMC Meeting', description: 'Federal Reserve interest rate decision', affectedAssets: ['^GSPC', 'DX-Y.NYB', 'GC=F', 'BTC-USD'], impactDirection: 'uncertain', policyVector: 'financial' },
+  { date: '2026-03-25', eventType: 'sanctions_review', title: 'OFAC Sanctions Review', description: 'Quarterly sanctions compliance update', affectedAssets: ['CL=F'], impactDirection: 'bearish', policyVector: 'military' },
+  { date: '2026-04-15', eventType: 'trade_review', title: 'Section 301 Review', description: 'US-China tariff review deadline', affectedAssets: ['^GSPC', 'USDCNY=X'], impactDirection: 'uncertain', policyVector: 'trade' },
+];
+
+const MOCK_SCENARIOS: ScenarioMatrix = {
+  scenarios: [
+    { id: 's1', policyVector: 'trade', title: 'Tariff Escalation', description: 'US raises tariffs to 60% on Chinese goods', probability: 0.35, previousProbability: 0.30, changeReason: 'Recent hawkish rhetoric from USTR', assetImpacts: [{ symbol: '^GSPC', direction: 'bearish', magnitude: 'moderate' }, { symbol: 'USDCNY=X', direction: 'bearish', magnitude: 'large' }], confidenceGrade: 'reasonable', updatedAt: new Date().toISOString() },
+    { id: 's2', policyVector: 'trade', title: 'Negotiated De-escalation', description: 'Partial tariff rollback in exchange for purchase commitments', probability: 0.25, previousProbability: 0.28, changeReason: 'Election pressure for economic stability', assetImpacts: [{ symbol: '^GSPC', direction: 'bullish', magnitude: 'moderate' }], confidenceGrade: 'speculative', updatedAt: new Date().toISOString() },
+    { id: 's3', policyVector: 'tech', title: 'Full Chip Ban', description: 'Complete semiconductor export ban to China', probability: 0.15, previousProbability: 0.12, changeReason: 'Intelligence reports on military chip usage', assetImpacts: [{ symbol: '^IXIC', direction: 'bearish', magnitude: 'large' }], confidenceGrade: 'speculative', updatedAt: new Date().toISOString() },
+  ],
+  activeVectors: ['trade', 'tech', 'financial'],
+  generatedAt: new Date().toISOString(),
+};
+
+export async function getPolicyVectors(): Promise<PolicyVector[]> {
+  if (!isTauri()) return MOCK_POLICY_VECTORS;
+  return invoke<PolicyVector[]>('get_policy_vectors');
+}
+
+const MOCK_BILATERAL_DYNAMICS: BilateralDynamic[] = [
+  { id: 'us-cn', name: 'US–China', nameZh: '美中关系', tension: 0.78, tensionLabel: 'strained', recentHeadlines: ['Chip export ban expanded', 'Rare earth retaliation threat'], newsCount7d: 12 },
+  { id: 'us-ru', name: 'US–Russia', nameZh: '美俄关系', tension: 0.85, tensionLabel: 'hostile', recentHeadlines: ['New sanctions package', 'Arctic military buildup'], newsCount7d: 7 },
+  { id: 'us-me', name: 'US–Middle East', nameZh: '美国-中东', tension: 0.52, tensionLabel: 'cautious', recentHeadlines: ['Red Sea security operations', 'Iran nuclear talks stall'], newsCount7d: 5 },
+  { id: 'us-eu', name: 'US–Europe', nameZh: '美欧关系', tension: 0.30, tensionLabel: 'cooperative', recentHeadlines: ['NATO defense spending accord', 'Trade framework renewal'], newsCount7d: 4 },
+];
+
+export async function getBilateralDynamics(): Promise<BilateralDynamic[]> {
+  if (!isTauri()) return MOCK_BILATERAL_DYNAMICS;
+  return invoke<BilateralDynamic[]>('get_bilateral_dynamics');
+}
+
+export async function getDecisionCalendar(days?: number): Promise<CalendarEvent[]> {
+  if (!isTauri()) return MOCK_CALENDAR;
+  return invoke<CalendarEvent[]>('get_decision_calendar', { days: days ?? 90 });
+}
+
+export async function getActiveScenarios(): Promise<ScenarioMatrix> {
+  if (!isTauri()) return MOCK_SCENARIOS;
+  return invoke<ScenarioMatrix>('get_active_scenarios');
+}
+
+export async function triggerScenarioUpdate(): Promise<ScenarioMatrix> {
+  if (!isTauri()) return MOCK_SCENARIOS;
+  return invoke<ScenarioMatrix>('trigger_scenario_update');
+}
+
+// ============================================================
+// Five-Layer Reasoning types (edict-004 Phase E)
+// ============================================================
+
+export interface ReasoningStep {
+  step: number;
+  layer: string;
+  finding: string;
+  evidence: string[];
+  confidence: number;
+}
+
+export interface FiveLayerReasoning {
+  globalCyclePhase: string;
+  globalCyclePhaseZh: string;
+  dollarTideState: string;
+  dollarTideLabel: string;
+  cyclePosition: string;
+  monetaryPolicyStage: string;
+  sentimentStage: string;
+  reasoningSteps: ReasoningStep[];
+  turningSignals: TurningSignal[];
+  sectorRecommendations: string[];
+  tailRisks: string[];
+  riskAlerts: string[];
+  confidence: number;
+  confidenceGrade: string;
+  narrative: string;
+  timestamp: string;
+}
+
+export async function getFiveLayerReasoning(): Promise<FiveLayerReasoning | null> {
+  if (!isTauri()) return null;
+  return invoke<FiveLayerReasoning | null>('get_five_layer_reasoning');
+}
+
+export async function triggerFiveLayerReasoning(): Promise<FiveLayerReasoning | null> {
+  if (!isTauri()) return null;
+  return invoke<FiveLayerReasoning>('trigger_five_layer_reasoning');
+}
+
+export function listenFiveLayerUpdated(callback: (r: FiveLayerReasoning) => void): Promise<() => void> {
+  if (!isTauri()) return Promise.resolve(() => undefined);
+  return listen<FiveLayerReasoning>('five-layer-reasoning-updated', (event) => callback(event.payload));
+}

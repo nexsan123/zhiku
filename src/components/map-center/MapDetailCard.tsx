@@ -8,11 +8,13 @@ import { NewsDetailModal } from '@components/news-detail';
 
 export interface MapSelection {
   name: string;
-  layerType: 'exchange' | 'centralBank' | 'gulfFdi';
+  layerType: 'exchange' | 'centralBank' | 'gulfFdi' | 'creditCycle';
   country: string;
   keywords: string[];
   rate?: string;
   size?: string;
+  detail?: string;
+  confidence?: number;
   x: number;
   y: number;
 }

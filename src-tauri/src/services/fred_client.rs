@@ -14,6 +14,8 @@ pub const FRED_SERIES: &[(&str, &str)] = &[
     ("UNRATE", "Unemployment Rate"),
     ("GDP", "Gross Domestic Product"),
     ("M2SL", "M2 Money Supply"),
+    ("DGS10", "10-Year Treasury Yield"),
+    ("DGS2", "2-Year Treasury Yield"),
 ];
 
 /// Fetch a single FRED series and insert observations into `macro_data`.

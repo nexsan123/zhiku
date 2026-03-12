@@ -4,3 +4,6 @@ pub mod api_status;
 pub mod market_data;
 pub mod ai;
 pub mod shell;
+pub mod settings;
+pub mod credit_cycle;
+pub mod game_map;

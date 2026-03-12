@@ -43,10 +43,13 @@ pub struct NewsItem {
     pub country: String,
     pub published_at: String,
     pub fetched_at: String,
+    pub sentiment_score: Option<f64>,
+    pub ai_summary: Option<String>,
 }
 
 impl From<NewsRow> for NewsItem {
     fn from(row: NewsRow) -> Self {
+        let ai_sum = row.ai_summary.clone();
         NewsItem {
             id: row.id,
             title: row.title,
@@ -59,6 +62,8 @@ impl From<NewsRow> for NewsItem {
             country: "us".to_string(), // Phase 2: US-only (ZK-04 vertical slice)
             published_at: row.published_at,
             fetched_at: row.fetched_at,
+            sentiment_score: row.sentiment_score,
+            ai_summary: ai_sum,
         }
     }
 }

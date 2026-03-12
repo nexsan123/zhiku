@@ -6,18 +6,18 @@ use uuid::Uuid;
 use crate::errors::AppError;
 
 /// RSS source definition with metadata.
-struct RssSource {
-    url: &'static str,
-    name: &'static str,
-    tier: i64,      // 1-4 source credibility
-    language: &'static str,
+pub struct RssSource {
+    pub url: &'static str,
+    pub name: &'static str,
+    pub tier: i64,      // 1-4 source credibility
+    pub language: &'static str,
 }
 
 /// Financial RSS feeds for global intelligence coverage (55+ sources).
 /// Tier 1 = wire services / top-tier journalism, Tier 2 = major financial media,
 /// Tier 3 = specialized / regional, Tier 4 = aggregators / opinion.
 /// Sources marked "TODO: verify RSS availability" may not have working RSS feeds.
-const RSS_SOURCES: &[RssSource] = &[
+pub const RSS_SOURCES: &[RssSource] = &[
     // =========================================================================
     // ENGLISH: Wire Services & Top-Tier Journalism (Tier 1)
     // =========================================================================
@@ -374,6 +374,57 @@ const RSS_SOURCES: &[RssSource] = &[
         name: "Zhitong Finance",
         tier: 3,
         language: "zh",
+    },
+    // =========================================================================
+    // US POLICY SOURCES (Tier 1) — Game Map / Scenario Engine input
+    // =========================================================================
+    RssSource {
+        url: "https://www.whitehouse.gov/feed/",
+        name: "White House",
+        tier: 1,
+        language: "en",
+    },
+    RssSource {
+        url: "https://www.state.gov/rss-feed/press-releases/feed/",
+        name: "State Dept Press",
+        tier: 1,
+        language: "en",
+    },
+    RssSource {
+        url: "https://www.sec.gov/news/pressreleases.rss",
+        name: "SEC Press Releases",
+        tier: 1,
+        language: "en",
+    },
+    RssSource {
+        url: "https://www.sec.gov/litigation/litreleases.rss",
+        name: "SEC Enforcement",
+        tier: 1,
+        language: "en",
+    },
+    RssSource {
+        url: "https://www.cftc.gov/Newsroom/PressReleases/RSS",
+        name: "CFTC Press",
+        tier: 1,
+        language: "en",
+    },
+    RssSource {
+        url: "https://home.treasury.gov/system/files/136/ofac-recent-actions.xml",
+        name: "OFAC Sanctions",
+        tier: 1,
+        language: "en",
+    },
+    RssSource {
+        url: "https://www.federalreserve.gov/feeds/press_all.xml",
+        name: "Federal Reserve Press",
+        tier: 1,
+        language: "en",
+    },
+    RssSource {
+        url: "https://ustr.gov/about-us/policy-offices/press-office/press-releases/rss",
+        name: "USTR Trade",
+        tier: 1,
+        language: "en",
     },
 ];
 

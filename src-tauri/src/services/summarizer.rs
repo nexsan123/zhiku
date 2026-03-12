@@ -13,6 +13,12 @@ pub struct NewsSummary {
     pub sentiment: f64,
     pub keywords: Vec<String>,
     pub category: String,
+    /// Regions involved (e.g. "east_asia", "middle_east", "north_america", "europe", "global").
+    #[serde(default)]
+    pub region: Vec<String>,
+    /// Key entities mentioned (countries, orgs, companies, people).
+    #[serde(default)]
+    pub entities: Vec<String>,
 }
 
 /// Default Ollama model for batch summarization.
@@ -26,13 +32,15 @@ Title: {title}
 Content: {description}
 
 Respond with exactly this JSON structure:
-{"summary":"2-3 sentence summary","sentiment":0.0,"keywords":["keyword1","keyword2","keyword3"],"category":"market"}
+{"summary":"2-3 sentence summary","sentiment":0.0,"keywords":["keyword1","keyword2","keyword3"],"category":"market","region":["east_asia"],"entities":["China","PBOC"]}
 
 Rules:
 - summary: 2-3 concise sentences capturing the key point
 - sentiment: a float from -1.0 (extremely negative) to 1.0 (extremely positive)
 - keywords: 3-5 relevant financial keywords
-- category: one of: macro_policy, market, geopolitical, central_bank, trade, crypto
+- category: one of: macro_policy, market, geopolitical, central_bank, trade, crypto, energy, supply_chain
+- region: 1-3 regions from: east_asia, southeast_asia, south_asia, middle_east, europe, north_america, latin_america, africa, oceania, global
+- entities: 1-5 key entities (country names, organizations, companies, or key figures mentioned)
 
 JSON only, no other text:"#;
 
@@ -56,34 +64,40 @@ pub async fn summarize_news(
         .replace("{title}", title)
         .replace("{description}", description);
 
-    // Try Ollama first
+    // Try Groq first (primary), Ollama as fallback (when available)
+    if !groq_api_key.is_empty() {
+        let groq_response = groq_client::chat_completion(&prompt, groq_api_key).await;
+        match groq_response {
+            Ok(ref text) if !text.is_empty() => {
+                if let Ok(summary) = parse_ai_json(text) {
+                    let model = "groq:llama-3.1-8b-instant".to_string();
+                    return Ok((summary, model));
+                }
+                log::warn!("Groq returned unparseable response, trying Ollama fallback");
+            }
+            Ok(_) => {
+                log::warn!("Groq returned empty response, trying Ollama fallback");
+            }
+            Err(e) => {
+                log::warn!("Groq failed: {}, trying Ollama fallback", e);
+            }
+        }
+    }
+
+    // Fallback to Ollama
     match ollama_client::generate_completion(&prompt, OLLAMA_MODEL).await {
         Ok(response) => {
             if let Ok(summary) = parse_ai_json(&response) {
                 let model = format!("ollama:{}", OLLAMA_MODEL);
                 return Ok((summary, model));
             }
-            log::warn!("Ollama returned unparseable response, trying Groq fallback");
+            Err(AppError::Network(
+                "All AI engines returned unparseable responses".to_string(),
+            ))
         }
-        Err(e) => {
-            log::warn!("Ollama failed: {}, trying Groq fallback", e);
-        }
-    }
-
-    // Fallback to Groq
-    let groq_response = groq_client::chat_completion(&prompt, groq_api_key).await?;
-    if groq_response.is_empty() {
-        return Err(AppError::Network(
-            "All AI engines unavailable for summarization".to_string(),
-        ));
-    }
-
-    match parse_ai_json(&groq_response) {
-        Ok(summary) => {
-            let model = "groq:llama-3.1-8b-instant".to_string();
-            Ok((summary, model))
-        }
-        Err(e) => Err(e),
+        Err(e) => Err(AppError::Network(
+            format!("All AI engines unavailable: {}", e),
+        )),
     }
 }
 
@@ -167,8 +181,13 @@ async fn write_analysis(
 ) -> Result<(), AppError> {
     let id = Uuid::new_v4().to_string();
     let now = Utc::now().to_rfc3339();
-    let keywords_json =
-        serde_json::to_string(&summary.keywords).unwrap_or_else(|_| "[]".to_string());
+    // Store keywords + region + entities as structured JSON in reasoning_chain
+    let meta_json = serde_json::json!({
+        "keywords": summary.keywords,
+        "region": summary.region,
+        "entities": summary.entities,
+    })
+    .to_string();
 
     sqlx::query(
         r#"INSERT INTO ai_analysis
@@ -180,7 +199,7 @@ async fn write_analysis(
     .bind(&summary.summary)
     .bind(model_used)
     .bind(summary.sentiment)
-    .bind(&keywords_json)
+    .bind(&meta_json)
     .bind(source_url)
     .bind(&now)
     .execute(pool)

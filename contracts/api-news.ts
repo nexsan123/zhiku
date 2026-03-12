@@ -10,6 +10,8 @@ export interface NewsItem {
   country: string;
   publishedAt: string;  // ISO 8601, TZ-aware
   fetchedAt: string;
+  sentimentScore?: number;
+  aiSummary?: string;
 }
 
 // AI 分析结果（Phase 3 完善字段）

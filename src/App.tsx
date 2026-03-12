@@ -14,6 +14,9 @@ import {
   Link2,
   Building2,
   Zap,
+  Compass,
+  Target,
+  FileSearch,
 } from 'lucide-react';
 import { useAppStore } from '@stores/app-store';
 import { TitleBar } from '@components/title-bar';
@@ -35,7 +38,11 @@ import { WtoPanel } from '@components/panels/WtoPanel';
 import { SupplyChainPanel } from '@components/panels/SupplyChainPanel';
 import { GulfFdiPanel } from '@components/panels/GulfFdiPanel';
 import { CycleReasoningPanel } from '@components/panels/CycleReasoningPanel';
+import { CreditCyclePanel } from '@components/panels/CreditCyclePanel';
+import { IntelBriefPanel } from '@components/panels/IntelBriefPanel';
+import { GameMapPanel } from '@components/panels/GameMapPanel';
 import { CmdKModal } from '@components/cmd-k';
+import { SettingsPage } from './components/settings/SettingsPage';
 import { listenApiStatusChanged } from '@services/tauri-bridge';
 import i18n from './i18n';
 
@@ -82,6 +89,7 @@ function App() {
   const toggleRightPanel = useAppStore((s) => s.toggleRightPanel);
   const updateApiStatus = useAppStore((s) => s.updateApiStatus);
   const [cmdKOpen, setCmdKOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // ---- Ctrl+[ / Ctrl+] keyboard shortcuts for panel collapse + Cmd/Ctrl+K for search ----
   useEffect(() => {
@@ -123,7 +131,7 @@ function App() {
 
   return (
     <div className="app">
-      <TitleBar />
+      <TitleBar onOpenSettings={() => setSettingsOpen(true)} />
 
       <div className="app__body">
         {/* Left Panel Stack — Cycle Reasoning (L1), News Feed (L1), AI Brief (L1), FRED Indicators (L2), BIS Rates (L2) */}
@@ -131,6 +139,21 @@ function App() {
           <Panel title={t('panel.cycleReasoning')} icon={<Zap size={13} />} panelId="cycle-reasoning">
             <ErrorBoundary>
               <CycleReasoningPanel />
+            </ErrorBoundary>
+          </Panel>
+          <Panel title={t('panel.creditCycle')} icon={<Compass size={13} />} panelId="credit-cycle">
+            <ErrorBoundary>
+              <CreditCyclePanel />
+            </ErrorBoundary>
+          </Panel>
+          <Panel title={t('panel.intelBrief')} icon={<FileSearch size={13} />} panelId="intel-brief">
+            <ErrorBoundary>
+              <IntelBriefPanel />
+            </ErrorBoundary>
+          </Panel>
+          <Panel title={t('panel.gameMap')} icon={<Target size={13} />} panelId="game-map">
+            <ErrorBoundary>
+              <GameMapPanel />
             </ErrorBoundary>
           </Panel>
           <Panel title={t('panel.newsFeed')} icon={<Newspaper size={13} />} panelId="news-feed">
@@ -213,6 +236,7 @@ function App() {
 
       <StatusBar />
       <CmdKModal open={cmdKOpen} onClose={() => setCmdKOpen(false)} />
+      <SettingsPage open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   );
 }

@@ -1,12 +1,24 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw, Inbox } from 'lucide-react';
-import { getNews, listenNewsUpdated, hostnameFromUrl, formatTimeAgo } from '@services/tauri-bridge';
+import { getNews, listenNewsUpdated, listenAiSummaryCompleted, hostnameFromUrl, formatTimeAgo } from '@services/tauri-bridge';
 import type { NewsItem } from '@contracts/api-news';
 import { NewsDetailModal } from '@components/news-detail';
 import './NewsFeedPanel.css';
 
 type LoadState = 'loading' | 'loaded' | 'error';
+
+function getSentimentClass(score: number): 'positive' | 'negative' | 'neutral' {
+  if (score > 0.6) return 'positive';
+  if (score < 0.4) return 'negative';
+  return 'neutral';
+}
+
+function getSentimentLabel(score: number): string {
+  if (score > 0.6) return 'Positive';
+  if (score < 0.4) return 'Negative';
+  return 'Neutral';
+}
 
 const CATEGORY_COLORS: Record<string, string> = {
   geopolitical: 'var(--color-intel-geopolitical)',
@@ -43,11 +55,22 @@ export function NewsFeedPanel() {
       cleanup = fn;
     });
 
+    let cleanupAi: (() => void) | null = null;
+    const unlistenAiPromise = listenAiSummaryCompleted(() => void load());
+    void unlistenAiPromise.then((fn) => {
+      cleanupAi = fn;
+    });
+
     return () => {
       if (cleanup) {
         cleanup();
       } else {
         void unlistenPromise.then((fn) => fn());
+      }
+      if (cleanupAi) {
+        cleanupAi();
+      } else {
+        void unlistenAiPromise.then((fn) => fn());
       }
     };
   }, [load]);
@@ -86,42 +109,72 @@ export function NewsFeedPanel() {
     );
   }
 
+  // Sort: AI-analyzed items first, then by time
+  const sorted = [...items].sort((a, b) => {
+    const aHasAi = a.aiSummary ? 1 : 0;
+    const bHasAi = b.aiSummary ? 1 : 0;
+    if (aHasAi !== bHasAi) return bHasAi - aHasAi;
+    return 0; // preserve backend order (already by time) within each group
+  });
+
+  const aiCount = sorted.filter(i => i.aiSummary).length;
+
   // Loaded state — render list
   return (
     <>
+      {aiCount > 0 && (
+        <div className="news-feed__ai-header">
+          <span className="news-feed__ai-header-badge">AI</span>
+          <span className="news-feed__ai-header-text">
+            {aiCount} / {sorted.length} analyzed
+          </span>
+        </div>
+      )}
       <ul className="news-feed" aria-label="News feed">
-        {items.map((item, idx) => (
-          <li
-            key={item.id}
-            className={`news-feed__item news-feed__item--clickable ${idx < items.length - 1 ? 'news-feed__item--divider' : ''}`}
-            onClick={() => setSelectedNews(item)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') setSelectedNews(item);
-            }}
-          >
-            <div
-              className="news-feed__category-dot"
-              style={{
-                background:
-                  CATEGORY_COLORS[item.category] ?? 'var(--color-text-disabled)',
+        {sorted.map((item, idx) => {
+          const hasAi = !!item.aiSummary;
+          return (
+            <li
+              key={item.id}
+              className={`news-feed__item news-feed__item--clickable ${hasAi ? 'news-feed__item--ai' : ''} ${idx < sorted.length - 1 ? 'news-feed__item--divider' : ''}`}
+              onClick={() => setSelectedNews(item)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') setSelectedNews(item);
               }}
-              aria-hidden="true"
-            />
-            <div className="news-feed__content">
-              <p className="news-feed__title">{item.title}</p>
-              <div className="news-feed__meta">
-                <span className="news-feed__source">
-                  {hostnameFromUrl(item.sourceUrl)}
-                </span>
-                <span className="news-feed__time">
-                  {formatTimeAgo(item.publishedAt)}
-                </span>
+            >
+              <div
+                className="news-feed__category-dot"
+                style={{
+                  background:
+                    CATEGORY_COLORS[item.category] ?? 'var(--color-text-disabled)',
+                }}
+                aria-hidden="true"
+              />
+              <div className="news-feed__content">
+                <p className="news-feed__title">{item.title}</p>
+                {hasAi && (
+                  <p className="news-feed__ai-preview">{item.aiSummary}</p>
+                )}
+                <div className="news-feed__meta">
+                  <span className="news-feed__source">
+                    {hostnameFromUrl(item.sourceUrl)}
+                  </span>
+                  <span className="news-feed__time">
+                    {formatTimeAgo(item.publishedAt)}
+                  </span>
+                  {item.sentimentScore != null && (
+                    <span className={`news-feed__sentiment news-feed__sentiment--${getSentimentClass(item.sentimentScore)}`}>
+                      {getSentimentLabel(item.sentimentScore)}
+                    </span>
+                  )}
+                  {hasAi && <span className="news-feed__ai-badge">AI</span>}
+                </div>
               </div>
-            </div>
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ul>
       <NewsDetailModal
         news={selectedNews}
