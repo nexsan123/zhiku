@@ -4,12 +4,13 @@
 use serde::{Deserialize, Serialize};
 
 use crate::errors::AppError;
+use crate::services::ai_config::ResolvedAiConfig;
 
-/// Claude API endpoint.
-const CLAUDE_API_URL: &str = "https://api.anthropic.com/v1/messages";
+/// Default Claude API endpoint (used when user has not configured a custom endpoint).
+const DEFAULT_CLAUDE_API_URL: &str = "https://api.anthropic.com/v1/messages";
 
-/// Default model for deep analysis.
-const CLAUDE_MODEL: &str = "claude-sonnet-4-20250514";
+/// Default model for deep analysis (used when user has not configured a model name).
+const DEFAULT_CLAUDE_MODEL: &str = "claude-sonnet-4-20250514";
 
 /// Anthropic API version header.
 const ANTHROPIC_VERSION: &str = "2023-06-01";
@@ -48,12 +49,15 @@ struct ClaudeContentBlock {
     text: Option<String>,
 }
 
-/// Send an analysis request to Claude API.
+/// Send an analysis request to Claude API using resolved config.
+///
+/// Reads model name and endpoint URL from the user's config. If not set,
+/// falls back to built-in defaults (claude-sonnet-4-20250514 + api.anthropic.com).
 ///
 /// # Arguments
 /// * `prompt` - User message content
 /// * `system` - Optional system prompt for context setting
-/// * `api_key` - Claude API key (from tauri-plugin-store)
+/// * `config` - Resolved AI config (api_key, model_name, endpoint_url from settings)
 ///
 /// # Returns
 /// The assistant's response text.
@@ -61,12 +65,26 @@ struct ClaudeContentBlock {
 pub async fn analyze(
     prompt: &str,
     system: Option<&str>,
-    api_key: &str,
+    config: &ResolvedAiConfig,
 ) -> Result<String, AppError> {
-    if api_key.is_empty() {
+    if config.api_key.is_empty() {
         log::warn!("Claude API key not configured — skipping request");
         return Ok(String::new());
     }
+
+    let model = if config.model_name.is_empty() {
+        DEFAULT_CLAUDE_MODEL
+    } else {
+        &config.model_name
+    };
+
+    let endpoint = if config.endpoint_url.is_empty() {
+        DEFAULT_CLAUDE_API_URL
+    } else {
+        &config.endpoint_url
+    };
+
+    log::info!("Claude request: model={}, endpoint={}", model, endpoint);
 
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(TIMEOUT_SECS))
@@ -74,7 +92,7 @@ pub async fn analyze(
         .map_err(|e| AppError::Network(format!("HTTP client error: {}", e)))?;
 
     let request_body = ClaudeRequest {
-        model: CLAUDE_MODEL,
+        model,
         max_tokens: MAX_TOKENS,
         messages: vec![ClaudeMessage {
             role: "user",
@@ -84,8 +102,8 @@ pub async fn analyze(
     };
 
     let response = client
-        .post(CLAUDE_API_URL)
-        .header("x-api-key", api_key)
+        .post(endpoint)
+        .header("x-api-key", &config.api_key)
         .header("anthropic-version", ANTHROPIC_VERSION)
         .header("Content-Type", "application/json")
         .json(&request_body)
@@ -113,4 +131,18 @@ pub async fn analyze(
         .join("");
 
     Ok(text)
+}
+
+/// Backward-compatible wrapper: analyze with just an API key (uses defaults for model/endpoint).
+pub async fn analyze_with_key(
+    prompt: &str,
+    system: Option<&str>,
+    api_key: &str,
+) -> Result<String, AppError> {
+    let config = ResolvedAiConfig {
+        api_key: api_key.to_string(),
+        model_name: String::new(),
+        endpoint_url: String::new(),
+    };
+    analyze(prompt, system, &config).await
 }

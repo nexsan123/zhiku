@@ -7,6 +7,7 @@ use crate::models::ai::{
     CycleIndicators, CycleReasoning, FiveLayerReasoning, ReasoningStep, TurningSignal,
 };
 use crate::models::credit::{confidence_grade, GlobalCycleOverview};
+use crate::services::ai_config::ResolvedAiConfig;
 use crate::services::{claude_client, summarizer};
 
 // ===========================================================================
@@ -39,12 +40,12 @@ Rules:
 - reasoningChain: 2-4 sentences explaining your logic
 - JSON only, no other text"#;
 
-/// Run legacy cycle reasoning using Claude API.
+/// Run legacy cycle reasoning using configured AI provider.
 pub async fn reason_cycle(
     indicators: &CycleIndicators,
-    claude_api_key: &str,
+    config: &ResolvedAiConfig,
 ) -> Result<CycleReasoning, AppError> {
-    if claude_api_key.is_empty() {
+    if config.api_key.is_empty() {
         log::warn!("Claude API key not configured — returning default cycle reasoning");
         return Ok(default_reasoning("No API key configured"));
     }
@@ -57,7 +58,7 @@ pub async fn reason_cycle(
         indicators_json
     );
 
-    let response = claude_client::analyze(&user_prompt, Some(CYCLE_SYSTEM_PROMPT), claude_api_key)
+    let response = claude_client::analyze(&user_prompt, Some(CYCLE_SYSTEM_PROMPT), config)
         .await?;
 
     if response.is_empty() {
@@ -71,6 +72,7 @@ pub async fn reason_cycle(
 pub async fn persist_reasoning(
     pool: &SqlitePool,
     reasoning: &CycleReasoning,
+    model_label: &str,
 ) -> Result<(), AppError> {
     let id = Uuid::new_v4().to_string();
     let now = Utc::now().to_rfc3339();
@@ -84,7 +86,7 @@ pub async fn persist_reasoning(
     )
     .bind(&id)
     .bind(&output_json)
-    .bind("claude:claude-sonnet-4-20250514")
+    .bind(model_label)
     .bind(reasoning.confidence)
     .bind(&reasoning.reasoning_chain)
     .bind(&now)
@@ -92,7 +94,7 @@ pub async fn persist_reasoning(
     .await
     .map_err(|e| AppError::Database(format!("Insert cycle_reasoning failed: {}", e)))?;
 
-    log::info!("Cycle reasoning persisted: id={}, confidence={:.2}", id, reasoning.confidence);
+    log::info!("Cycle reasoning persisted: id={}, model={}, confidence={:.2}", id, model_label, reasoning.confidence);
     Ok(())
 }
 
@@ -211,13 +213,13 @@ pub struct FiveLayerInput {
     pub active_scenarios: Vec<String>,
 }
 
-/// Run five-layer reasoning using Claude.
+/// Run five-layer reasoning using configured AI provider.
 pub async fn reason_five_layer(
     _pool: &SqlitePool,
     input: &FiveLayerInput,
-    claude_api_key: &str,
+    config: &ResolvedAiConfig,
 ) -> Result<FiveLayerReasoning, AppError> {
-    if claude_api_key.is_empty() {
+    if config.api_key.is_empty() {
         log::warn!("Claude API key not configured — returning default five-layer reasoning");
         return Ok(default_five_layer(&input.cycle_overview, "No API key configured"));
     }
@@ -225,7 +227,7 @@ pub async fn reason_five_layer(
     let prompt = build_five_layer_prompt(input)?;
 
     let response =
-        claude_client::analyze(&prompt, Some(FIVE_LAYER_SYSTEM_PROMPT), claude_api_key).await?;
+        claude_client::analyze(&prompt, Some(FIVE_LAYER_SYSTEM_PROMPT), config).await?;
 
     if response.is_empty() {
         return Ok(default_five_layer(&input.cycle_overview, "Claude returned empty response"));
@@ -238,6 +240,7 @@ pub async fn reason_five_layer(
 pub async fn persist_five_layer(
     pool: &SqlitePool,
     reasoning: &FiveLayerReasoning,
+    model_label: &str,
 ) -> Result<(), AppError> {
     let id = Uuid::new_v4().to_string();
     let now = Utc::now().to_rfc3339();
@@ -247,10 +250,11 @@ pub async fn persist_five_layer(
     sqlx::query(
         r#"INSERT INTO ai_analysis
            (id, analysis_type, input_ids, output, model, confidence, reasoning_chain, source_urls, created_at)
-           VALUES (?1, 'five_layer_reasoning', NULL, ?2, 'claude:claude-sonnet-4-20250514', ?3, NULL, NULL, ?4)"#,
+           VALUES (?1, 'five_layer_reasoning', NULL, ?2, ?3, ?4, NULL, NULL, ?5)"#,
     )
     .bind(&id)
     .bind(&output_json)
+    .bind(model_label)
     .bind(reasoning.confidence)
     .bind(&now)
     .execute(pool)
@@ -258,8 +262,9 @@ pub async fn persist_five_layer(
     .map_err(|e| AppError::Database(format!("Insert five_layer_reasoning failed: {}", e)))?;
 
     log::info!(
-        "Five-layer reasoning persisted: id={}, confidence={:.2}",
+        "Five-layer reasoning persisted: id={}, model={}, confidence={:.2}",
         id,
+        model_label,
         reasoning.confidence
     );
     Ok(())

@@ -41,16 +41,16 @@ Rules:
 // Public API
 // ---------------------------------------------------------------------------
 
-/// Perform deep analysis on a news cluster using Claude.
+/// Perform deep analysis on a news cluster using configured AI provider.
 ///
 /// Fetches news details from SQLite, builds a prompt with all titles + summaries,
-/// sends to Claude, parses the structured response.
+/// sends to AI provider, parses the structured response.
 pub async fn analyze_cluster(
     pool: &SqlitePool,
     cluster: &NewsCluster,
-    claude_api_key: &str,
+    config: &crate::services::ai_config::ResolvedAiConfig,
 ) -> Result<DeepAnalysis, AppError> {
-    if claude_api_key.is_empty() {
+    if config.api_key.is_empty() {
         log::warn!("Claude API key not configured — returning default deep analysis");
         return Ok(default_analysis(cluster));
     }
@@ -61,7 +61,7 @@ pub async fn analyze_cluster(
     let user_prompt = build_prompt(cluster, &news_details);
 
     let response =
-        claude_client::analyze(&user_prompt, Some(DEEP_ANALYSIS_SYSTEM_PROMPT), claude_api_key)
+        claude_client::analyze(&user_prompt, Some(DEEP_ANALYSIS_SYSTEM_PROMPT), config)
             .await?;
 
     if response.is_empty() {

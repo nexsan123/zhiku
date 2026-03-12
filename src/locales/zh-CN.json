@@ -353,6 +353,7 @@
     "critical": "危急",
     "hawkish": "鹰派",
     "dovish": "鸽派",
-    "unavailable": "暂无数据"
+    "unavailable": "暂无数据",
+    "marketRef": "VIX · DXY ▸ 市场雷达"
   }
 }

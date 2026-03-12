@@ -295,9 +295,9 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
                     }
                 };
 
-                // Layer 3: Claude reasoning
-                let claude_key = crate::services::ai_config::resolve_provider_key(&app, "claude");
-                let reasoning = match cycle_reasoner::reason_cycle(&indicators, &claude_key).await {
+                // Layer 3: AI reasoning (uses user-configured model/endpoint)
+                let claude_config = crate::services::ai_config::resolve_provider_config(&app, "claude");
+                let reasoning = match cycle_reasoner::reason_cycle(&indicators, &claude_config).await {
                     Ok(r) => r,
                     Err(e) => {
                         log::warn!("PollLoop [CycleReasoning] reasoning failed: {}", e);
@@ -309,7 +309,8 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
                 };
 
                 // Layer 4: persist
-                if let Err(e) = cycle_reasoner::persist_reasoning(&pool, &reasoning).await {
+                let model_label = claude_config.model_label("claude");
+                if let Err(e) = cycle_reasoner::persist_reasoning(&pool, &reasoning, &model_label).await {
                     log::warn!("PollLoop [CycleReasoning] persist failed: {}", e);
                 }
 
@@ -385,7 +386,7 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
             tokio::time::sleep(Duration::from_secs(5 * 60)).await;
             loop {
                 log::info!("PollLoop [DeepAnalysis]: starting clustering + deep analysis pass");
-                let claude_key = crate::services::ai_config::resolve_provider_key(&app, "claude");
+                let claude_config = crate::services::ai_config::resolve_provider_config(&app, "claude");
 
                 // Step 1: Build clusters from recently analyzed news
                 match news_cluster::build_clusters(&pool).await {
@@ -397,7 +398,7 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
                             // Step 2: Deep-analyze each cluster via Claude
                             let mut analyzed = 0usize;
                             for cluster in &clusters {
-                                match deep_analyzer::analyze_cluster(&pool, cluster, &claude_key).await {
+                                match deep_analyzer::analyze_cluster(&pool, cluster, &claude_config).await {
                                     Ok(analysis) => {
                                         if let Err(e) = deep_analyzer::persist_analysis(&pool, &analysis).await {
                                             log::warn!("PollLoop [DeepAnalysis]: persist failed for cluster {}: {}", cluster.cluster_id, e);
@@ -438,9 +439,9 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
             tokio::time::sleep(Duration::from_secs(10 * 60)).await;
             loop {
                 log::info!("PollLoop [ScenarioUpdate]: starting weekly scenario probability update");
-                let claude_key = crate::services::ai_config::resolve_provider_key(&app, "claude");
+                let claude_config = crate::services::ai_config::resolve_provider_config(&app, "claude");
 
-                match scenario_engine::update_scenarios(&pool, &claude_key).await {
+                match scenario_engine::update_scenarios(&pool, &claude_config).await {
                     Ok(matrix) => {
                         log::info!(
                             "PollLoop [ScenarioUpdate]: updated {} scenarios",

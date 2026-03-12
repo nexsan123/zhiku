@@ -9,6 +9,20 @@ pub struct ResolvedAiConfig {
     pub endpoint_url: String,
 }
 
+impl ResolvedAiConfig {
+    /// Generate a human-readable model label for persistence (e.g., "claude:claude-sonnet-4-20250514").
+    ///
+    /// If the user configured a model_name, uses `"{provider}:{model_name}"`.
+    /// Otherwise falls back to `"{provider}:default"`.
+    pub fn model_label(&self, provider: &str) -> String {
+        if self.model_name.is_empty() {
+            format!("{}:default", provider)
+        } else {
+            format!("{}:{}", provider, self.model_name)
+        }
+    }
+}
+
 /// Mirrors AiModelConfig for deserialization from store.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

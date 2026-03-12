@@ -11,8 +11,6 @@ export interface MapSelection {
   layerType: 'creditCycle' | 'newsHeatmap' | 'tensionArcs';
   country: string;
   keywords: string[];
-  rate?: string;
-  size?: string;
   detail?: string;
   confidence?: number;
   x: number;
@@ -115,14 +113,6 @@ export function MapDetailCard({ selection, onClose }: Props) {
       {/* Meta info */}
       <div className="map-detail__meta">
         <span className="map-detail__country">{selection.country}</span>
-        {selection.rate && (
-          <span className="map-detail__rate">
-            {t('map.rate')}: {selection.rate}
-          </span>
-        )}
-        {selection.size && (
-          <span className="map-detail__size">{selection.size.toUpperCase()}</span>
-        )}
       </div>
 
       {loading ? (

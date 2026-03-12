@@ -93,9 +93,9 @@ pub async fn get_active_scenarios(pool: &SqlitePool) -> Result<ScenarioMatrix, A
 /// persists results to ai_analysis.
 pub async fn update_scenarios(
     pool: &SqlitePool,
-    claude_api_key: &str,
+    config: &crate::services::ai_config::ResolvedAiConfig,
 ) -> Result<ScenarioMatrix, AppError> {
-    if claude_api_key.is_empty() {
+    if config.api_key.is_empty() {
         log::warn!("Claude API key not configured — returning empty scenario matrix");
         return Ok(ScenarioMatrix {
             scenarios: Vec::new(),
@@ -128,7 +128,7 @@ pub async fn update_scenarios(
     // Build prompt
     let prompt = build_scenario_prompt(&active, &dynamics, &previous);
 
-    let response = claude_client::analyze(&prompt, Some(SCENARIO_SYSTEM_PROMPT), claude_api_key)
+    let response = claude_client::analyze(&prompt, Some(SCENARIO_SYSTEM_PROMPT), config)
         .await?;
 
     if response.is_empty() {

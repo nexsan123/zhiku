@@ -353,6 +353,7 @@
     "critical": "Critical",
     "hawkish": "Hawkish",
     "dovish": "Dovish",
-    "unavailable": "Unavailable"
+    "unavailable": "Unavailable",
+    "marketRef": "VIX · DXY ▸ Market Radar"
   }
 }
