@@ -13,11 +13,7 @@ function gradeClass(grade: string): string {
   return 'ib-grade--speculative';
 }
 
-function gradeLabel(grade: string): string {
-  if (grade === 'high') return 'HIGH';
-  if (grade === 'reasonable') return 'REASONABLE';
-  return 'SPECULATIVE';
-}
+// gradeLabel moved inline to use t()
 
 function AnalysisCard({ analysis }: { analysis: DeepAnalysis }) {
   const { t } = useTranslation();
@@ -41,7 +37,7 @@ function AnalysisCard({ analysis }: { analysis: DeepAnalysis }) {
         </div>
         <div className="ib-card__header-right">
           <span className={`ib-grade-badge ${gradeClass(analysis.deepAnalysis.confidenceGrade)}`}>
-            {gradeLabel(analysis.deepAnalysis.confidenceGrade)}
+            {t(`grade.${analysis.deepAnalysis.confidenceGrade}`, { defaultValue: analysis.deepAnalysis.confidenceGrade })}
           </span>
           <span className="ib-card__time">{timeAgo}</span>
         </div>

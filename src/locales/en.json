@@ -13,7 +13,8 @@
     "minimize": "Minimize",
     "maximize": "Maximize",
     "close": "Close",
-    "settings": "Settings"
+    "settings": "Settings",
+    "notifications": "Notifications ({{count}})"
   },
   "panel": {
     "newsFeed": "News Feed",
@@ -124,7 +125,11 @@
     "marketData": "Market Data",
     "macroIndicators": "Macro Indicators",
     "relatedNews": "Related News",
-    "noRelatedNews": "No related news"
+    "noRelatedNews": "No related news",
+    "webglUnavailable": "WebGL unavailable",
+    "requiresGpu": "Map requires GPU acceleration",
+    "newsHover": "{{count}} news · {{title}}",
+    "newsInHour": "{{count}} news in 1h"
   },
   "language": {
     "zh": "中文",
@@ -257,7 +262,64 @@
     "modelName": "Model",
     "endpoint": "Endpoint",
     "cancel": "Cancel",
-    "aiKeysMovedNote": "AI model API keys are now managed in the AI Models tab."
+    "aiKeysMovedNote": "AI model API keys are now managed in the AI Models tab.",
+    "tier": "Tier {{n}}",
+    "disable": "Disable",
+    "enable": "Enable",
+    "tierLabel0": "T0 · Official",
+    "tierLabel1": "T1 · Wire Service",
+    "tierLabel2": "T2 · Independent",
+    "tierLabel3": "T3 · Specialized",
+    "rsshubBaseUrl": "RSSHub Base URL",
+    "rsshubBaseUrlDesc": "Self-hosted RSSHub instance URL (default: rsshub.app)"
+  },
+  "country": {
+    "US": "United States", "CN": "China", "XM": "Euro Area", "JP": "Japan",
+    "GB": "United Kingdom", "CA": "Canada", "AU": "Australia", "KR": "South Korea",
+    "IN": "India", "BR": "Brazil", "TR": "Turkey", "AR": "Argentina",
+    "ZA": "South Africa", "SA": "Saudi Arabia", "AE": "UAE"
+  },
+  "countryShort": {
+    "US": "US", "CN": "CN", "XM": "EU", "JP": "JP",
+    "GB": "GB", "CA": "CA", "AU": "AU", "KR": "KR",
+    "IN": "IN", "BR": "BR", "TR": "TR", "AR": "AR",
+    "ZA": "ZA", "SA": "SA", "AE": "AE"
+  },
+  "category": {
+    "geopolitical": "Geopolitical",
+    "macro_policy": "Macro Policy",
+    "market": "Market",
+    "corporate": "Corporate",
+    "central_bank": "Central Bank",
+    "trade": "Trade",
+    "crypto": "Crypto",
+    "energy": "Energy",
+    "supply_chain": "Supply Chain"
+  },
+  "grade": {
+    "high": "HIGH",
+    "reasonable": "REASONABLE",
+    "speculative": "SPECULATIVE"
+  },
+  "activityLevel": {
+    "critical": "CRITICAL",
+    "high": "HIGH",
+    "moderate": "MODERATE",
+    "low": "LOW"
+  },
+  "tensionLevel": {
+    "critical": "CRITICAL",
+    "high": "HIGH",
+    "moderate": "MODERATE",
+    "low": "LOW"
+  },
+  "policyVector": {
+    "trade": "Trade",
+    "tech": "Tech",
+    "financial": "Financial",
+    "energy": "Energy",
+    "crypto": "Crypto",
+    "military": "Military"
   },
   "creditCycle": {
     "loading": "Loading credit cycle data...",
@@ -272,7 +334,24 @@
     "monitorTier": "Monitor Tier",
     "tideDetail": "Dollar Tide Indicators",
     "yieldSpread": "Yield Spread",
-    "dataAsOf": "Data as of"
+    "dataAsOf": "Data as of",
+    "creditGdpGap": "Credit-to-GDP Gap",
+    "lowReliability": "Low data reliability",
+    "dxy3m": "DXY 3M",
+    "dxy6m": "DXY 6M",
+    "m2GrowthLabel": "M2 Growth",
+    "gdpGrowth": "Real GDP Growth",
+    "fiscalBalance": "Fiscal Balance/GDP",
+    "currentAccount": "Current Account/GDP",
+    "govDebt": "Gov Debt/GDP",
+    "govRevenue": "Gov Revenue/GDP",
+    "incomeSection": "Income",
+    "liabilitySection": "Liabilities",
+    "reserveSection": "Reserves",
+    "noImfData": "No IMF data",
+    "fiscalShort": "Fiscal",
+    "debtShort": "Debt",
+    "revShort": "Rev"
   },
   "intel": {
     "loading": "Loading intelligence brief...",
@@ -354,6 +433,12 @@
     "hawkish": "Hawkish",
     "dovish": "Dovish",
     "unavailable": "Unavailable",
-    "marketRef": "VIX · DXY ▸ Market Radar"
+    "marketRef": "VIX · DXY ▸ Market Radar",
+    "fearGreedShort": "F&G",
+    "sentimentShort": "Senti",
+    "unemployment": "Unemp",
+    "eventsUnit": "events",
+    "articlesUnit": "articles",
+    "confidenceLabel": "Confidence"
   }
 }

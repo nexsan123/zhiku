@@ -11,11 +11,17 @@ type Tab = 'data-sources' | 'ai-models' | 'api-keys';
 interface Props {
   open: boolean;
   onClose: () => void;
+  initialTab?: Tab;
 }
 
-export function SettingsPage({ open, onClose }: Props) {
+export function SettingsPage({ open, onClose, initialTab = 'data-sources' }: Props) {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<Tab>('data-sources');
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
+
+  // Sync activeTab when opened with a specific tab
+  useEffect(() => {
+    if (open) setActiveTab(initialTab);
+  }, [open, initialTab]);
 
   useEffect(() => {
     if (!open) return;

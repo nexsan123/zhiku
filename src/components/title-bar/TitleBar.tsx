@@ -4,17 +4,17 @@ import { Search, Radio, Zap, Bell, Minus, Square, X, PanelLeft, PanelRight, Sett
 import { useAppStore } from '@stores/app-store';
 import './TitleBar.css';
 
-interface TitleBarProps {
-  onOpenSettings?: () => void;
-}
-
-export function TitleBar({ onOpenSettings }: TitleBarProps) {
+export function TitleBar() {
   const { t, i18n } = useTranslation();
   const toggleLeftPanel = useAppStore((s) => s.toggleLeftPanel);
   const toggleRightPanel = useAppStore((s) => s.toggleRightPanel);
   const notificationCount = useAppStore((s) => s.notificationCount);
   const intelCount = useAppStore((s) => s.intelCount);
   const apiStatus = useAppStore((s) => s.apiStatus);
+  const setCmdKOpen = useAppStore((s) => s.setCmdKOpen);
+  const openSettings = useAppStore((s) => s.openSettings);
+  const setSituationTab = useAppStore((s) => s.setSituationTab);
+  const leftPanelCollapsed = useAppStore((s) => s.leftPanelCollapsed);
 
   const sourceValues = Object.values(apiStatus);
   const onlineSourceCount = sourceValues.filter((s) => s.status === 'online').length;
@@ -54,17 +54,32 @@ export function TitleBar({ onOpenSettings }: TitleBarProps) {
 
       {/* Center: Search + Sources + Intel */}
       <div className="title-bar__center" data-tauri-drag-region>
-        <button className="title-bar__action-btn" aria-label={`${t('titleBar.search')} (${t('titleBar.searchShortcut')})`}>
+        <button
+          className="title-bar__action-btn"
+          aria-label={`${t('titleBar.search')} (${t('titleBar.searchShortcut')})`}
+          onClick={() => setCmdKOpen(true)}
+        >
           <Search size={13} />
           <span className="title-bar__action-label">{t('titleBar.search')}</span>
           <kbd className="title-bar__kbd">{t('titleBar.searchShortcut')}</kbd>
         </button>
-        <button className="title-bar__action-btn" aria-label={t('titleBar.sources')}>
+        <button
+          className="title-bar__action-btn"
+          aria-label={t('titleBar.sources')}
+          onClick={() => openSettings('data-sources')}
+        >
           <Radio size={13} />
           <span className="title-bar__action-label">{t('titleBar.sources')}</span>
           <span className="title-bar__action-count">{onlineSourceCount}/{totalSourceCount}</span>
         </button>
-        <button className="title-bar__action-btn" aria-label={t('titleBar.intel')}>
+        <button
+          className="title-bar__action-btn"
+          aria-label={t('titleBar.intel')}
+          onClick={() => {
+            setSituationTab('intel');
+            if (leftPanelCollapsed) toggleLeftPanel();
+          }}
+        >
           <Zap size={13} />
           <span className="title-bar__action-label">{t('titleBar.intel')}</span>
           <span className="title-bar__badge">{intelCount}</span>
@@ -91,14 +106,14 @@ export function TitleBar({ onOpenSettings }: TitleBarProps) {
         </button>
         <button
           className="title-bar__notification-btn"
-          onClick={onOpenSettings}
+          onClick={() => openSettings()}
           aria-label={t('titleBar.settings')}
         >
           <Settings size={16} />
         </button>
         <button
           className="title-bar__notification-btn"
-          aria-label={`Notifications (${notificationCount})`}
+          aria-label={t('titleBar.notifications', { count: notificationCount })}
         >
           <Bell size={16} />
           {notificationCount > 0 && (

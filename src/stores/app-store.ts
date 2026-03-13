@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import type { ApiServiceStatus, PanelId, PanelState } from '@contracts/app-types';
 import { MOCK_API_STATUS } from '@utils/mocks/api-status';
 
+export type SituationTab = 'cycle' | 'credit' | 'intel' | 'gameMap';
+
 // 所有面板 ID（左栏 7 + 右栏 8）
 const ALL_PANEL_IDS: PanelId[] = [
   'cycle-reasoning',
@@ -46,6 +48,16 @@ interface AppState {
   // 计数
   intelCount: number;
   notificationCount: number;
+
+  // CmdK / Settings / Situation tab
+  cmdKOpen: boolean;
+  setCmdKOpen: (open: boolean) => void;
+  settingsOpen: boolean;
+  settingsInitialTab: 'data-sources' | 'ai-models' | 'api-keys';
+  openSettings: (tab?: 'data-sources' | 'ai-models' | 'api-keys') => void;
+  closeSettings: () => void;
+  situationTab: SituationTab;
+  setSituationTab: (tab: SituationTab) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -79,4 +91,14 @@ export const useAppStore = create<AppState>((set) => ({
   // 计数（Phase 4 mock 初始值）
   intelCount: 0,
   notificationCount: 0,
+
+  // CmdK / Settings / Situation tab
+  cmdKOpen: false,
+  setCmdKOpen: (open: boolean) => set({ cmdKOpen: open }),
+  settingsOpen: false,
+  settingsInitialTab: 'data-sources',
+  openSettings: (tab = 'data-sources') => set({ settingsOpen: true, settingsInitialTab: tab }),
+  closeSettings: () => set({ settingsOpen: false }),
+  situationTab: 'cycle',
+  setSituationTab: (tab) => set({ situationTab: tab }),
 }));

@@ -1,68 +1,83 @@
 {
-  "_comment": "Data reliability scores per country per indicator. Range 0.0-1.0. Reviewed quarterly. See edict-004.",
-  "_updated": "2026-03-10",
+  "_comment": "Data reliability scores per country per indicator. Range 0.0-1.0. Reviewed quarterly. See edict-004. Includes IMF WEO fiscal indicators.",
+  "_updated": "2026-03-12",
   "US": {
     "gdp": 0.95, "credit": 0.95, "cpi": 0.95, "employment": 0.95,
+    "fiscal_balance": 0.95, "current_account": 0.95, "gov_debt": 0.95, "gov_revenue": 0.95,
     "note": "Transparent statistical system, independent audit"
   },
   "CN": {
     "gdp": 0.60, "credit": 0.75, "cpi": 0.70, "employment": 0.55,
+    "fiscal_balance": 0.55, "current_account": 0.70, "gov_debt": 0.50, "gov_revenue": 0.50,
     "alt_indicators": ["electricity_consumption", "rail_freight", "bank_lending"],
-    "note": "Official GDP widely questioned; credit data from BIS more reliable than domestic sources"
+    "note": "Official GDP widely questioned; credit data from BIS more reliable than domestic sources. Fiscal data opaque; local government hidden debt understates true position"
   },
   "XM": {
     "gdp": 0.90, "credit": 0.90, "cpi": 0.90, "employment": 0.85,
+    "fiscal_balance": 0.90, "current_account": 0.90, "gov_debt": 0.90, "gov_revenue": 0.90,
     "note": "Eurostat methodology, generally reliable; aggregation masks country-level variance"
   },
   "JP": {
     "gdp": 0.95, "credit": 0.95, "cpi": 0.95, "employment": 0.95,
+    "fiscal_balance": 0.95, "current_account": 0.95, "gov_debt": 0.95, "gov_revenue": 0.95,
     "note": "High-quality statistical bureau"
   },
   "GB": {
     "gdp": 0.90, "credit": 0.90, "cpi": 0.90, "employment": 0.90,
+    "fiscal_balance": 0.90, "current_account": 0.90, "gov_debt": 0.90, "gov_revenue": 0.90,
     "note": "ONS reliable"
   },
   "CA": {
     "gdp": 0.90, "credit": 0.90, "cpi": 0.90, "employment": 0.90,
+    "fiscal_balance": 0.90, "current_account": 0.90, "gov_debt": 0.90, "gov_revenue": 0.90,
     "note": "Statistics Canada reliable"
   },
   "AU": {
     "gdp": 0.90, "credit": 0.90, "cpi": 0.90, "employment": 0.90,
+    "fiscal_balance": 0.90, "current_account": 0.90, "gov_debt": 0.90, "gov_revenue": 0.90,
     "note": "ABS reliable"
   },
   "KR": {
     "gdp": 0.85, "credit": 0.85, "cpi": 0.85, "employment": 0.85,
+    "fiscal_balance": 0.85, "current_account": 0.85, "gov_debt": 0.85, "gov_revenue": 0.85,
     "note": "Bank of Korea data generally reliable"
   },
   "IN": {
     "gdp": 0.65, "credit": 0.75, "cpi": 0.70, "employment": 0.50,
+    "fiscal_balance": 0.60, "current_account": 0.70, "gov_debt": 0.65, "gov_revenue": 0.55,
     "alt_indicators": ["gstn_tax_collections", "pmi"],
     "note": "GDP methodology revised 2015, base year debate; employment data sparse"
   },
   "BR": {
     "gdp": 0.80, "credit": 0.80, "cpi": 0.80, "employment": 0.75,
+    "fiscal_balance": 0.75, "current_account": 0.80, "gov_debt": 0.80, "gov_revenue": 0.75,
     "note": "IBGE generally reliable but political pressure periods exist"
   },
   "TR": {
     "gdp": 0.70, "credit": 0.75, "cpi": 0.40, "employment": 0.65,
+    "fiscal_balance": 0.60, "current_account": 0.70, "gov_debt": 0.65, "gov_revenue": 0.55,
     "alt_indicators": ["enag_independent_cpi"],
-    "note": "CPI widely disputed: official 85% vs independent estimates >170% (2022). Credit data from BIS more reliable"
+    "note": "CPI widely disputed: official 85% vs independent estimates >170% (2022). Credit data from BIS more reliable. Fiscal spending data subject to off-budget items"
   },
   "AR": {
     "gdp": 0.65, "credit": 0.70, "cpi": 0.50, "employment": 0.60,
+    "fiscal_balance": 0.50, "current_account": 0.60, "gov_debt": 0.55, "gov_revenue": 0.45,
     "alt_indicators": ["provincial_cpi_estimates"],
-    "note": "CPI data faked 2007-2015 under Kirchner. Post-Milei improving but legacy trust issues"
+    "note": "CPI data faked 2007-2015 under Kirchner. Post-Milei improving but legacy trust issues. Fiscal accounts restructured under Milei, improving transparency"
   },
   "ZA": {
     "gdp": 0.80, "credit": 0.80, "cpi": 0.80, "employment": 0.70,
+    "fiscal_balance": 0.80, "current_account": 0.80, "gov_debt": 0.80, "gov_revenue": 0.75,
     "note": "Stats SA reasonably reliable; employment survey methodology limitations"
   },
   "SA": {
     "gdp": 0.70, "credit": 0.65, "cpi": 0.75, "employment": 0.50,
-    "note": "Oil GDP transparent but non-oil GDP opaque; limited credit market data"
+    "fiscal_balance": 0.65, "current_account": 0.70, "gov_debt": 0.60, "gov_revenue": 0.60,
+    "note": "Oil GDP transparent but non-oil GDP opaque; limited credit market data. Oil revenue transparent; non-oil fiscal data less reliable"
   },
   "AE": {
     "gdp": 0.70, "credit": 0.65, "cpi": 0.75, "employment": 0.45,
+    "fiscal_balance": 0.60, "current_account": 0.65, "gov_debt": 0.55, "gov_revenue": 0.55,
     "note": "Similar to SA; Dubai more transparent than other emirates"
   }
 }

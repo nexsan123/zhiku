@@ -149,7 +149,7 @@ export function CycleReasoningPanel() {
       </div>
 
       {/* ---- Confidence bar ---- */}
-      <div className="cycle-confidence-bar" aria-label={`Confidence ${confidencePct}%`}>
+      <div className="cycle-confidence-bar" aria-label={`${t('cycle.confidenceLabel')} ${confidencePct}%`}>
         <div
           className={`cycle-confidence-bar__fill ${confidenceClass(reasoning.confidence)}`}
           style={{ width: `${confidencePct}%` }}
@@ -165,7 +165,7 @@ export function CycleReasoningPanel() {
             <span className="cycle-indicator-row__name">{t('cycle.monetary')}</span>
             <div className="cycle-indicator-row__values">
               <span className="cycle-indicator-row__detail">
-                {indicators.monetary.fedRate}% · {indicators.monetary.m2Growth > 0 ? '+' : ''}{indicators.monetary.m2Growth}% M2
+                {indicators.monetary.fedRate}% · M2 {indicators.monetary.m2Growth > 0 ? '+' : ''}{indicators.monetary.m2Growth}%
               </span>
               <span className={`cycle-phase cycle-phase--sm ${phaseClass(indicators.monetary.policyStance)}`}>
                 {t(phaseKey(indicators.monetary.policyStance))}
@@ -191,7 +191,7 @@ export function CycleReasoningPanel() {
             <span className="cycle-indicator-row__name">{t('cycle.economic')}</span>
             <div className="cycle-indicator-row__values">
               <span className="cycle-indicator-row__detail">
-                GDP {indicators.economic.gdpGrowth > 0 ? '+' : ''}{indicators.economic.gdpGrowth}% · U {indicators.economic.unemployment}%
+                GDP {indicators.economic.gdpGrowth > 0 ? '+' : ''}{indicators.economic.gdpGrowth}% · {t('cycle.unemployment')} {indicators.economic.unemployment}%
               </span>
               <span className={`cycle-phase cycle-phase--sm ${phaseClass(indicators.economic.phase)}`}>
                 {t(phaseKey(indicators.economic.phase))}
@@ -217,7 +217,7 @@ export function CycleReasoningPanel() {
             <span className="cycle-indicator-row__name">{t('cycle.sentiment')}</span>
             <div className="cycle-indicator-row__values">
               <span className="cycle-indicator-row__detail">
-                F&G {indicators.sentiment.fearGreed} · Senti {(indicators.sentiment.newsSentimentAvg * 100).toFixed(0)}%
+                {t('cycle.fearGreedShort')} {indicators.sentiment.fearGreed} · {t('cycle.sentimentShort')} {(indicators.sentiment.newsSentimentAvg * 100).toFixed(0)}%
               </span>
               <span className={`cycle-phase cycle-phase--sm ${phaseClass(indicators.sentiment.phase)}`}>
                 {t(phaseKey(indicators.sentiment.phase))}
@@ -230,7 +230,7 @@ export function CycleReasoningPanel() {
             <span className="cycle-indicator-row__name">{t('cycle.geopolitical')}</span>
             <div className="cycle-indicator-row__values">
               <span className="cycle-indicator-row__detail">
-                {indicators.geopolitical.eventCount} events
+                {indicators.geopolitical.eventCount} {t('cycle.eventsUnit')}
               </span>
               <span className={`cycle-phase cycle-phase--sm ${phaseClass(indicators.geopolitical.riskLevel)}`}>
                 {t(phaseKey(indicators.geopolitical.riskLevel))}
@@ -244,7 +244,7 @@ export function CycleReasoningPanel() {
       {reasoning.turningSignals.length > 0 && (
         <div className="cycle-section">
           <h4 className="cycle-section__title">{t('cycle.turningSignals')}</h4>
-          <ul className="cycle-signals" aria-label="Turning signals">
+          <ul className="cycle-signals" aria-label={t('cycle.turningSignals')}>
             {reasoning.turningSignals.map((sig, i) => (
               <li
                 key={i}

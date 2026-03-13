@@ -4,31 +4,35 @@ use std::collections::HashSet;
 
 use crate::errors::AppError;
 
-/// BIS Data Portal REST API base (SDMX REST v2).
+/// BIS Statistics Warehouse REST API base (SDMX REST v1).
 /// Free, no API key required.
-/// Docs: https://data.bis.org/
+/// Docs: https://stats.bis.org/
+/// Note: v2 (data.bis.org) is defunct (404). Migrated to v1 (stats.bis.org) 2026-03.
 
 /// Central bank policy rates (monthly).
 const BIS_CBPOL_URL: &str =
-    "https://data.bis.org/api/v2/data/WS_CBPOL/M..?detail=dataonly&format=csv";
+    "https://stats.bis.org/api/v1/data/WS_CBPOL/M..?detail=dataonly&format=csv";
 
 /// Credit to non-financial sector (% of GDP, quarterly).
+/// Dataset renamed: WS_CREDIT (v2) -> WS_TC (v1).
+/// Key filter: Q..P.A.M.770.A (P=private non-fin, 770=% of GDP).
 const BIS_CREDIT_URL: &str =
-    "https://data.bis.org/api/v2/data/WS_CREDIT/Q..\
-.A.M.XDC.A?detail=dataonly&format=csv";
+    "https://stats.bis.org/api/v1/data/WS_TC/Q..P.A.M.770.A?detail=dataonly&format=csv";
 
 /// Credit-to-GDP gap (percentage points, quarterly). Basel III early warning.
+/// Key filter: Q..P.A.C (P=private non-fin, C=credit-to-GDP gap).
 const BIS_CREDIT_GAP_URL: &str =
-    "https://data.bis.org/api/v2/data/WS_CREDIT_GAP/Q..B.G?detail=dataonly&format=csv";
+    "https://stats.bis.org/api/v1/data/WS_CREDIT_GAP/Q..P.A.C?detail=dataonly&format=csv";
 
 /// Debt service ratio for private non-financial sector (%, quarterly).
+/// Key filter: Q..P (P=private non-fin sector).
 const BIS_DSR_URL: &str =
-    "https://data.bis.org/api/v2/data/WS_DSR/Q..B?detail=dataonly&format=csv";
+    "https://stats.bis.org/api/v1/data/WS_DSR/Q..P?detail=dataonly&format=csv";
 
 /// Selected property prices (nominal, YoY %, quarterly).
 /// Kuznets cycle reference for real estate-driven credit risk.
 const BIS_SPP_URL: &str =
-    "https://data.bis.org/api/v2/data/WS_SPP/Q..N.628?detail=dataonly&format=csv";
+    "https://stats.bis.org/api/v1/data/WS_SPP/Q..N.628?detail=dataonly&format=csv";
 
 /// Target countries for edict-004 (15 countries/areas, 3 tiers).
 /// (BIS ref_area code, human label).
@@ -59,7 +63,7 @@ const COUNTRIES: &[(&str, &str)] = &[
 
 /// Fetch a BIS SDMX CSV dataset and insert into `macro_data`.
 ///
-/// Generic over any BIS dataset that returns REF_AREA, TIME_PERIOD, OBS_VALUE.
+/// Generic over any BIS dataset that returns REF_AREA (or BORROWERS_CTY), TIME_PERIOD, OBS_VALUE.
 /// Indicator stored as `{prefix}_{ref_area}` (e.g. "BIS_CBPOL_US").
 ///
 /// # Arguments
@@ -172,7 +176,8 @@ pub async fn fetch_bis_rates(pool: &SqlitePool) -> Result<usize, AppError> {
     fetch_bis_dataset(pool, BIS_CBPOL_URL, "BIS_CBPOL", "CBPOL").await
 }
 
-/// Fetch BIS credit to non-financial sector as % of GDP (WS_CREDIT, quarterly).
+/// Fetch BIS credit to non-financial sector as % of GDP (WS_TC, quarterly).
+/// Dataset renamed from WS_CREDIT (v2) to WS_TC (v1).
 /// Indicator: BIS_CREDIT_{country_code}
 pub async fn fetch_bis_credit(pool: &SqlitePool) -> Result<usize, AppError> {
     fetch_bis_dataset(pool, BIS_CREDIT_URL, "BIS_CREDIT", "CREDIT").await
@@ -223,11 +228,13 @@ pub async fn fetch_all_credit_data(pool: &SqlitePool) -> Result<usize, AppError>
     Ok(total)
 }
 
-/// Parse BIS SDMX-CSV response into (ref_area, period, value) tuples.
+/// Parse BIS SDMX-CSV response into (country_code, period, value) tuples.
 ///
-/// BIS CSV typically has headers like:
-///   REF_AREA,TIME_PERIOD,OBS_VALUE,...
-/// We find the column indices dynamically for robustness.
+/// BIS v1 CSV headers vary by dataset:
+///   - CBPOL, SPP use `REF_AREA` for country code
+///   - WS_TC, WS_CREDIT_GAP, WS_DSR use `BORROWERS_CTY` for country code
+/// We try `REF_AREA` first, then fall back to `BORROWERS_CTY`.
+/// TIME_PERIOD and OBS_VALUE are present in all datasets.
 fn parse_bis_csv(body: &str) -> Vec<(String, String, f64)> {
     let mut results = Vec::new();
     let mut lines = body.lines();
@@ -239,7 +246,11 @@ fn parse_bis_csv(body: &str) -> Vec<(String, String, f64)> {
     };
 
     let headers: Vec<&str> = header.split(',').collect();
-    let ref_area_idx = headers.iter().position(|h| h.trim() == "REF_AREA");
+    // Country code column: REF_AREA (CBPOL, SPP) or BORROWERS_CTY (WS_TC, CREDIT_GAP, DSR)
+    let ref_area_idx = headers
+        .iter()
+        .position(|h| h.trim() == "REF_AREA")
+        .or_else(|| headers.iter().position(|h| h.trim() == "BORROWERS_CTY"));
     let period_idx = headers
         .iter()
         .position(|h| h.trim() == "TIME_PERIOD");

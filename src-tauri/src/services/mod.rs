@@ -17,6 +17,7 @@ pub mod market_context;
 pub mod qt_rest;
 pub mod qt_ws;
 pub mod bis_client;
+pub mod imf_client;
 pub mod wto_client;
 pub mod mempool_client;
 pub mod ai_provider;

@@ -1,16 +1,16 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAppStore } from '@stores/app-store';
+import type { SituationTab } from '@stores/app-store';
 import { CycleReasoningPanel } from './CycleReasoningPanel';
 import { CreditCyclePanel } from './CreditCyclePanel';
 import { IntelBriefPanel } from './IntelBriefPanel';
 import { GameMapPanel } from './GameMapPanel';
 import './SituationCenterPanel.css';
 
-type SituationTab = 'cycle' | 'credit' | 'intel' | 'gameMap';
-
 export function SituationCenterPanel() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<SituationTab>('cycle');
+  const activeTab = useAppStore((s) => s.situationTab);
+  const setActiveTab = useAppStore((s) => s.setSituationTab);
 
   const tabs: { id: SituationTab; label: string }[] = [
     { id: 'cycle', label: t('situation.cycleTab') },

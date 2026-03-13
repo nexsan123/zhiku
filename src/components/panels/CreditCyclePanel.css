@@ -148,6 +148,43 @@
   font-size: 10px; font-family: var(--font-mono); color: var(--color-text-secondary);
 }
 
+/* ---- Income toggle ---- */
+.cc-income-toggle {
+  display: flex; align-items: center; gap: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-2);
+  font-size: 10px; font-family: var(--font-mono); font-weight: var(--font-weight-semibold);
+  color: var(--color-accent-primary); background: transparent; border: 1px solid var(--glass-border-subtle);
+  border-radius: var(--radius-sm); cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.cc-income-toggle:hover { background: var(--glass-bg-card); }
+
+/* ---- Country row expanded ---- */
+.cc-country-row--expanded { flex-direction: column; align-items: stretch; }
+.cc-country-row__header {
+  display: flex; align-items: center; justify-content: space-between; width: 100%;
+}
+
+/* ---- Income chips row ---- */
+.cc-country-row__income {
+  display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; padding-top: 3px;
+  border-top: 1px solid var(--glass-border-subtle);
+}
+.cc-income-chip {
+  display: flex; align-items: center; gap: 2px;
+  font-size: 9px; font-family: var(--font-mono);
+  padding: 1px var(--spacing-1); border-radius: var(--radius-sm);
+  background: var(--color-bg-overlay);
+}
+.cc-income-chip__label {
+  color: var(--color-text-disabled); font-weight: var(--font-weight-semibold);
+}
+.cc-val--positive { color: #00c2a8; }
+.cc-val--negative { color: var(--color-semantic-error); }
+.cc-val--neutral { color: var(--color-text-tertiary); }
+.cc-country-row__income--empty {
+  color: var(--color-text-disabled); font-size: 9px; font-family: var(--font-mono); font-style: italic;
+}
+
 /* ---- Footer ---- */
 .cc-footer {
   display: flex; justify-content: space-between; align-items: center;

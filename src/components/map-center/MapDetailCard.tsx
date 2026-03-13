@@ -191,7 +191,7 @@ export function MapDetailCard({ selection, onClose }: Props) {
                       if (e.key === 'Enter' || e.key === ' ') setSelectedNews(n);
                     }}
                   >
-                    <span className="map-detail__news-title">{n.title}</span>
+                    <span className="map-detail__news-title">{n.aiSummary || n.title}</span>
                   </li>
                 ))}
               </ul>

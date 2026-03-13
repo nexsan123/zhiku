@@ -13,7 +13,8 @@
     "minimize": "最小化",
     "maximize": "最大化",
     "close": "关闭",
-    "settings": "设置"
+    "settings": "设置",
+    "notifications": "通知 ({{count}})"
   },
   "panel": {
     "newsFeed": "新闻动态",
@@ -124,7 +125,11 @@
     "marketData": "市场数据",
     "macroIndicators": "宏观指标",
     "relatedNews": "相关新闻",
-    "noRelatedNews": "暂无相关新闻"
+    "noRelatedNews": "暂无相关新闻",
+    "webglUnavailable": "WebGL 不可用",
+    "requiresGpu": "地图需要 GPU 加速支持",
+    "newsHover": "{{count}}条新闻 · {{title}}",
+    "newsInHour": "1小时内 {{count}} 条新闻"
   },
   "language": {
     "zh": "中文",
@@ -257,7 +262,64 @@
     "modelName": "模型",
     "endpoint": "接口地址",
     "cancel": "取消",
-    "aiKeysMovedNote": "AI 模型密钥已移至「AI 模型」标签页管理。"
+    "aiKeysMovedNote": "AI 模型密钥已移至「AI 模型」标签页管理。",
+    "tier": "第 {{n}} 级",
+    "disable": "禁用",
+    "enable": "启用",
+    "tierLabel0": "T0 · 官方数据",
+    "tierLabel1": "T1 · 通讯社",
+    "tierLabel2": "T2 · 独立媒体",
+    "tierLabel3": "T3 · 专业源",
+    "rsshubBaseUrl": "RSSHub 地址",
+    "rsshubBaseUrlDesc": "自建 RSSHub 实例地址（默认 rsshub.app）"
+  },
+  "country": {
+    "US": "美国", "CN": "中国", "XM": "欧元区", "JP": "日本",
+    "GB": "英国", "CA": "加拿大", "AU": "澳大利亚", "KR": "韩国",
+    "IN": "印度", "BR": "巴西", "TR": "土耳其", "AR": "阿根廷",
+    "ZA": "南非", "SA": "沙特", "AE": "阿联酋"
+  },
+  "countryShort": {
+    "US": "美", "CN": "中", "XM": "欧", "JP": "日",
+    "GB": "英", "CA": "加", "AU": "澳", "KR": "韩",
+    "IN": "印", "BR": "巴西", "TR": "土", "AR": "阿根",
+    "ZA": "南非", "SA": "沙特", "AE": "阿联"
+  },
+  "category": {
+    "geopolitical": "地缘政治",
+    "macro_policy": "宏观政策",
+    "market": "市场",
+    "corporate": "企业",
+    "central_bank": "央行",
+    "trade": "贸易",
+    "crypto": "加密",
+    "energy": "能源",
+    "supply_chain": "供应链"
+  },
+  "grade": {
+    "high": "高可信",
+    "reasonable": "合理",
+    "speculative": "推测"
+  },
+  "activityLevel": {
+    "critical": "危急",
+    "high": "高",
+    "moderate": "中",
+    "low": "低"
+  },
+  "tensionLevel": {
+    "critical": "危急",
+    "high": "紧张",
+    "moderate": "中等",
+    "low": "缓和"
+  },
+  "policyVector": {
+    "trade": "贸易",
+    "tech": "科技",
+    "financial": "金融",
+    "energy": "能源",
+    "crypto": "加密",
+    "military": "军事"
   },
   "creditCycle": {
     "loading": "正在加载信用周期数据...",
@@ -272,7 +334,24 @@
     "monitorTier": "监控圈",
     "tideDetail": "美元浪潮指标",
     "yieldSpread": "利差",
-    "dataAsOf": "数据截至"
+    "dataAsOf": "数据截至",
+    "creditGdpGap": "信贷/GDP缺口",
+    "lowReliability": "数据可靠性低",
+    "dxy3m": "美元 3月趋势",
+    "dxy6m": "美元 6月趋势",
+    "m2GrowthLabel": "M2 增速",
+    "gdpGrowth": "GDP 实际增速",
+    "fiscalBalance": "财政赤字/GDP",
+    "currentAccount": "经常账户/GDP",
+    "govDebt": "政府债务/GDP",
+    "govRevenue": "政府收入/GDP",
+    "incomeSection": "收入端",
+    "liabilitySection": "负债端",
+    "reserveSection": "储备端",
+    "noImfData": "暂无 IMF 数据",
+    "fiscalShort": "财政",
+    "debtShort": "债务",
+    "revShort": "税收"
   },
   "intel": {
     "loading": "正在加载情报简报...",
@@ -354,6 +433,12 @@
     "hawkish": "鹰派",
     "dovish": "鸽派",
     "unavailable": "暂无数据",
-    "marketRef": "VIX · DXY ▸ 市场雷达"
+    "marketRef": "VIX · DXY ▸ 市场雷达",
+    "fearGreedShort": "恐贪",
+    "sentimentShort": "情绪",
+    "unemployment": "失业率",
+    "eventsUnit": "事件",
+    "articlesUnit": "篇",
+    "confidenceLabel": "置信度"
   }
 }

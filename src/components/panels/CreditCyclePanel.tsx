@@ -42,30 +42,74 @@ function formatPct(val: number | null | undefined): string {
   return `${val >= 0 ? '+' : ''}${val.toFixed(1)}%`;
 }
 
-function CountryRow({ c }: { c: CountryCyclePosition }) {
-  const { i18n } = useTranslation();
+function CountryRow({ c, expanded }: { c: CountryCyclePosition; expanded: boolean }) {
+  const { t, i18n } = useTranslation();
   const isZh = i18n.language.startsWith('zh');
+  const ind = c.indicators;
+  const hasIncome = ind.imfGdpGrowth != null || ind.imfFiscalBalance != null
+    || ind.imfCurrentAccount != null || ind.imfGovDebt != null || ind.imfGovRevenue != null;
 
   return (
-    <div className="cc-country-row">
-      <div className="cc-country-row__left">
-        <span className="cc-country-row__code">{c.countryCode}</span>
-        <span className="cc-country-row__name">{c.countryName}</span>
-      </div>
-      <div className="cc-country-row__right">
-        <span className={`cc-phase-badge ${phaseColorClass(c.phase)}`}>
-          {isZh ? c.phaseLabel : c.phase}
-        </span>
-        {c.indicators.creditGdpGap != null && (
-          <span className="cc-country-row__gap" title="Credit-to-GDP Gap">
-            {formatPct(c.indicators.creditGdpGap)}
+    <div className={`cc-country-row ${expanded ? 'cc-country-row--expanded' : ''}`}>
+      <div className="cc-country-row__header">
+        <div className="cc-country-row__left">
+          <span className="cc-country-row__code">{c.countryCode}</span>
+          <span className="cc-country-row__name">{c.countryName}</span>
+        </div>
+        <div className="cc-country-row__right">
+          <span className={`cc-phase-badge ${phaseColorClass(c.phase)}`}>
+            {isZh ? c.phaseLabel : c.phase}
           </span>
-        )}
-        <span className={`cc-grade-dot ${gradeClass(c.confidenceGrade)}`} title={c.confidenceGrade} />
-        {c.reliability < 0.70 && (
-          <span className="cc-country-row__warn" title="Low data reliability">!</span>
-        )}
+          {ind.creditGdpGap != null && (
+            <span className="cc-country-row__gap" title={t('creditCycle.creditGdpGap')}>
+              {formatPct(ind.creditGdpGap)}
+            </span>
+          )}
+          <span className={`cc-grade-dot ${gradeClass(c.confidenceGrade)}`} title={t(`grade.${c.confidenceGrade}`, { defaultValue: c.confidenceGrade })} />
+          {c.reliability < 0.70 && (
+            <span className="cc-country-row__warn" title={t('creditCycle.lowReliability')}>!</span>
+          )}
+        </div>
       </div>
+      {expanded && hasIncome && (
+        <div className="cc-country-row__income">
+          {ind.imfGdpGrowth != null && (
+            <span className="cc-income-chip" title={t('creditCycle.gdpGrowth')}>
+              <span className="cc-income-chip__label">GDP</span>
+              <span className={ind.imfGdpGrowth >= 0 ? 'cc-val--positive' : 'cc-val--negative'}>{formatPct(ind.imfGdpGrowth)}</span>
+            </span>
+          )}
+          {ind.imfFiscalBalance != null && (
+            <span className="cc-income-chip" title={t('creditCycle.fiscalBalance')}>
+              <span className="cc-income-chip__label">{t('creditCycle.fiscalShort')}</span>
+              <span className={ind.imfFiscalBalance >= 0 ? 'cc-val--positive' : 'cc-val--negative'}>{formatPct(ind.imfFiscalBalance)}</span>
+            </span>
+          )}
+          {ind.imfCurrentAccount != null && (
+            <span className="cc-income-chip" title={t('creditCycle.currentAccount')}>
+              <span className="cc-income-chip__label">CA</span>
+              <span className={ind.imfCurrentAccount >= 0 ? 'cc-val--positive' : 'cc-val--negative'}>{formatPct(ind.imfCurrentAccount)}</span>
+            </span>
+          )}
+          {ind.imfGovDebt != null && (
+            <span className="cc-income-chip" title={t('creditCycle.govDebt')}>
+              <span className="cc-income-chip__label">{t('creditCycle.debtShort')}</span>
+              <span className={ind.imfGovDebt > 100 ? 'cc-val--negative' : 'cc-val--neutral'}>{formatPct(ind.imfGovDebt)}</span>
+            </span>
+          )}
+          {ind.imfGovRevenue != null && (
+            <span className="cc-income-chip" title={t('creditCycle.govRevenue')}>
+              <span className="cc-income-chip__label">{t('creditCycle.revShort')}</span>
+              <span className="cc-val--neutral">{formatPct(ind.imfGovRevenue)}</span>
+            </span>
+          )}
+        </div>
+      )}
+      {expanded && !hasIncome && (
+        <div className="cc-country-row__income cc-country-row__income--empty">
+          <span className="cc-income-chip__label">{t('creditCycle.noImfData')}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -75,6 +119,7 @@ export function CreditCyclePanel() {
   const isZh = i18n.language.startsWith('zh');
   const [data, setData] = useState<GlobalCycleOverview | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
+  const [showIncome, setShowIncome] = useState(false);
 
   const load = useCallback(async () => {
     setLoadState('loading');
@@ -155,6 +200,11 @@ export function CreditCyclePanel() {
         </div>
       )}
 
+      {/* Income toggle */}
+      <button className="cc-income-toggle" onClick={() => setShowIncome(!showIncome)}>
+        {showIncome ? '▾' : '▸'} {t('creditCycle.incomeSection')}
+      </button>
+
       {/* Core countries */}
       <div className="cc-section">
         <h4 className="cc-section__title">
@@ -163,7 +213,7 @@ export function CreditCyclePanel() {
             {isZh ? data.coreSummary.dominantPhaseLabel : data.coreSummary.dominantPhase}
           </span>
         </h4>
-        {core.map(c => <CountryRow key={c.countryCode} c={c} />)}
+        {core.map(c => <CountryRow key={c.countryCode} c={c} expanded={showIncome} />)}
       </div>
 
       {/* Important countries */}
@@ -175,7 +225,7 @@ export function CreditCyclePanel() {
               {isZh ? data.importantSummary.dominantPhaseLabel : data.importantSummary.dominantPhase}
             </span>
           </h4>
-          {important.map(c => <CountryRow key={c.countryCode} c={c} />)}
+          {important.map(c => <CountryRow key={c.countryCode} c={c} expanded={showIncome} />)}
         </div>
       )}
 
@@ -188,7 +238,7 @@ export function CreditCyclePanel() {
               {isZh ? data.monitorSummary.dominantPhaseLabel : data.monitorSummary.dominantPhase}
             </span>
           </h4>
-          {monitor.map(c => <CountryRow key={c.countryCode} c={c} />)}
+          {monitor.map(c => <CountryRow key={c.countryCode} c={c} expanded={showIncome} />)}
         </div>
       )}
 
@@ -197,13 +247,13 @@ export function CreditCyclePanel() {
         <h4 className="cc-section__title">{t('creditCycle.tideDetail')}</h4>
         <div className="cc-tide-detail">
           <div className="cc-tide-row">
-            <span>DXY 3M</span><span>{formatPct(data.dollarTide.dxyTrend3m)}</span>
+            <span>{t('creditCycle.dxy3m')}</span><span>{formatPct(data.dollarTide.dxyTrend3m)}</span>
           </div>
           <div className="cc-tide-row">
-            <span>DXY 6M</span><span>{formatPct(data.dollarTide.dxyTrend6m)}</span>
+            <span>{t('creditCycle.dxy6m')}</span><span>{formatPct(data.dollarTide.dxyTrend6m)}</span>
           </div>
           <div className="cc-tide-row">
-            <span>M2</span><span>{formatPct(data.dollarTide.m2Growth)}</span>
+            <span>{t('creditCycle.m2GrowthLabel')}</span><span>{formatPct(data.dollarTide.m2Growth)}</span>
           </div>
           <div className="cc-tide-row">
             <span>{t('creditCycle.yieldSpread')}</span><span>{data.dollarTide.yieldSpread.toFixed(2)}pp</span>

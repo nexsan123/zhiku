@@ -126,6 +126,13 @@ async fn fetch_country_indicators(pool: &SqlitePool, code: &str) -> CountryCredi
     // Rate direction from two latest policy rate observations
     let rate_direction = compute_rate_direction(pool, &format!("BIS_CBPOL_{}", code)).await;
 
+    // Income side (IMF WEO, edict-005)
+    let imf_gdp_growth = latest_indicator(pool, &format!("IMF_NGDP_RPCH_{}", code)).await;
+    let imf_fiscal_balance = latest_indicator(pool, &format!("IMF_GGXCNL_NGDP_{}", code)).await;
+    let imf_current_account = latest_indicator(pool, &format!("IMF_BCA_NGDPD_{}", code)).await;
+    let imf_gov_debt = latest_indicator(pool, &format!("IMF_GGXWDG_NGDP_{}", code)).await;
+    let imf_gov_revenue = latest_indicator(pool, &format!("IMF_GGR_G01_GDP_PT_{}", code)).await;
+
     CountryCreditData {
         credit_gdp_gap,
         debt_service_ratio,
@@ -134,6 +141,11 @@ async fn fetch_country_indicators(pool: &SqlitePool, code: &str) -> CountryCredi
         property_price_trend,
         policy_rate,
         rate_direction,
+        imf_gdp_growth,
+        imf_fiscal_balance,
+        imf_current_account,
+        imf_gov_debt,
+        imf_gov_revenue,
     }
 }
 

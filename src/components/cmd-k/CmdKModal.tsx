@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, X } from 'lucide-react';
+import { useAppStore } from '@stores/app-store';
+import type { SituationTab } from '@stores/app-store';
 import './CmdKModal.css';
 
 interface SearchResult {
@@ -10,11 +12,27 @@ interface SearchResult {
   detail?: string;
 }
 
+// Map panel IDs to situation center tabs (panels inside SituationCenter)
+const SITUATION_TAB_MAP: Record<string, SituationTab> = {
+  'cycle-reasoning': 'cycle',
+  'credit-cycle': 'credit',
+  'intel-brief': 'intel',
+  'game-map': 'gameMap',
+};
+
 export function CmdKModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const togglePanel = useAppStore((s) => s.togglePanel);
+  const panels = useAppStore((s) => s.panels);
+  const setSituationTab = useAppStore((s) => s.setSituationTab);
+  const leftPanelCollapsed = useAppStore((s) => s.leftPanelCollapsed);
+  const rightPanelCollapsed = useAppStore((s) => s.rightPanelCollapsed);
+  const toggleLeftPanel = useAppStore((s) => s.toggleLeftPanel);
+  const toggleRightPanel = useAppStore((s) => s.toggleRightPanel);
+  const openSettings = useAppStore((s) => s.openSettings);
 
   // Static search items
   const allItems: SearchResult[] = useMemo(() => [
@@ -37,22 +55,23 @@ export function CmdKModal({ open, onClose }: { open: boolean; onClose: () => voi
     { id: 'intel-brief', type: 'panel', label: t('panel.intelBrief'), detail: t('intel.aiGenerated') },
     { id: 'game-map', type: 'panel', label: t('panel.gameMap'), detail: t('gameMap.policyVectors') },
     // Countries
-    { id: 'us', type: 'country', label: 'United States', detail: 'NYSE, NASDAQ, Fed' },
-    { id: 'uk', type: 'country', label: 'United Kingdom', detail: 'LSE, BoE' },
-    { id: 'jp', type: 'country', label: 'Japan', detail: 'TSE, BoJ' },
-    { id: 'cn', type: 'country', label: 'China', detail: 'SSE, PBoC' },
-    { id: 'de', type: 'country', label: 'Germany', detail: 'FRA, ECB' },
-    { id: 'sg', type: 'country', label: 'Singapore', detail: 'SGX' },
-    { id: 'ae', type: 'country', label: 'UAE', detail: 'DFM, ADX, DIFC' },
-    { id: 'sa', type: 'country', label: 'Saudi Arabia', detail: 'Tadawul, KAFD' },
+    { id: 'US', type: 'country', label: t('country.US'), detail: 'NYSE, NASDAQ, Fed' },
+    { id: 'GB', type: 'country', label: t('country.GB'), detail: 'LSE, BoE' },
+    { id: 'JP', type: 'country', label: t('country.JP'), detail: 'TSE, BoJ' },
+    { id: 'CN', type: 'country', label: t('country.CN'), detail: 'SSE, PBoC' },
+    { id: 'XM', type: 'country', label: t('country.XM'), detail: 'ECB, STOXX' },
+    { id: 'AE', type: 'country', label: t('country.AE'), detail: 'DFM, ADX, DIFC' },
+    { id: 'SA', type: 'country', label: t('country.SA'), detail: 'Tadawul, KAFD' },
+    { id: 'IN', type: 'country', label: t('country.IN'), detail: 'BSE, RBI' },
     // Data sources
     { id: 'fred', type: 'source', label: 'FRED', detail: t('fred.staticNote') },
-    { id: 'yahoo', type: 'source', label: 'Yahoo Finance' },
-    { id: 'rss', type: 'source', label: 'RSS Feeds' },
-    { id: 'eia', type: 'source', label: 'EIA', detail: 'Oil & Energy' },
-    { id: 'coingecko', type: 'source', label: 'CoinGecko', detail: 'Crypto' },
-    { id: 'ollama', type: 'source', label: 'Ollama', detail: 'Local AI' },
-    { id: 'claude', type: 'source', label: 'Claude', detail: 'Deep Analysis' },
+    { id: 'imf', type: 'source', label: 'IMF WEO', detail: t('creditCycle.incomeSection') },
+    { id: 'yahoo', type: 'source', label: 'Yahoo Finance', detail: t('panel.marketRadar') },
+    { id: 'rss', type: 'source', label: 'RSS Feeds', detail: t('panel.newsFeed') },
+    { id: 'eia', type: 'source', label: 'EIA', detail: t('panel.oilEnergy') },
+    { id: 'coingecko', type: 'source', label: 'CoinGecko', detail: t('panel.crypto') },
+    { id: 'ollama', type: 'source', label: 'Ollama', detail: t('settings.local') + ' AI' },
+    { id: 'claude', type: 'source', label: 'Claude', detail: t('intel.aiGenerated') },
   ], [t]);
 
   const filtered = useMemo(() => {
@@ -75,6 +94,35 @@ export function CmdKModal({ open, onClose }: { open: boolean; onClose: () => voi
     setSelectedIndex(0);
   }, [query]);
 
+  const navigateTo = useCallback((item: SearchResult) => {
+    onClose();
+    if (item.type === 'panel') {
+      const sitTab = SITUATION_TAB_MAP[item.id];
+      if (sitTab) {
+        // Panel lives inside SituationCenter — switch tab + ensure left panel open
+        setSituationTab(sitTab);
+        if (leftPanelCollapsed) toggleLeftPanel();
+      } else {
+        // Standalone panel — ensure its side is open + expand it
+        const leftPanels = ['news-feed', 'ai-brief', 'fred-indicators', 'bis-rates', 'situation-center'];
+        const isLeft = leftPanels.includes(item.id);
+        if (isLeft && leftPanelCollapsed) toggleLeftPanel();
+        if (!isLeft && rightPanelCollapsed) toggleRightPanel();
+        // Expand if collapsed
+        if (panels[item.id as keyof typeof panels] && !panels[item.id as keyof typeof panels].expanded) {
+          togglePanel(item.id as Parameters<typeof togglePanel>[0]);
+        }
+        // Scroll panel into view
+        setTimeout(() => {
+          document.getElementById(`panel-${item.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+    } else if (item.type === 'source') {
+      openSettings('data-sources');
+    }
+    // country type: no specific action yet (could zoom map in Phase 5)
+  }, [onClose, setSituationTab, leftPanelCollapsed, rightPanelCollapsed, toggleLeftPanel, toggleRightPanel, panels, togglePanel, openSettings]);
+
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -83,12 +131,11 @@ export function CmdKModal({ open, onClose }: { open: boolean; onClose: () => voi
       e.preventDefault();
       setSelectedIndex((i) => Math.max(i - 1, 0));
     } else if (e.key === 'Enter' && filtered[selectedIndex]) {
-      onClose();
-      // TODO: Navigate to selected item (scroll panel into view, zoom map to country)
+      navigateTo(filtered[selectedIndex]);
     } else if (e.key === 'Escape') {
       onClose();
     }
-  }, [filtered, selectedIndex, onClose]);
+  }, [filtered, selectedIndex, onClose, navigateTo]);
 
   if (!open) return null;
 
@@ -113,7 +160,7 @@ export function CmdKModal({ open, onClose }: { open: boolean; onClose: () => voi
               key={item.id}
               className={`cmdk__result ${i === selectedIndex ? 'cmdk__result--selected' : ''}`}
               onMouseEnter={() => setSelectedIndex(i)}
-              onClick={onClose}
+              onClick={() => navigateTo(item)}
             >
               <span className={`cmdk__type cmdk__type--${item.type}`}>
                 {item.type === 'panel' ? '◻' : item.type === 'country' ? '◉' : '◈'}

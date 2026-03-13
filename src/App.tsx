@@ -1,4 +1,4 @@
-import { Component, useEffect, useState } from 'react';
+import { Component, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Newspaper,
@@ -80,8 +80,11 @@ function App() {
   const toggleLeftPanel = useAppStore((s) => s.toggleLeftPanel);
   const toggleRightPanel = useAppStore((s) => s.toggleRightPanel);
   const updateApiStatus = useAppStore((s) => s.updateApiStatus);
-  const [cmdKOpen, setCmdKOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const cmdKOpen = useAppStore((s) => s.cmdKOpen);
+  const setCmdKOpen = useAppStore((s) => s.setCmdKOpen);
+  const settingsOpen = useAppStore((s) => s.settingsOpen);
+  const closeSettings = useAppStore((s) => s.closeSettings);
+  const settingsInitialTab = useAppStore((s) => s.settingsInitialTab);
 
   // ---- Ctrl+[ / Ctrl+] keyboard shortcuts for panel collapse + Cmd/Ctrl+K for search ----
   useEffect(() => {
@@ -96,12 +99,12 @@ function App() {
       }
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        setCmdKOpen((prev) => !prev);
+        setCmdKOpen(!cmdKOpen);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [toggleLeftPanel, toggleRightPanel]);
+  }, [toggleLeftPanel, toggleRightPanel, setCmdKOpen, cmdKOpen]);
 
   // ---- Listen for Tauri 'api-status-changed' events ----
   useEffect(() => {
@@ -123,7 +126,7 @@ function App() {
 
   return (
     <div className="app">
-      <TitleBar onOpenSettings={() => setSettingsOpen(true)} />
+      <TitleBar />
 
       <div className="app__body">
         {/* Left Panel Stack — 态势中枢 (L1), News Feed (L1), FRED Indicators (L2), BIS Rates (L2) */}
@@ -208,7 +211,7 @@ function App() {
 
       <StatusBar />
       <CmdKModal open={cmdKOpen} onClose={() => setCmdKOpen(false)} />
-      <SettingsPage open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <SettingsPage open={settingsOpen} onClose={closeSettings} initialTab={settingsInitialTab} />
     </div>
   );
 }

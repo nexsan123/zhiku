@@ -14,12 +14,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   corporate: 'var(--color-intel-corporate)',
 };
 
-const CATEGORY_LABELS: Record<string, string> = {
-  geopolitical: 'GEOPOLITICAL',
-  macro_policy: 'MACRO POLICY',
-  market: 'MARKET',
-  corporate: 'CORPORATE',
-};
+// Category labels provided via i18n (category.*)
 
 interface Props {
   news: NewsItem | null;
@@ -56,7 +51,7 @@ export function NewsDetailModal({ news, onClose }: Props) {
   if (!news) return null;
 
   const categoryColor = CATEGORY_COLORS[news.category] ?? 'var(--color-text-disabled)';
-  const categoryLabel = CATEGORY_LABELS[news.category] ?? news.category.toUpperCase();
+  const categoryLabel = t(`category.${news.category}`, { defaultValue: news.category });
 
   return createPortal(
     <div

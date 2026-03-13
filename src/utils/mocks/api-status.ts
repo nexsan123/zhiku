@@ -42,6 +42,10 @@ export const MOCK_API_STATUS: Record<string, ApiServiceStatus> = {
     service: 'bis',
     status: 'idle',
   },
+  imf: {
+    service: 'imf',
+    status: 'idle',
+  },
   wto: {
     service: 'wto',
     status: 'idle',

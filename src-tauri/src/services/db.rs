@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS news (
     url TEXT UNIQUE NOT NULL,
     title TEXT NOT NULL,
     source TEXT NOT NULL,
-    source_tier INTEGER DEFAULT 4,
+    source_tier INTEGER DEFAULT 3,
     category TEXT,
     published_at TEXT NOT NULL,
     fetched_at TEXT NOT NULL,

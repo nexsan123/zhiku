@@ -91,12 +91,12 @@ export function AiBriefPanel() {
               {/* Card header: category tag + sentiment + count */}
               <div className="ai-brief__card-header">
                 <span className={`ai-brief__category ai-brief__category--${catMod}`}>
-                  {item.category.replace('_', ' ').toUpperCase()}
+                  {t(`category.${item.category}`, { defaultValue: item.category })}
                 </span>
                 <span className={`ai-brief__sentiment ai-brief__sentiment--${sent}`}>
                   {t(sentimentKey(sent))}
                 </span>
-                <span className="ai-brief__time">{item.count} articles</span>
+                <span className="ai-brief__time">{item.count}{t('cycle.articlesUnit')}</span>
               </div>
 
               {/* Summary text */}

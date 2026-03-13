@@ -80,7 +80,7 @@ function StatusDot({ item, displayLabel }: StatusDotProps) {
 // 'rss' and 'fear_greed' are not yet in ApiServiceName contract but are valid
 // runtime service names tracked by the backend.
 const SERVICE_ORDER: string[] = [
-  'ollama', 'groq', 'claude', 'fred', 'yahoo', 'eia', 'bis', 'wto', 'coingecko', 'rss', 'fear_greed', 'qt_rest', 'qt_ws',
+  'ollama', 'groq', 'claude', 'fred', 'yahoo', 'eia', 'bis', 'imf', 'wto', 'coingecko', 'rss', 'fear_greed', 'qt_rest', 'qt_ws',
 ];
 
 // Custom display labels for services with underscores or special names

@@ -14,6 +14,8 @@ function activityClass(label: string): string {
   return 'gm-activity--low';
 }
 
+// Activity, tension, grade labels provided via i18n (activityLevel.*, tensionLevel.*, grade.*)
+
 function dirClass(dir: string): string {
   if (dir === 'bullish') return 'gm-dir--bullish';
   if (dir === 'bearish') return 'gm-dir--bearish';
@@ -105,7 +107,7 @@ export function GameMapPanel() {
               <div className="gm-vector-row__left">
                 <span className="gm-vector-row__name">{isZh ? v.nameZh : v.name}</span>
                 <span className={`gm-activity-badge ${activityClass(v.activityLabel)}`}>
-                  {v.activityLabel.toUpperCase()}
+                  {t(`activityLevel.${v.activityLabel}`, { defaultValue: v.activityLabel })}
                 </span>
               </div>
               <div className="gm-vector-row__bar-wrap">
@@ -129,7 +131,7 @@ export function GameMapPanel() {
                   <div className={`gm-bilateral-row__bar gm-tension--${b.tensionLabel}`} style={{ width: `${Math.round(b.tension * 100)}%` }} />
                 </div>
                 <span className={`gm-tension-badge gm-tension--${b.tensionLabel}`}>
-                  {b.tensionLabel.toUpperCase()}
+                  {t(`tensionLevel.${b.tensionLabel}`, { defaultValue: b.tensionLabel })}
                 </span>
               </div>
             ))}
@@ -180,7 +182,7 @@ export function GameMapPanel() {
               return (
                 <div key={s.id} className="gm-scenario-card">
                   <div className="gm-scenario-card__header">
-                    <span className="gm-scenario-card__vector">{s.policyVector}</span>
+                    <span className="gm-scenario-card__vector">{t(`policyVector.${s.policyVector}`, { defaultValue: s.policyVector })}</span>
                     <span className="gm-scenario-card__title">{s.title}</span>
                     <div className="gm-scenario-card__prob">
                       <span className="gm-scenario-card__pct">{Math.round(s.probability * 100)}%</span>
@@ -202,7 +204,7 @@ export function GameMapPanel() {
                       </span>
                     ))}
                     <span className={`gm-scenario-card__grade ${gradeClass(s.confidenceGrade)}`}>
-                      {s.confidenceGrade.toUpperCase()}
+                      {t(`grade.${s.confidenceGrade}`, { defaultValue: s.confidenceGrade })}
                     </span>
                   </div>
                 </div>

@@ -45,10 +45,11 @@ impl CreditCyclePhase {
 // Per-country credit indicators
 // ---------------------------------------------------------------------------
 
-/// Core credit indicators for a single country, computed from BIS data.
+/// Core credit indicators for a single country, computed from BIS + IMF data.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CountryCreditData {
+    // ---- Liability side (BIS) ----
     /// BIS credit-to-GDP gap (percentage points). >+10 = Basel III warning.
     pub credit_gdp_gap: Option<f64>,
     /// Debt service ratio (% of income spent on debt service).
@@ -63,6 +64,18 @@ pub struct CountryCreditData {
     pub policy_rate: Option<f64>,
     /// Policy rate direction: "hiking", "pausing", "cutting", "unknown".
     pub rate_direction: String,
+
+    // ---- Income side (IMF WEO, edict-005) ----
+    /// Real GDP growth (%, IMF NGDP_RPCH).
+    pub imf_gdp_growth: Option<f64>,
+    /// Fiscal balance / GDP (%, IMF GGXCNL_NGDP). Negative = deficit.
+    pub imf_fiscal_balance: Option<f64>,
+    /// Current account balance / GDP (%, IMF BCA_NGDPD).
+    pub imf_current_account: Option<f64>,
+    /// Government gross debt / GDP (%, IMF GGXWDG_NGDP).
+    pub imf_gov_debt: Option<f64>,
+    /// Government revenue / GDP (%, IMF GGR_G01_GDP_PT).
+    pub imf_gov_revenue: Option<f64>,
 }
 
 // ---------------------------------------------------------------------------

@@ -2,7 +2,8 @@ import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import DeckGL from '@deck.gl/react';
 import type { PickingInfo, Color } from '@deck.gl/core';
-import { Map } from 'react-map-gl/maplibre';
+import { Map as MapGL } from 'react-map-gl/maplibre';
+import type { MapRef } from 'react-map-gl/maplibre';
 import { ScatterplotLayer, TextLayer, ArcLayer } from '@deck.gl/layers';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './MapCenter.css';
@@ -73,13 +74,7 @@ const CREDIT_CYCLE_LOCATIONS: Record<string, [number, number]> = {
   AE: [54.3773, 24.4539],        // Central Bank of UAE (Abu Dhabi)
 };
 
-// Human-readable country names
-const COUNTRY_NAMES: Record<string, string> = {
-  US: 'United States', CN: 'China', XM: 'Euro Area', JP: 'Japan',
-  GB: 'United Kingdom', CA: 'Canada', AU: 'Australia', KR: 'South Korea',
-  IN: 'India', BR: 'Brazil', TR: 'Turkey', AR: 'Argentina',
-  ZA: 'South Africa', SA: 'Saudi Arabia', AE: 'UAE',
-};
+// Country names and short labels are provided via i18n (country.XX / countryShort.XX)
 
 // Alias mapping: bilateral id tokens → CREDIT_CYCLE_LOCATIONS keys
 // 'eu' from 'us-eu' maps to XM (Euro Area); 'me' maps to SA (Saudi Arabia as proxy)
@@ -145,6 +140,36 @@ export function MapCenter() {
   useEffect(() => {
     setWebglOk(isWebGLAvailable());
   }, []);
+
+  const mapRef = useRef<MapRef>(null);
+  const { i18n } = useTranslation();
+
+  // Switch base map labels to Chinese when locale is zh
+  const handleMapLoad = useCallback(() => {
+    const map = mapRef.current?.getMap();
+    if (!map) return;
+    const isZh = i18n.language.startsWith('zh');
+    const labelField = isZh ? ['coalesce', ['get', 'name:zh'], ['get', 'name']] : ['get', 'name'];
+    const style = map.getStyle();
+    if (!style?.layers) return;
+    for (const layer of style.layers) {
+      if (layer.type === 'symbol') {
+        try {
+          const current = map.getLayoutProperty(layer.id, 'text-field');
+          if (current) {
+            map.setLayoutProperty(layer.id, 'text-field', labelField);
+          }
+        } catch {
+          // skip layers that don't support text-field
+        }
+      }
+    }
+  }, [i18n.language]);
+
+  // Re-apply when language changes
+  useEffect(() => {
+    handleMapLoad();
+  }, [handleMapLoad]);
 
   const [activeLayers, setActiveLayers] = useState<Record<LayerId, boolean>>({
     creditCycle: true,
@@ -307,7 +332,7 @@ export function MapCenter() {
           id: 'credit-cycle-labels',
           data: creditCycleDots,
           getPosition: (d) => d.coordinates,
-          getText: (d) => d.countryCode,
+          getText: (d) => t(`countryShort.${d.countryCode}`, { defaultValue: d.countryCode }),
           getSize: 10,
           getColor: [220, 230, 245, 210] as Color,
           getTextAnchor: 'start',
@@ -370,7 +395,7 @@ export function MapCenter() {
     }
 
     return result;
-  }, [activeLayers, creditCycleDots, heatmapDots, arcData, pulseScale]);
+  }, [activeLayers, creditCycleDots, heatmapDots, arcData, pulseScale, t]);
 
   const onHover = useCallback((info: PickingInfo) => {
     if (info.object) {
@@ -380,7 +405,7 @@ export function MapCenter() {
       if ('countryCode' in obj && 'phaseLabel' in obj) {
         const code = obj['countryCode'] as string;
         const phaseLabel = obj['phaseLabel'] as string;
-        const countryName = COUNTRY_NAMES[code] ?? code;
+        const countryName = t(`country.${code}`, { defaultValue: code });
         setHoverInfo({ x: info.x, y: info.y, name: countryName, detail: phaseLabel });
         return;
       }
@@ -390,8 +415,8 @@ export function MapCenter() {
         const code = obj['countryCode'] as string;
         const count = obj['newsCount'] as number;
         const latestTitle = obj['latestTitle'] as string;
-        const countryName = COUNTRY_NAMES[code] ?? code;
-        setHoverInfo({ x: info.x, y: info.y, name: countryName, detail: `${count} news · ${latestTitle}` });
+        const countryName = t(`country.${code}`, { defaultValue: code });
+        setHoverInfo({ x: info.x, y: info.y, name: countryName, detail: t('map.newsHover', { count, title: latestTitle }) });
         return;
       }
 
@@ -400,7 +425,7 @@ export function MapCenter() {
         const name = obj['name'] as string;
         const tension = obj['tension'] as number;
         const tensionLabel = obj['tensionLabel'] as string;
-        setHoverInfo({ x: info.x, y: info.y, name, detail: `${tensionLabel} (${Math.round(tension * 100)}%)` });
+        setHoverInfo({ x: info.x, y: info.y, name, detail: `${t(`tensionLevel.${tensionLabel}`, { defaultValue: tensionLabel })} (${Math.round(tension * 100)}%)` });
         return;
       }
     } else {
@@ -417,7 +442,7 @@ export function MapCenter() {
         const code = obj['countryCode'] as string;
         const phaseLabel = obj['phaseLabel'] as string;
         const confidence = obj['confidence'] as number;
-        const countryName = COUNTRY_NAMES[code] ?? code;
+        const countryName = t(`country.${code}`, { defaultValue: code });
         setSelection({
           name: countryName,
           layerType: 'creditCycle',
@@ -436,13 +461,13 @@ export function MapCenter() {
         const code = obj['countryCode'] as string;
         const count = obj['newsCount'] as number;
         const keywords = obj['topKeywords'] as string[];
-        const countryName = COUNTRY_NAMES[code] ?? code;
+        const countryName = t(`country.${code}`, { defaultValue: code });
         setSelection({
           name: countryName,
           layerType: 'newsHeatmap',
           country: code,
           keywords: [code, countryName, ...keywords],
-          detail: `${count} news in 1h`,
+          detail: t('map.newsInHour', { count }),
           x: info.x,
           y: info.y,
         });
@@ -475,8 +500,8 @@ export function MapCenter() {
     return (
       <div className="map-center" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
-          <p style={{ marginBottom: 8 }}>WebGL unavailable</p>
-          <p style={{ fontSize: 10, opacity: 0.6 }}>Map requires GPU acceleration</p>
+          <p style={{ marginBottom: 8 }}>{t('map.webglUnavailable')}</p>
+          <p style={{ fontSize: 10, opacity: 0.6 }}>{t('map.requiresGpu')}</p>
         </div>
       </div>
     );
@@ -493,9 +518,11 @@ export function MapCenter() {
         onClick={onClick}
         getCursor={() => (hoverInfo ? 'pointer' : 'grab')}
       >
-        <Map
+        <MapGL
+          ref={mapRef}
           mapStyle={MAP_STYLE}
           attributionControl={false}
+          onLoad={handleMapLoad}
         />
       </DeckGL>
 

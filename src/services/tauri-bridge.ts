@@ -668,6 +668,7 @@ export async function listenAiSummaryCompleted(callback: () => void): Promise<()
 // ============================================================
 
 export interface CountryCreditData {
+  // Liability side (BIS)
   creditGdpGap: number | null;
   debtServiceRatio: number | null;
   creditGrowthYoy: number | null;
@@ -675,6 +676,12 @@ export interface CountryCreditData {
   propertyPriceTrend: number | null;
   policyRate: number | null;
   rateDirection: string;
+  // Income side (IMF WEO, edict-005)
+  imfGdpGrowth: number | null;
+  imfFiscalBalance: number | null;
+  imfCurrentAccount: number | null;
+  imfGovDebt: number | null;
+  imfGovRevenue: number | null;
 }
 
 export interface CountryCyclePosition {
@@ -734,14 +741,14 @@ export interface GlobalCycleOverview {
 
 const MOCK_GLOBAL_CYCLE: GlobalCycleOverview = {
   countries: [
-    { countryCode: 'US', countryName: 'United States', tier: 'core', indicators: { creditGdpGap: 2.1, debtServiceRatio: 15.3, creditGrowthYoy: 3.2, creditImpulse: 0.5, propertyPriceTrend: 4.1, policyRate: 5.25, rateDirection: 'pausing' }, phase: 'tightening', phaseLabel: '收水期', confidence: 0.75, confidenceGrade: 'reasonable', reliability: 0.95, dollarTideRiskModifier: 0, dataPeriod: '2025-Q3' },
-    { countryCode: 'CN', countryName: 'China', tier: 'core', indicators: { creditGdpGap: -3.5, debtServiceRatio: 20.1, creditGrowthYoy: 8.5, creditImpulse: -1.2, propertyPriceTrend: -2.3, policyRate: 3.45, rateDirection: 'cutting' }, phase: 'deleveraging', phaseLabel: '去杠杆', confidence: 0.60, confidenceGrade: 'reasonable', reliability: 0.70, dollarTideRiskModifier: 1, dataPeriod: '2025-Q3' },
-    { countryCode: 'XM', countryName: 'Euro Area', tier: 'core', indicators: { creditGdpGap: -1.2, debtServiceRatio: 12.0, creditGrowthYoy: 1.8, creditImpulse: 0.3, propertyPriceTrend: -0.5, policyRate: 4.50, rateDirection: 'pausing' }, phase: 'tightening', phaseLabel: '收水期', confidence: 0.72, confidenceGrade: 'reasonable', reliability: 0.92, dollarTideRiskModifier: 0, dataPeriod: '2025-Q3' },
-    { countryCode: 'JP', countryName: 'Japan', tier: 'core', indicators: { creditGdpGap: 5.2, debtServiceRatio: 8.5, creditGrowthYoy: 2.1, creditImpulse: 0.8, propertyPriceTrend: 3.2, policyRate: 0.10, rateDirection: 'hiking' }, phase: 'leveraging', phaseLabel: '加杠杆', confidence: 0.68, confidenceGrade: 'reasonable', reliability: 0.93, dollarTideRiskModifier: 0, dataPeriod: '2025-Q3' },
-    { countryCode: 'GB', countryName: 'United Kingdom', tier: 'important', indicators: { creditGdpGap: -0.8, debtServiceRatio: 14.2, creditGrowthYoy: 1.5, creditImpulse: -0.2, propertyPriceTrend: -1.1, policyRate: 5.25, rateDirection: 'pausing' }, phase: 'tightening', phaseLabel: '收水期', confidence: 0.74, confidenceGrade: 'reasonable', reliability: 0.91, dollarTideRiskModifier: 0, dataPeriod: '2025-Q3' },
-    { countryCode: 'KR', countryName: 'South Korea', tier: 'important', indicators: { creditGdpGap: 3.8, debtServiceRatio: 22.5, creditGrowthYoy: 5.2, creditImpulse: -0.5, propertyPriceTrend: -3.1, policyRate: 3.50, rateDirection: 'cutting' }, phase: 'overheating', phaseLabel: '过热期', confidence: 0.65, confidenceGrade: 'reasonable', reliability: 0.88, dollarTideRiskModifier: 1, dataPeriod: '2025-Q3' },
-    { countryCode: 'TR', countryName: 'Turkey', tier: 'monitor', indicators: { creditGdpGap: 8.5, debtServiceRatio: 28.3, creditGrowthYoy: 42.0, creditImpulse: 3.2, propertyPriceTrend: 15.0, policyRate: 45.00, rateDirection: 'pausing' }, phase: 'overheating', phaseLabel: '过热期', confidence: 0.45, confidenceGrade: 'speculative', reliability: 0.55, dollarTideRiskModifier: 2, dataPeriod: '2025-Q3' },
-    { countryCode: 'SA', countryName: 'Saudi Arabia', tier: 'monitor', indicators: { creditGdpGap: 1.2, debtServiceRatio: 5.1, creditGrowthYoy: 8.0, creditImpulse: 1.5, propertyPriceTrend: 6.2, policyRate: 6.00, rateDirection: 'pausing' }, phase: 'leveraging', phaseLabel: '加杠杆', confidence: 0.50, confidenceGrade: 'reasonable', reliability: 0.60, dollarTideRiskModifier: 0, dataPeriod: '2025-Q3' },
+    { countryCode: 'US', countryName: 'United States', tier: 'core', indicators: { creditGdpGap: 2.1, debtServiceRatio: 15.3, creditGrowthYoy: 3.2, creditImpulse: 0.5, propertyPriceTrend: 4.1, policyRate: 5.25, rateDirection: 'pausing', imfGdpGrowth: 2.8, imfFiscalBalance: -6.3, imfCurrentAccount: -3.0, imfGovDebt: 123.0, imfGovRevenue: 30.2 }, phase: 'tightening', phaseLabel: '收水期', confidence: 0.75, confidenceGrade: 'reasonable', reliability: 0.95, dollarTideRiskModifier: 0, dataPeriod: '2025-Q3' },
+    { countryCode: 'CN', countryName: 'China', tier: 'core', indicators: { creditGdpGap: -3.5, debtServiceRatio: 20.1, creditGrowthYoy: 8.5, creditImpulse: -1.2, propertyPriceTrend: -2.3, policyRate: 3.45, rateDirection: 'cutting', imfGdpGrowth: 4.6, imfFiscalBalance: -7.1, imfCurrentAccount: 1.5, imfGovDebt: 83.0, imfGovRevenue: 26.8 }, phase: 'deleveraging', phaseLabel: '去杠杆', confidence: 0.60, confidenceGrade: 'reasonable', reliability: 0.70, dollarTideRiskModifier: 1, dataPeriod: '2025-Q3' },
+    { countryCode: 'XM', countryName: 'Euro Area', tier: 'core', indicators: { creditGdpGap: -1.2, debtServiceRatio: 12.0, creditGrowthYoy: 1.8, creditImpulse: 0.3, propertyPriceTrend: -0.5, policyRate: 4.50, rateDirection: 'pausing', imfGdpGrowth: 0.8, imfFiscalBalance: -3.5, imfCurrentAccount: 2.8, imfGovDebt: 88.0, imfGovRevenue: 46.1 }, phase: 'tightening', phaseLabel: '收水期', confidence: 0.72, confidenceGrade: 'reasonable', reliability: 0.92, dollarTideRiskModifier: 0, dataPeriod: '2025-Q3' },
+    { countryCode: 'JP', countryName: 'Japan', tier: 'core', indicators: { creditGdpGap: 5.2, debtServiceRatio: 8.5, creditGrowthYoy: 2.1, creditImpulse: 0.8, propertyPriceTrend: 3.2, policyRate: 0.10, rateDirection: 'hiking', imfGdpGrowth: 1.0, imfFiscalBalance: -5.8, imfCurrentAccount: 3.5, imfGovDebt: 252.0, imfGovRevenue: 35.4 }, phase: 'leveraging', phaseLabel: '加杠杆', confidence: 0.68, confidenceGrade: 'reasonable', reliability: 0.93, dollarTideRiskModifier: 0, dataPeriod: '2025-Q3' },
+    { countryCode: 'GB', countryName: 'United Kingdom', tier: 'important', indicators: { creditGdpGap: -0.8, debtServiceRatio: 14.2, creditGrowthYoy: 1.5, creditImpulse: -0.2, propertyPriceTrend: -1.1, policyRate: 5.25, rateDirection: 'pausing', imfGdpGrowth: 1.3, imfFiscalBalance: -4.5, imfCurrentAccount: -3.1, imfGovDebt: 101.0, imfGovRevenue: 39.2 }, phase: 'tightening', phaseLabel: '收水期', confidence: 0.74, confidenceGrade: 'reasonable', reliability: 0.91, dollarTideRiskModifier: 0, dataPeriod: '2025-Q3' },
+    { countryCode: 'KR', countryName: 'South Korea', tier: 'important', indicators: { creditGdpGap: 3.8, debtServiceRatio: 22.5, creditGrowthYoy: 5.2, creditImpulse: -0.5, propertyPriceTrend: -3.1, policyRate: 3.50, rateDirection: 'cutting', imfGdpGrowth: 2.2, imfFiscalBalance: -2.1, imfCurrentAccount: 4.5, imfGovDebt: 55.0, imfGovRevenue: 27.5 }, phase: 'overheating', phaseLabel: '过热期', confidence: 0.65, confidenceGrade: 'reasonable', reliability: 0.88, dollarTideRiskModifier: 1, dataPeriod: '2025-Q3' },
+    { countryCode: 'TR', countryName: 'Turkey', tier: 'monitor', indicators: { creditGdpGap: 8.5, debtServiceRatio: 28.3, creditGrowthYoy: 42.0, creditImpulse: 3.2, propertyPriceTrend: 15.0, policyRate: 45.00, rateDirection: 'pausing', imfGdpGrowth: 4.0, imfFiscalBalance: -5.2, imfCurrentAccount: -4.8, imfGovDebt: 42.0, imfGovRevenue: 18.5 }, phase: 'overheating', phaseLabel: '过热期', confidence: 0.45, confidenceGrade: 'speculative', reliability: 0.55, dollarTideRiskModifier: 2, dataPeriod: '2025-Q3' },
+    { countryCode: 'SA', countryName: 'Saudi Arabia', tier: 'monitor', indicators: { creditGdpGap: 1.2, debtServiceRatio: 5.1, creditGrowthYoy: 8.0, creditImpulse: 1.5, propertyPriceTrend: 6.2, policyRate: 6.00, rateDirection: 'pausing', imfGdpGrowth: 1.5, imfFiscalBalance: -2.0, imfCurrentAccount: 5.2, imfGovDebt: 26.0, imfGovRevenue: 42.0 }, phase: 'leveraging', phaseLabel: '加杠杆', confidence: 0.50, confidenceGrade: 'reasonable', reliability: 0.60, dollarTideRiskModifier: 0, dataPeriod: '2025-Q3' },
   ],
   globalPhase: 'tightening',
   globalPhaseLabel: '收水期',

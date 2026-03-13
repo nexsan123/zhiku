@@ -1,8 +1,23 @@
 use sqlx::SqlitePool;
 use tauri::State;
 
+use tauri_plugin_store::StoreExt;
+
 use crate::models::news::{NewsHeatmapEntry, NewsItem, NewsRow};
 use crate::services::{news_heatmap, rss_fetcher};
+
+/// Read a key from tauri-plugin-store settings.json.
+/// Returns empty string if key not found or store unavailable.
+fn read_store_key(app: &tauri::AppHandle, key: &str) -> String {
+    let store = match app.store("settings.json") {
+        Ok(s) => s,
+        Err(_) => return String::new(),
+    };
+    store
+        .get(key)
+        .and_then(|v| v.as_str().map(|s| s.to_string()))
+        .unwrap_or_default()
+}
 
 /// Get all news articles from the database, ordered by published date descending.
 /// Aligns with: contracts/api-news.ts :: NewsItem
@@ -35,10 +50,16 @@ pub async fn get_news_count(pool: State<'_, SqlitePool>) -> Result<i64, String> 
 }
 
 /// Trigger RSS fetch for all configured feeds. Returns count of newly inserted articles.
+/// Reads `rsshub_base_url` from settings store for RSSHub source URL resolution.
 /// Frontend: invoke('fetch_rss')
 #[tauri::command]
-pub async fn fetch_rss(pool: State<'_, SqlitePool>) -> Result<usize, String> {
-    rss_fetcher::fetch_all_rss(pool.inner())
+pub async fn fetch_rss(
+    app: tauri::AppHandle,
+    pool: State<'_, SqlitePool>,
+) -> Result<usize, String> {
+    let rsshub_raw = read_store_key(&app, "rsshub_base_url");
+    let rsshub_base = rss_fetcher::resolve_rsshub_base(&rsshub_raw);
+    rss_fetcher::fetch_all_rss(pool.inner(), rsshub_base)
         .await
         .map_err(|e| e.to_string())
 }

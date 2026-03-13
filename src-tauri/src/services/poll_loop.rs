@@ -5,8 +5,8 @@ use tauri::{Emitter, Manager};
 use crate::models::news::ApiStatus;
 use crate::services::{
     bis_client, coingecko_client, cycle_reasoner, db, deep_analyzer, eia_client,
-    fear_greed_client, game_map, indicator_engine, market_context, mempool_client, news_cluster,
-    rss_fetcher, scenario_engine, summarizer, yahoo_client,
+    fear_greed_client, game_map, imf_client, indicator_engine, market_context, mempool_client,
+    news_cluster, rss_fetcher, scenario_engine, summarizer, yahoo_client,
 };
 
 /// Configuration for poll intervals per data source.
@@ -21,6 +21,7 @@ pub struct PollConfig {
     pub bis_interval: Duration,
     pub wto_interval: Duration,
     pub mempool_interval: Duration,
+    pub imf_interval: Duration,
 }
 
 impl Default for PollConfig {
@@ -36,6 +37,7 @@ impl Default for PollConfig {
             bis_interval: Duration::from_secs(6 * 60 * 60),    // 6 hours
             wto_interval: Duration::from_secs(24 * 60 * 60),   // 24 hours
             mempool_interval: Duration::from_secs(5 * 60),     // 5 minutes
+            imf_interval: Duration::from_secs(24 * 60 * 60),    // 24 hours (WEO data is annual)
         }
     }
 }
@@ -55,8 +57,11 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         let interval = config.rss_interval;
         tauri::async_runtime::spawn(async move {
             loop {
+                // Read RSSHub base URL from settings store (re-read each cycle for hot-reload)
+                let rsshub_raw = read_store_key(&app, "rsshub_base_url");
+                let rsshub_base = rss_fetcher::resolve_rsshub_base(&rsshub_raw);
                 let start = std::time::Instant::now();
-                let (status, error) = match rss_fetcher::fetch_all_rss(&pool).await {
+                let (status, error) = match rss_fetcher::fetch_all_rss(&pool, rsshub_base).await {
                     Ok(count) => {
                         log::info!("PollLoop [RSS]: {} new articles", count);
                         if count > 0 {
@@ -501,6 +506,31 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         });
     }
 
+    // IMF WEO polling (no API key required, annual macro data)
+    {
+        let pool = pool.clone();
+        let app = app_handle.clone();
+        let interval = config.imf_interval;
+        tauri::async_runtime::spawn(async move {
+            loop {
+                let start = std::time::Instant::now();
+                let (status, error) = match imf_client::fetch_all_data(&pool).await {
+                    Ok(count) => {
+                        log::info!("PollLoop [IMF]: {} observations", count);
+                        ("online".to_string(), None)
+                    }
+                    Err(e) => {
+                        log::warn!("PollLoop [IMF] error: {}", e);
+                        ("offline".to_string(), Some(e.to_string()))
+                    }
+                };
+                let elapsed_ms = start.elapsed().as_millis() as i64;
+                update_and_emit(&pool, &app, "imf", &status, error.as_deref(), elapsed_ms).await;
+                tokio::time::sleep(interval).await;
+            }
+        });
+    }
+
     // WTO trade data polling (needs API key)
     {
         let pool = pool.clone();
@@ -558,7 +588,7 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         });
     }
 
-    log::info!("SmartPollLoop: all 12 tasks spawned (9 data sources + 1 cleanup + AI summarization + cycle reasoning + market context)");
+    log::info!("SmartPollLoop: all 16 tasks spawned (12 data + 1 cleanup + cycle-reasoning + market-context + deep-analysis + scenario-engine)");
 }
 
 /// Push WS alerts to QuantTerminal after MarketContext write.
