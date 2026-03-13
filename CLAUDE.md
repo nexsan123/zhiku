@@ -9,7 +9,8 @@
 
 ## 当前圣旨
 
-**edict-002-finance-reshaping** (2026-03-08)，详见 `.team-logs/edict-002-finance-reshaping.md`
+**edict-005-fiscal-balance-source-reform** (2026-03-11)，详见 `.team-logs/edict-005-fiscal-balance-source-reform.md`
+> 父级：edict-002 (仍有效) → edict-003 (AI引擎) → edict-004 (世界局势推理) → edict-005 (国家资产负债表+源改革)
 
 ## 环境声明
 

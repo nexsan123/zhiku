@@ -70,3 +70,22 @@
   - API Key 配置
 - **情报产出优先级**：实时情报流优先，其他（简报/研报/预警）都要
 - **edict-002 状态**：仍有效，edict-003 为其子任务
+
+## [2026-03-13] determine_phase() 收入指标决策
+
+- **问题**：IMF 收入侧指标（GDP增速、经常账户、财政赤字等 5 项）已入库展示，是否集成到 Rust 规则引擎 `determine_phase()`？
+- **决策**：**不集成，等 Phase 3 AI 引擎**
+- **理由**：
+  1. `determine_phase()` 是硬编码规则引擎，用 6 个 BIS 信贷指标判断周期相位，逻辑已经够复杂。再叠加 5 个 IMF 指标，规则组合爆炸，维护成本高
+  2. IMF 收入指标半年更新一次，是宏观背景而非周期信号 — 适合 AI 推理而非规则匹配
+  3. Phase 3 AI 引擎（Claude）能综合权衡这些指标的相互影响，比 if-else 规则更准确
+  4. 当前 BIS 6 指标已足够判定信贷周期相位，收入指标是增强而非必须
+- **结论**：IMF 收入指标保持 display-only，Phase 3 AI 引擎中作为推理输入
+
+## [2026-03-13] 数据源运行时审计 + 修复
+
+- **BIS API**：v2 (`data.bis.org`) 全球废弃 → 迁移至 v1 (`stats.bis.org`)，v1 支持 CSV 无需 XML。WS_CREDIT 在 v1 改名为 WS_TC
+- **T0 RSS**：8 源中 2 正常、3 换 URL、1 改 UA、2 删除（无 RSS feed）。修复后 6/6 全通
+- **RSSHub**：公共 rsshub.app 被 Cloudflare 拦截 → 改为可配置 base URL，推荐自建 Docker 实例
+- **死源清理**：Reuters (全球停 RSS)、Barron's (域名死)、Forbes Markets (Datadome)、SEC Enforcement (无 feed)、OFAC (无 feed)
+- **CLAUDE.md**：圣旨引用从 edict-002 更新为 edict-005
