@@ -267,7 +267,7 @@ async fn count_bilateral_news(pool: &SqlitePool, keywords: &[&str]) -> (i64, Vec
 
     let conditions: Vec<String> = keywords
         .iter()
-        .map(|kw| format!("LOWER(title) LIKE '%{}%'", kw))
+        .map(|kw| format!("(LOWER(title) LIKE '%{}%' OR LOWER(ai_summary) LIKE '%{}%')", kw, kw))
         .collect();
 
     let where_clause = conditions.join(" OR ");

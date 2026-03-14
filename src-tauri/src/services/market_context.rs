@@ -158,6 +158,65 @@ fn derive_event_risk(vix: Option<f64>, global_phase: &CreditCyclePhase, max_vect
     else { "none" }
 }
 
+/// Compute regime history duration stats (median, min, max in days) from recent rows.
+///
+/// Scans the last 100 rows of market_context, groups consecutive runs of the same
+/// `market_regime`, counts each run's length (each row ~5 min apart), converts to days,
+/// and returns (median_days, min_days, max_days). Returns None if fewer than 10 rows exist.
+async fn compute_regime_hist_days(pool: &SqlitePool) -> Option<(f64, f64, f64)> {
+    let rows: Vec<(String,)> = sqlx::query_as(
+        "SELECT market_regime FROM market_context ORDER BY id DESC LIMIT 100",
+    )
+    .fetch_all(pool)
+    .await
+    .ok()?;
+
+    if rows.len() < 10 {
+        return None;
+    }
+
+    // Group consecutive runs of the same regime and count rows per run
+    let mut run_lengths: Vec<usize> = Vec::new();
+    let mut current_regime = &rows[0].0;
+    let mut current_len: usize = 1;
+
+    for row in &rows[1..] {
+        if row.0 == *current_regime {
+            current_len += 1;
+        } else {
+            run_lengths.push(current_len);
+            current_regime = &row.0;
+            current_len = 1;
+        }
+    }
+    run_lengths.push(current_len);
+
+    if run_lengths.is_empty() {
+        return None;
+    }
+
+    // Convert row counts to days (each row ~5 minutes apart)
+    const MINUTES_PER_ROW: f64 = 5.0;
+    const MINUTES_PER_DAY: f64 = 1440.0;
+    let mut durations: Vec<f64> = run_lengths
+        .iter()
+        .map(|&count| (count as f64) * MINUTES_PER_ROW / MINUTES_PER_DAY)
+        .collect();
+
+    durations.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+
+    let min_days = durations[0];
+    let max_days = durations[durations.len() - 1];
+    let median_days = if durations.len() % 2 == 0 {
+        let mid = durations.len() / 2;
+        (durations[mid - 1] + durations[mid]) / 2.0
+    } else {
+        durations[durations.len() / 2]
+    };
+
+    Some((median_days, min_days, max_days))
+}
+
 /// Write a new MarketContext row, composing data from five-layer model.
 /// Called periodically by poll_loop to keep QuantTerminal informed.
 pub async fn write_market_context(
@@ -288,6 +347,9 @@ pub async fn write_market_context(
         market_regime, regime, event_risk, phase_str, tide_str,
     );
 
+    // === Compute regime history durations ===
+    let regime_hist = compute_regime_hist_days(mc_pool).await;
+
     // === Insert row ===
     sqlx::query(
         r#"INSERT INTO market_context
@@ -296,7 +358,7 @@ pub async fn write_market_context(
             market_regime, regime_confidence, regime_reasoning, regime_trend,
             regime_hist_median_days, regime_hist_min_days, regime_hist_max_days)
            VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 'zhiku', 2,
-                   ?9, ?10, ?11, ?12, NULL, NULL, NULL)"#,
+                   ?9, ?10, ?11, ?12, ?13, ?14, ?15)"#,
     )
     .bind(&now)
     .bind(regime)
@@ -310,6 +372,9 @@ pub async fn write_market_context(
     .bind(regime_confidence)
     .bind(&reasoning)
     .bind(regime_trend)
+    .bind(regime_hist.as_ref().map(|(m, _, _)| *m))
+    .bind(regime_hist.as_ref().map(|(_, min, _)| *min))
+    .bind(regime_hist.as_ref().map(|(_, _, max)| *max))
     .execute(mc_pool)
     .await
     .map_err(|e| AppError::Database(format!("market_context insert failed: {}", e)))?;
