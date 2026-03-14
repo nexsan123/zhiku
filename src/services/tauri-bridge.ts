@@ -588,7 +588,7 @@ export async function testConnection(service: string, apiKey?: string): Promise<
   try {
     return await invoke<{ success: boolean; message: string; responseMs: number }>('test_connection', {
       service,
-      ...(apiKey ? { apiKey } : {}),
+      apiKey: apiKey ?? null,
     });
   } catch (e) {
     return { success: false, message: String(e), responseMs: 0 };
@@ -1023,4 +1023,22 @@ export async function triggerFiveLayerReasoning(): Promise<FiveLayerReasoning | 
 export function listenFiveLayerUpdated(callback: (r: FiveLayerReasoning) => void): Promise<() => void> {
   if (!isTauri()) return Promise.resolve(() => undefined);
   return listen<FiveLayerReasoning>('five-layer-reasoning-updated', (event) => callback(event.payload));
+}
+
+/**
+ * Listen for 'deep-analysis-completed' Tauri events (new deep analysis clusters ready).
+ * Returns a cleanup function (call on component unmount).
+ */
+export function listenDeepAnalysisCompleted(callback: () => void): Promise<() => void> {
+  if (!isTauri()) return Promise.resolve(() => undefined);
+  return listen('deep-analysis-completed', () => callback());
+}
+
+/**
+ * Listen for 'scenario-updated' Tauri events (scenario matrix recalculated).
+ * Returns a cleanup function (call on component unmount).
+ */
+export function listenScenarioUpdated(callback: () => void): Promise<() => void> {
+  if (!isTauri()) return Promise.resolve(() => undefined);
+  return listen('scenario-updated', () => callback());
 }

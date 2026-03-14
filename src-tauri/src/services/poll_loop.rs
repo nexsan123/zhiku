@@ -78,12 +78,12 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
                 update_and_emit(&pool, &app, "rss", &status, error.as_deref(), elapsed_ms).await;
 
                 // Phase 3: AI summarization of pending news after RSS fetch
-                let groq_key = crate::services::ai_config::resolve_provider_key(&app, "groq");
+                let (batch_config, batch_provider) = crate::services::ai_config::resolve_batch_config(&app);
                 let ai_start = std::time::Instant::now();
-                match summarizer::summarize_pending_batch(&pool, &groq_key).await {
+                match summarizer::summarize_pending_batch(&pool, &batch_config, &batch_provider).await {
                     Ok(count) => {
                         if count > 0 {
-                            log::info!("PollLoop [AI]: {} articles summarized", count);
+                            log::info!("PollLoop [AI]: {} articles summarized via {}", count, batch_provider);
                             let _ = app.emit("ai-summary-completed", count);
                             // Broadcast to WS clients
                             if let Some(broadcaster) = app.try_state::<crate::services::qt_ws::WsBroadcaster>() {
@@ -92,16 +92,13 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
                             }
                         }
                         let ai_ms = ai_start.elapsed().as_millis() as i64;
-                        update_and_emit(&pool, &app, "ollama", "online", None, ai_ms).await;
+                        update_and_emit(&pool, &app, &batch_provider, "online", None, ai_ms).await;
                     }
                     Err(e) => {
                         let err_msg = e.to_string();
-                        log::warn!("PollLoop [AI] summarization error: {}", err_msg);
+                        log::warn!("PollLoop [AI] summarization error ({}): {}", batch_provider, err_msg);
                         let ai_ms = ai_start.elapsed().as_millis() as i64;
-                        // Update ollama/groq status based on error
-                        update_and_emit(&pool, &app, "ollama", "offline", Some(&err_msg), ai_ms)
-                            .await;
-                        update_and_emit(&pool, &app, "groq", "offline", Some(&err_msg), ai_ms)
+                        update_and_emit(&pool, &app, &batch_provider, "offline", Some(&err_msg), ai_ms)
                             .await;
                     }
                 }

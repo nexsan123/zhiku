@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw } from 'lucide-react';
-import { getMarketRadar } from '@services/tauri-bridge';
+import { getMarketRadar, listenMarketUpdated } from '@services/tauri-bridge';
 import type { MarketRadarData } from '@services/tauri-bridge';
 import './MarketRadarPanel.css';
 
@@ -32,6 +32,13 @@ export function MarketRadarPanel() {
 
   useEffect(() => {
     void load();
+    let cleanup: (() => void) | null = null;
+    const unlistenPromise = listenMarketUpdated(() => void load());
+    void unlistenPromise.then((fn) => { cleanup = fn; });
+    return () => {
+      if (cleanup) { cleanup(); }
+      else { void unlistenPromise.then((fn) => fn()); }
+    };
   }, [load]);
 
   if (loadState === 'loading') {

@@ -54,4 +54,20 @@ export const MOCK_API_STATUS: Record<string, ApiServiceStatus> = {
     service: 'coingecko',
     status: 'idle',
   },
+  rss: {
+    service: 'rss',
+    status: 'idle',
+  },
+  fear_greed: {
+    service: 'fear_greed',
+    status: 'idle',
+  },
+  qt_rest: {
+    service: 'qt_rest',
+    status: 'idle',
+  },
+  qt_ws: {
+    service: 'qt_ws',
+    status: 'idle',
+  },
 };

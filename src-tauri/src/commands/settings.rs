@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use tauri_plugin_store::StoreExt;
 
-use crate::services::ollama_client;
 use crate::services::rss_fetcher::RSS_SOURCES;
 
 /// Connection test result returned to frontend.
@@ -142,11 +141,14 @@ pub async fn test_connection(
         .map_err(|e| e.to_string())?;
 
     let result: Result<String, String> = match service.as_str() {
-        "ollama" => match ollama_client::check_health().await {
-            Ok(true) => Ok("Ollama is running".into()),
-            Ok(false) => Err("Ollama is not responding".into()),
-            Err(e) => Err(format!("Ollama error: {}", e)),
-        },
+        "ollama" => {
+            // Inline health check: GET http://localhost:11434/api/tags
+            match client.get("http://localhost:11434/api/tags").send().await {
+                Ok(r) if r.status().is_success() => Ok("Ollama is running".into()),
+                Ok(_) => Err("Ollama is not responding".into()),
+                Err(e) => Err(format!("Ollama error: {}", e)),
+            }
+        }
         "groq" => {
             let key = get_key("groq_api_key");
             if key.is_empty() {

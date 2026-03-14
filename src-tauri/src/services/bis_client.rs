@@ -270,6 +270,8 @@ fn parse_bis_csv(body: &str) -> Vec<(String, String, f64)> {
             }
         };
 
+    let mut skipped_non_finite: usize = 0;
+
     for line in lines {
         let cols: Vec<&str> = line.split(',').collect();
         let max_idx = *[ref_area_idx, period_idx, value_idx]
@@ -285,8 +287,19 @@ fn parse_bis_csv(body: &str) -> Vec<(String, String, f64)> {
         let value_str = cols[value_idx].trim();
 
         if let Ok(value) = value_str.parse::<f64>() {
-            results.push((ref_area, period, value));
+            if value.is_finite() {
+                results.push((ref_area, period, value));
+            } else {
+                skipped_non_finite += 1;
+            }
         }
+    }
+
+    if skipped_non_finite > 0 {
+        log::warn!(
+            "BIS CSV: skipped {} rows with non-finite values (NaN/Infinity)",
+            skipped_non_finite
+        );
     }
 
     results

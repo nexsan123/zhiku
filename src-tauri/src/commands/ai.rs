@@ -9,8 +9,8 @@ use crate::services::{
 
 /// Summarize all pending (unsummarized) news articles using AI.
 ///
-/// Strategy: Ollama first -> Groq fallback.
-/// Reads groq_api_key from tauri-plugin-store.
+/// Routes through ai_router using batch-optimized provider priority
+/// (groq > ollama > others via ai_config::resolve_batch_config).
 ///
 /// Frontend: invoke('summarize_pending_news')
 ///
@@ -21,9 +21,9 @@ pub async fn summarize_pending_news(
     pool: State<'_, SqlitePool>,
     app: tauri::AppHandle,
 ) -> Result<usize, String> {
-    let groq_key = crate::services::ai_config::resolve_provider_key(&app, "groq");
+    let (config, provider) = crate::services::ai_config::resolve_batch_config(&app);
 
-    summarizer::summarize_pending_batch(pool.inner(), &groq_key)
+    summarizer::summarize_pending_batch(pool.inner(), &config, &provider)
         .await
         .map_err(|e| e.to_string())
 }

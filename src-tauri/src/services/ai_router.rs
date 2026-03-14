@@ -1,8 +1,7 @@
 //! Unified AI routing layer.
 //!
-//! All reasoning chains call `ai_router::reason()` instead of directly
-//! calling `claude_client` or `groq_client`. The router dispatches to
-//! the correct backend based on the provider name.
+//! All AI calls (reasoning, summarization, deep analysis) go through
+//! `ai_router::reason()`. The router dispatches to the correct backend:
 //!
 //! - "claude" → Anthropic Messages API (claude_client)
 //! - everything else → OpenAI-compatible API (openai_compat)

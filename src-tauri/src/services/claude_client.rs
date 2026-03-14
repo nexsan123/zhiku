@@ -133,16 +133,4 @@ pub async fn analyze(
     Ok(text)
 }
 
-/// Backward-compatible wrapper: analyze with just an API key (uses defaults for model/endpoint).
-pub async fn analyze_with_key(
-    prompt: &str,
-    system: Option<&str>,
-    api_key: &str,
-) -> Result<String, AppError> {
-    let config = ResolvedAiConfig {
-        api_key: api_key.to_string(),
-        model_name: String::new(),
-        endpoint_url: String::new(),
-    };
-    analyze(prompt, system, &config).await
-}
+

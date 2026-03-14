@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw } from 'lucide-react';
-import { getMarketData, getMacroData, isTauri } from '@services/tauri-bridge';
+import { getMarketData, getMacroData, isTauri, listenMarketUpdated } from '@services/tauri-bridge';
 import type { MarketDataItem } from '@services/tauri-bridge';
 import type { MockStablecoin } from '@utils/mocks/panel-data';
 import { MOCK_STABLECOINS } from '@utils/mocks/panel-data';
@@ -129,6 +129,13 @@ export function CryptoPanel() {
 
   useEffect(() => {
     void load();
+    let cleanup: (() => void) | null = null;
+    const unlistenPromise = listenMarketUpdated(() => void load());
+    void unlistenPromise.then((fn) => { cleanup = fn; });
+    return () => {
+      if (cleanup) { cleanup(); }
+      else { void unlistenPromise.then((fn) => fn()); }
+    };
   }, [load]);
 
   if (loadState === 'loading') {

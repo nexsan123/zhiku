@@ -4,7 +4,8 @@ use sqlx::SqlitePool;
 use uuid::Uuid;
 
 use crate::errors::AppError;
-use crate::services::{groq_client, ollama_client};
+use crate::services::ai_config::ResolvedAiConfig;
+use crate::services::ai_router;
 
 /// Internal result of AI news summarization.
 #[derive(Debug, Deserialize)]
@@ -20,16 +21,9 @@ pub struct NewsSummary {
     #[serde(default)]
     pub entities: Vec<String>,
     /// Political bias detected in source: "none", "pro_west", "pro_east", "nationalist", "other".
-    #[serde(default = "default_bias")]
+    #[serde(default)]
     pub political_bias: String,
 }
-
-fn default_bias() -> String {
-    "none".to_string()
-}
-
-/// Default Ollama model for batch summarization.
-const OLLAMA_MODEL: &str = "llama3.1:8b";
 
 /// Prompt template for news summarization.
 /// Requests structured JSON output with summary, sentiment, keywords, category.
@@ -56,72 +50,64 @@ const SUMMARIZE_PROMPT_TEMPLATE: &str = r#"你是一位独立的金融新闻分�
 
 /// Summarize a single news article using AI.
 ///
-/// Strategy: Ollama first -> Groq fallback -> error if both fail.
+/// Routes through `ai_router::reason()` using the resolved batch config
+/// (provider priority: groq > ollama > others via ai_config::resolve_batch_config).
 ///
 /// # Arguments
 /// * `title` - News article title
 /// * `description` - News article content/snippet
-/// * `groq_api_key` - Groq API key for fallback (empty = skip Groq)
+/// * `config` - Resolved AI config (api_key, model_name, endpoint_url)
+/// * `provider` - Provider name for routing (e.g. "groq", "ollama")
 ///
 /// # Returns
-/// Parsed `NewsSummary` with summary, sentiment, keywords, category.
+/// Parsed `NewsSummary` with summary, sentiment, keywords, category, plus the model label.
 pub async fn summarize_news(
     title: &str,
     description: &str,
-    groq_api_key: &str,
+    config: &ResolvedAiConfig,
+    provider: &str,
 ) -> Result<(NewsSummary, String), AppError> {
     let prompt = SUMMARIZE_PROMPT_TEMPLATE
         .replace("{title}", title)
         .replace("{description}", description);
 
-    // Try Groq first (primary), Ollama as fallback (when available)
-    if !groq_api_key.is_empty() {
-        let groq_response = groq_client::chat_completion(&prompt, groq_api_key).await;
-        match groq_response {
-            Ok(ref text) if !text.is_empty() => {
-                if let Ok(summary) = parse_ai_json(text) {
-                    let model = "groq:llama-3.1-8b-instant".to_string();
-                    return Ok((summary, model));
-                }
-                log::warn!("Groq returned unparseable response, trying Ollama fallback");
-            }
-            Ok(_) => {
-                log::warn!("Groq returned empty response, trying Ollama fallback");
-            }
-            Err(e) => {
-                log::warn!("Groq failed: {}, trying Ollama fallback", e);
-            }
-        }
+    let response = ai_router::reason(&prompt, None, config, provider).await?;
+
+    if response.is_empty() {
+        return Err(AppError::Network(
+            "AI engine returned empty response (API key may not be configured)".to_string(),
+        ));
     }
 
-    // Fallback to Ollama
-    match ollama_client::generate_completion(&prompt, OLLAMA_MODEL).await {
-        Ok(response) => {
-            if let Ok(summary) = parse_ai_json(&response) {
-                let model = format!("ollama:{}", OLLAMA_MODEL);
-                return Ok((summary, model));
-            }
-            Err(AppError::Network(
-                "All AI engines returned unparseable responses".to_string(),
-            ))
+    match parse_ai_json(&response) {
+        Ok(summary) => {
+            let model = config.model_label(provider);
+            Ok((summary, model))
         }
-        Err(e) => Err(AppError::Network(
-            format!("All AI engines unavailable: {}", e),
-        )),
+        Err(e) => Err(AppError::Parse(format!(
+            "AI returned unparseable response: {}",
+            e
+        ))),
     }
 }
 
 /// Process all pending (unsummarized) news articles in batch.
 ///
 /// Queries `news` table for rows where `ai_summary IS NULL`, runs summarization
-/// on each, writes results to `ai_analysis` table, and updates `news.ai_summary`
-/// + `news.sentiment_score`.
+/// on each via `ai_router`, writes results to `ai_analysis` table, and updates
+/// `news.ai_summary` + `news.sentiment_score`.
+///
+/// # Arguments
+/// * `pool` - SQLite connection pool
+/// * `config` - Resolved AI config from `ai_config::resolve_batch_config()`
+/// * `provider` - Provider name for routing (e.g. "groq", "ollama")
 ///
 /// # Returns
 /// Count of successfully summarized articles.
 pub async fn summarize_pending_batch(
     pool: &SqlitePool,
-    groq_api_key: &str,
+    config: &ResolvedAiConfig,
+    provider: &str,
 ) -> Result<usize, AppError> {
     // Fetch pending news (limit to 20 per batch to avoid long blocking)
     let pending: Vec<(String, String, Option<String>, String)> = sqlx::query_as(
@@ -139,11 +125,37 @@ pub async fn summarize_pending_batch(
 
     log::info!("Summarizer: {} pending articles to process", pending.len());
     let mut success_count: usize = 0;
+    let mut fail_count: usize = 0;
+    let mut retry_count: usize = 0;
 
-    for (news_id, title, snippet, source_url) in &pending {
+    for (idx, (news_id, title, snippet, source_url)) in pending.iter().enumerate() {
+        // Throttle: 3s delay between requests to avoid Groq TPM limit
+        if idx > 0 {
+            tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+        }
+
         let description = snippet.as_deref().unwrap_or("");
 
-        match summarize_news(title, description, groq_api_key).await {
+        let result = match summarize_news(title, description, config, provider).await {
+            Ok(ok) => Ok(ok),
+            Err(e) => {
+                let err_msg = e.to_string().to_lowercase();
+                if err_msg.contains("429") || err_msg.contains("rate limit") {
+                    retry_count += 1;
+                    log::warn!(
+                        "Summarizer: rate-limited on news {}, waiting 30s before retry",
+                        news_id
+                    );
+                    tokio::time::sleep(std::time::Duration::from_secs(30)).await;
+                    // Single retry
+                    summarize_news(title, description, config, provider).await
+                } else {
+                    Err(e)
+                }
+            }
+        };
+
+        match result {
             Ok((summary, model_used)) => {
                 // Write to ai_analysis table
                 if let Err(e) = write_analysis(
@@ -156,12 +168,14 @@ pub async fn summarize_pending_batch(
                 .await
                 {
                     log::warn!("Failed to write ai_analysis for {}: {}", news_id, e);
+                    fail_count += 1;
                     continue;
                 }
 
                 // Update news table
                 if let Err(e) = update_news_summary(pool, news_id, &summary).await {
                     log::warn!("Failed to update news summary for {}: {}", news_id, e);
+                    fail_count += 1;
                     continue;
                 }
 
@@ -169,12 +183,19 @@ pub async fn summarize_pending_batch(
             }
             Err(e) => {
                 log::warn!("Summarization failed for news {}: {}", news_id, e);
+                fail_count += 1;
                 // Continue with next article — do not abort batch
             }
         }
     }
 
-    log::info!("Summarizer: {}/{} articles processed", success_count, pending.len());
+    log::info!(
+        "Summarizer: {}/{} articles processed (failed: {}, retries: {})",
+        success_count,
+        pending.len(),
+        fail_count,
+        retry_count
+    );
     Ok(success_count)
 }
 
@@ -196,6 +217,7 @@ async fn write_analysis(
         "keywords": summary.keywords,
         "region": summary.region,
         "entities": summary.entities,
+        "politicalBias": summary.political_bias,
     })
     .to_string();
 

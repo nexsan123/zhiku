@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw } from 'lucide-react';
-import { getCycleIndicators, getCycleReasoning } from '@services/tauri-bridge';
+import { getCycleIndicators, getCycleReasoning, listenCycleUpdated } from '@services/tauri-bridge';
 import type { CycleIndicators, CycleReasoning } from '@services/tauri-bridge';
 import './CycleReasoningPanel.css';
 
@@ -92,6 +92,13 @@ export function CycleReasoningPanel() {
 
   useEffect(() => {
     void load();
+    let cleanup: (() => void) | null = null;
+    const unlistenPromise = listenCycleUpdated(() => void load());
+    void unlistenPromise.then((fn) => { cleanup = fn; });
+    return () => {
+      if (cleanup) { cleanup(); }
+      else { void unlistenPromise.then((fn) => fn()); }
+    };
   }, [load]);
 
   // ---- Loading state ----

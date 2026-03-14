@@ -50,6 +50,8 @@ export function FearGreedPanel() {
 
   useEffect(() => {
     void load();
+    const timer = setInterval(() => void load(), 5 * 60 * 1000);
+    return () => clearInterval(timer);
   }, [load]);
 
   if (loadState === 'loading') {

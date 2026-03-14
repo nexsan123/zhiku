@@ -106,10 +106,19 @@ Layer 1 原始数据 → Layer 2 Rust指标计算(6类) → Layer 3 Claude推理
 
 ## 阶段路线
 
-| 阶段 | 内容 | 状态 |
-|------|------|------|
-| Phase 1 | 项目骨架 | ✅ 完成（部分保留，部分重构） |
-| Phase 2 | 数据引擎（RSS+FRED+Yahoo+SQLite+SmartPollLoop） | 🔄 进行中 |
-| Phase 3 | AI 引擎（Ollama+Groq+Claude+周期推理） | 待开始 |
-| Phase 4 | 前端面板（三栏布局+16面板+状态灯） | 🔄 进行中 |
-| Phase 5 | 地图+集成（deck.gl+图层+QuantTerminal API） | 待开始 |
+| 阶段 | 内容 | 状态 | 实况（2026-03-13 审计） |
+|------|------|------|------------------------|
+| Phase 1 | 项目骨架 | ✅ 完成 | Tauri v2 + React 19 + SQLite 6 表 |
+| Phase 2 | 数据引擎（RSS+FRED+Yahoo+SQLite+SmartPollLoop） | 🔄 进行中 | RSS/Yahoo/BIS/CoinGecko/F&G/mempool/IMF 已接入；FRED/EIA/WTO 需 API key 仍 idle |
+| Phase 3 | AI 引擎（Ollama+Groq+Claude+周期推理） | 🔄 进行中（骨架已建，未全链路验证） | summarizer+cycle_reasoner+deep_analyzer+scenario_engine+ai_router 已有代码；AiProvider trait 未实际使用，三引擎可插拔名不副实 |
+| Phase 4 | 前端面板（三栏布局+18面板+状态灯） | 🔄 进行中 | 18 个面板 .tsx 存在，三栏布局完成；部分面板仍依赖 mock 数据 |
+| Phase 5 | 地图+集成（deck.gl+图层+QuantTerminal API） | 🔄 进行中（骨架已建，未全链路验证） | deck.gl MapCenter 已有；QT REST :9601 + WS :9600 + market_context.db 代码已写，未实跑验证 |
+
+### 当前优先级：甲案（纵深打通）
+
+> 决策日期：2026-03-13，符合 ZK-04（纵切优先）+ Q-04（做完一个确定一个）
+
+1. **Phase 2 收尾**：FRED/EIA API key 配好实跑 → IMF WEO 全链路验证 → edict-005 验收通过
+2. **Phase 3 真正可插拔**：AiProvider trait 落地 → 三引擎统一接口 → 清理 dead code
+3. **Phase 4 联调**：18 面板逐个消灭 mock 依赖，接真数据
+4. **Phase 5 验证**：QT 集成实跑验证

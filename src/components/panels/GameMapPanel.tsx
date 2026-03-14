@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw } from 'lucide-react';
-import { getPolicyVectors, getBilateralDynamics, getDecisionCalendar, getActiveScenarios } from '@services/tauri-bridge';
+import { getPolicyVectors, getBilateralDynamics, getDecisionCalendar, getActiveScenarios, listenScenarioUpdated } from '@services/tauri-bridge';
 import type { PolicyVector, BilateralDynamic, CalendarEvent, ScenarioMatrix, Scenario } from '@services/tauri-bridge';
 import './GameMapPanel.css';
 
@@ -64,7 +64,16 @@ export function GameMapPanel() {
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+    let cleanup: (() => void) | null = null;
+    const unlistenPromise = listenScenarioUpdated(() => void load());
+    void unlistenPromise.then((fn) => { cleanup = fn; });
+    return () => {
+      if (cleanup) { cleanup(); }
+      else { void unlistenPromise.then((fn) => fn()); }
+    };
+  }, [load]);
 
   if (loadState === 'loading') {
     return (

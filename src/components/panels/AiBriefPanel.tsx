@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw } from 'lucide-react';
-import { getAiBrief } from '@services/tauri-bridge';
+import { getAiBrief, listenAiSummaryCompleted } from '@services/tauri-bridge';
 import type { AiBriefCategory } from '@services/tauri-bridge';
 import './AiBriefPanel.css';
 
@@ -50,6 +50,13 @@ export function AiBriefPanel() {
 
   useEffect(() => {
     void load();
+    let cleanup: (() => void) | null = null;
+    const unlistenPromise = listenAiSummaryCompleted(() => void load());
+    void unlistenPromise.then((fn) => { cleanup = fn; });
+    return () => {
+      if (cleanup) { cleanup(); }
+      else { void unlistenPromise.then((fn) => fn()); }
+    };
   }, [load]);
 
   if (loadState === 'loading') {

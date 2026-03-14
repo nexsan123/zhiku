@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw, ChevronDown, ChevronRight } from 'lucide-react';
-import { getDeepAnalyses } from '@services/tauri-bridge';
+import { getDeepAnalyses, listenDeepAnalysisCompleted } from '@services/tauri-bridge';
 import type { DeepAnalysis } from '@services/tauri-bridge';
 import './IntelBriefPanel.css';
 
@@ -121,7 +121,16 @@ export function IntelBriefPanel() {
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+    let cleanup: (() => void) | null = null;
+    const unlistenPromise = listenDeepAnalysisCompleted(() => void load());
+    void unlistenPromise.then((fn) => { cleanup = fn; });
+    return () => {
+      if (cleanup) { cleanup(); }
+      else { void unlistenPromise.then((fn) => fn()); }
+    };
+  }, [load]);
 
   if (loadState === 'loading') {
     return (

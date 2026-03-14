@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw } from 'lucide-react';
-import { getMarketData } from '@services/tauri-bridge';
+import { getMarketData, listenMarketUpdated } from '@services/tauri-bridge';
 import type { MarketDataItem } from '@services/tauri-bridge';
 import './IndicesPanel.css';
 
@@ -40,6 +40,13 @@ export function IndicesPanel() {
 
   useEffect(() => {
     void load();
+    let cleanup: (() => void) | null = null;
+    const unlistenPromise = listenMarketUpdated(() => void load());
+    void unlistenPromise.then((fn) => { cleanup = fn; });
+    return () => {
+      if (cleanup) { cleanup(); }
+      else { void unlistenPromise.then((fn) => fn()); }
+    };
   }, [load]);
 
   if (loadState === 'loading') {

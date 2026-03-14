@@ -248,6 +248,8 @@ pub fn confidence_grade(confidence: f64) -> &'static str {
 }
 
 /// Compute confidence grade in Chinese for display.
+/// Reserved for future frontend/API use.
+#[allow(dead_code)]
 pub fn confidence_grade_zh(confidence: f64) -> &'static str {
     if confidence >= 0.80 {
         "高确信"

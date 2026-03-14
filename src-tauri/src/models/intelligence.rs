@@ -88,6 +88,8 @@ pub struct DeepAnalysis {
 }
 
 /// Confidence grade enum for typed usage.
+/// Currently not directly constructed in Rust but reserved for future frontend/API use.
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum ConfidenceGrade {
@@ -96,6 +98,7 @@ pub enum ConfidenceGrade {
     Speculative,
 }
 
+#[allow(dead_code)]
 impl ConfidenceGrade {
     pub fn from_score(confidence: f64) -> Self {
         if confidence >= 0.80 {
