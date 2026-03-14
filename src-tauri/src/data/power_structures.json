@@ -64,7 +64,7 @@
           "label": "军事投射能力",
           "detail": "全球800+军事基地，11艘航母战斗群",
           "status": "strained",
-          "evidence": "155mm炮弹月产量约3.6万发(2024)，乌克兰日消耗约6000-8000发，暴露产能缺口；红海拦截胡塞导弹/无人机成本不对称($2M标准导弹 vs $2K无人机)"
+          "evidence": "155mm炮弹月产量约3.6万发(2024，目标2025年底10万发)，乌克兰日消耗约3000-7000发(强度依赖)，暴露产能缺口；红海拦截胡塞导弹/无人机成本不对称(SM-2 $2.1M / SM-6 $4.3M vs 无人机$2K-$20K)"
         },
         {
           "id": "energy_control",
@@ -130,7 +130,7 @@
           "detail": "FAO食品价格指数反映全球粮价趋势",
           "metrics": {
             "fao_index_2022_peak": 159.7,
-            "fao_index_2024": 118,
+            "fao_index_2024": 120,
             "fao_index_baseline_2015": 100,
             "source": "FAO Food Price Index (2014-2016=100)"
           }
@@ -345,7 +345,7 @@
             "cips_participants": 1400,
             "cips_daily_volume_billion_rmb": 500,
             "swift_daily_volume_trillion_usd": 5,
-            "mbridge_status": "pilot phase, 26 observing central banks",
+            "mbridge_status": "MVP launched June 2024; BIS stepped back to observer Oct 2024; continues under PBoC/BoT/CBUAE/HKMA/Saudi CB",
             "source": "CIPS 2024; SWIFT; BIS Innovation Hub 2024"
           }
         },
