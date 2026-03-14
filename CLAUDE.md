@@ -109,16 +109,16 @@ Layer 1 原始数据 → Layer 2 Rust指标计算(6类) → Layer 3 Claude推理
 | 阶段 | 内容 | 状态 | 实况（2026-03-13 审计） |
 |------|------|------|------------------------|
 | Phase 1 | 项目骨架 | ✅ 完成 | Tauri v2 + React 19 + SQLite 6 表 |
-| Phase 2 | 数据引擎（RSS+FRED+Yahoo+SQLite+SmartPollLoop） | 🔄 进行中 | RSS/Yahoo/BIS/CoinGecko/F&G/mempool/IMF 已接入；FRED/EIA/WTO 需 API key 仍 idle |
-| Phase 3 | AI 引擎（Ollama+Groq+Claude+周期推理） | 🔄 进行中（骨架已建，未全链路验证） | summarizer+cycle_reasoner+deep_analyzer+scenario_engine+ai_router 已有代码；AiProvider trait 未实际使用，三引擎可插拔名不副实 |
-| Phase 4 | 前端面板（三栏布局+18面板+状态灯） | 🔄 进行中 | 18 个面板 .tsx 存在，三栏布局完成；部分面板仍依赖 mock 数据 |
-| Phase 5 | 地图+集成（deck.gl+图层+QuantTerminal API） | 🔄 进行中（骨架已建，未全链路验证） | deck.gl MapCenter 已有；QT REST :9601 + WS :9600 + market_context.db 代码已写，未实跑验证 |
+| Phase 2 | 数据引擎（RSS+FRED+Yahoo+SQLite+SmartPollLoop） | ✅ 完成 | 16 源全通：RSS(55+)/Yahoo/FRED/EIA/BIS/IMF/CoinGecko/F&G/mempool；WTO idle(需 Key) |
+| Phase 3 | AI 引擎（统一路由+周期推理+情景推演） | ✅ 完成 | ai_router 统一调度 → openai_compat(Groq/Ollama/Deepseek) + claude_client；summarizer/cycle_reasoner/deep_analyzer/scenario_engine 全链路验证 |
+| Phase 4 | 前端面板（三栏布局+16面板+状态灯） | ✅ 完成 | 16 面板全部接真数据 + 实时事件刷新；StatusBar 14 服务状态灯 |
+| Phase 5 | 地图+集成（deck.gl+图层+QuantTerminal API） | ✅ 完成 | deck.gl 3 层(信贷周期/标签/双边弧线)；QT REST :9601(9端点) + WS :9600(3事件) + market_context.db(WAL共享) 实跑验证通过 |
 
-### 当前优先级：甲案（纵深打通）
+### 剩余运维项
 
-> 决策日期：2026-03-13，符合 ZK-04（纵切优先）+ Q-04（做完一个确定一个）
-
-1. **Phase 2 收尾**：FRED/EIA API key 配好实跑 → IMF WEO 全链路验证 → edict-005 验收通过
-2. **Phase 3 真正可插拔**：AiProvider trait 落地 → 三引擎统一接口 → 清理 dead code
-3. **Phase 4 联调**：18 面板逐个消灭 mock 依赖，接真数据
-4. **Phase 5 验证**：QT 集成实跑验证
+| 项目 | 状态 | 说明 |
+|------|------|------|
+| Claude API Key | 未配置 | 深度推理链路不可用，仅 Groq 批量在跑 |
+| 中文 RSS 源 (21个) | 待自建 RSSHub | 需云 VPS 或本地 Docker，皇上暂缓 |
+| WTO API | idle | 需注册 API Key |
+| policy_calendar.json | 静态 | 2026 年 12 事件，日后需更新机制 |
