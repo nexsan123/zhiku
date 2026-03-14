@@ -24,7 +24,7 @@ package_manager: npm
 framework: Tauri v2
 project_type: desktop-app
 map_library: deck.gl + MapLibre GL
-ai_engine: Ollama (批量) → Groq (兜底) + Claude API (深度)
+ai_engine: Groq (批量) → Ollama (兜底) + DeepSeek (深度推理) → Claude (交叉验证)
 data_sources: RSS (55+中文) + FRED + Yahoo Finance + EIA + BIS + WTO + CoinGecko + mempool + alternative.me
 quant_integration: REST localhost:9601 + WebSocket ws://localhost:9600 → F:\QuantTerminal
 ```
@@ -57,16 +57,19 @@ StatusBar:  API状态灯(Ollama/Groq/Claude/FRED/Yahoo/EIA...) | Ready | 时间
 | L2 重要 | EIA, BIS, alternative.me (F&G) | EIA 需要 |
 | L3 增强 | WTO, CoinGecko, mempool.space, 静态策划数据 | 不需要 |
 
-## AI 引擎（丙方案）
+## AI 引擎（丙方案 → 丁方案）
 
 ```
-批量（高频）: Ollama 14B → Groq 兜底 (Llama 3.1 8B, 14400 req/day 免费)
-深度（低频）: Claude API（金融周期推理、地缘推演、情报综合）
+批量（高频）: Groq (Llama 3.1 8B, 14400 req/day 免费) → Ollama 14B 兜底
+深度（低频）: DeepSeek (128K上下文, 低成本, 中文强) → Claude 兜底/交叉验证
 ```
+
+> **DeepSeek 为主的理由**：128K 上下文可注入知识库，推理能力强，成本低，
+> 中文训练数据与西方 RSS 源形成天然偏见对冲。Claude 保留为交叉验证角色。
 
 ### 金融周期推理引擎
 
-Layer 1 原始数据 → Layer 2 Rust指标计算(6类) → Layer 3 Claude推理 → Layer 4 结构化JSON → QuantTerminal
+Layer 1 原始数据 → Layer 2 Rust指标计算(6类) → Layer 3 DeepSeek推理 → Layer 4 结构化JSON → QuantTerminal
 
 推理频率: 周期定位日频 / 转折预警6h / 情绪快照1h / P0事件即时
 

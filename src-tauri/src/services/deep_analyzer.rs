@@ -7,7 +7,7 @@ use crate::models::credit::confidence_grade;
 use crate::models::intelligence::{DeepAnalysis, DeepMotiveAnalysis, LayerImpact, NewsCluster};
 use crate::services::summarizer;
 
-/// System prompt for Claude deep analysis (second pass).
+/// System prompt for deep analysis (second pass, provider-agnostic).
 const DEEP_ANALYSIS_SYSTEM_PROMPT: &str = r#"你是一位独立的全球金融情报深度分析师。你站在上帝视角，超越一切国家、政党、意识形态的立场。
 
 核心原则：
@@ -55,7 +55,7 @@ const DEEP_ANALYSIS_SYSTEM_PROMPT: &str = r#"你是一位独立的全球金融�
 /// Perform deep analysis on a news cluster using configured AI provider.
 ///
 /// Fetches news details from SQLite, builds a prompt with all titles + summaries,
-/// sends to AI provider, parses the structured response.
+/// sends to AI provider (DeepSeek preferred, Claude fallback), parses the structured response.
 pub async fn analyze_cluster(
     pool: &SqlitePool,
     cluster: &NewsCluster,
@@ -77,7 +77,7 @@ pub async fn analyze_cluster(
             .await?;
 
     if response.is_empty() {
-        log::warn!("Claude returned empty response for deep analysis");
+        log::warn!("AI returned empty response for deep analysis");
         return Ok(default_analysis(cluster));
     }
 
@@ -90,9 +90,13 @@ pub async fn analyze_cluster(
 }
 
 /// Persist a DeepAnalysis result to the ai_analysis table.
+///
+/// `model_label` should be e.g. "deepseek:deepseek-chat" or "claude:claude-sonnet-4-20250514",
+/// produced by `ResolvedAiConfig::model_label(provider)`.
 pub async fn persist_analysis(
     pool: &SqlitePool,
     analysis: &DeepAnalysis,
+    model_label: &str,
 ) -> Result<(), AppError> {
     let id = Uuid::new_v4().to_string();
     let now = Utc::now().to_rfc3339();
@@ -105,11 +109,12 @@ pub async fn persist_analysis(
     sqlx::query(
         r#"INSERT INTO ai_analysis
            (id, analysis_type, input_ids, output, model, confidence, reasoning_chain, source_urls, created_at)
-           VALUES (?1, 'deep_analysis', ?2, ?3, 'claude:claude-sonnet-4-20250514', ?4, ?5, ?6, ?7)"#,
+           VALUES (?1, 'deep_analysis', ?2, ?3, ?4, ?5, ?6, ?7, ?8)"#,
     )
     .bind(&id)
     .bind(&analysis.cluster_id)
     .bind(&output_json)
+    .bind(model_label)
     .bind(analysis.deep_analysis.confidence)
     .bind(&analysis.key_observation)
     .bind(&source_urls_json)
@@ -119,8 +124,9 @@ pub async fn persist_analysis(
     .map_err(|e| AppError::Database(format!("Insert deep_analysis failed: {}", e)))?;
 
     log::info!(
-        "Deep analysis persisted: cluster={}, confidence={:.2}",
+        "Deep analysis persisted: cluster={}, model={}, confidence={:.2}",
         analysis.cluster_id,
+        model_label,
         analysis.deep_analysis.confidence
     );
     Ok(())
@@ -200,7 +206,7 @@ async fn fetch_source_urls(pool: &SqlitePool, news_ids: &[String]) -> Vec<String
     urls
 }
 
-/// Build the user prompt for Claude deep analysis.
+/// Build the user prompt for deep analysis.
 fn build_prompt(cluster: &NewsCluster, news_details: &[(String, String)]) -> String {
     let mut prompt = format!(
         "Analyze this cluster of {} related news articles.\n\
@@ -231,7 +237,7 @@ fn build_prompt(cluster: &NewsCluster, news_details: &[(String, String)]) -> Str
     prompt
 }
 
-/// Parse Claude's response into DeepAnalysis.
+/// Parse AI response into DeepAnalysis.
 fn parse_deep_analysis(
     response: &str,
     cluster: &NewsCluster,
@@ -362,13 +368,13 @@ fn extract_str(value: &serde_json::Value, key: &str) -> String {
         .to_string()
 }
 
-/// Default analysis when Claude is unavailable.
+/// Default analysis when no AI provider is available.
 fn default_analysis(cluster: &NewsCluster) -> DeepAnalysis {
     DeepAnalysis {
         cluster_id: cluster.cluster_id.clone(),
         cluster_topic: cluster.topic_hint.clone(),
         news_count: cluster.news_count,
-        surface: "Analysis unavailable — Claude API key not configured".to_string(),
+        surface: "Analysis unavailable — no AI provider configured".to_string(),
         connection: String::new(),
         deep_analysis: DeepMotiveAnalysis {
             primary_motive: String::new(),
@@ -384,7 +390,7 @@ fn default_analysis(cluster: &NewsCluster) -> DeepAnalysis {
             geopolitical: "none".to_string(),
             sentiment: "none".to_string(),
         },
-        key_observation: "Deep analysis requires Claude API key".to_string(),
+        key_observation: "Deep analysis requires an AI provider (DeepSeek/Claude)".to_string(),
         source_urls: Vec::new(),
         analyzed_at: Utc::now().to_rfc3339(),
     }

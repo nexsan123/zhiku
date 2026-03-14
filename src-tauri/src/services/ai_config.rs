@@ -108,16 +108,18 @@ pub fn resolve_batch_config(app: &tauri::AppHandle) -> (ResolvedAiConfig, String
 
 /// Resolve config + provider name for deep reasoning.
 ///
-/// Checks `ai_models` for the first enabled model (in priority order: claude, deepseek,
+/// Checks `ai_models` for the first enabled model (in priority order: deepseek, claude,
 /// groq, ollama, then any other). Returns (config, provider_name).
 ///
-/// This allows users to configure any model for reasoning — the system will
-/// use whichever is available.
+/// DeepSeek is preferred for reasoning: 128K context (fits knowledge base injection),
+/// strong reasoning capability, low cost, and Chinese-language strength provides
+/// natural bias offset against Western-dominated news sources.
+/// Claude serves as fallback / cross-validation when configured.
 pub fn resolve_reasoning_config(app: &tauri::AppHandle) -> (ResolvedAiConfig, String) {
     resolve_config_with_priority(
         app,
-        &["claude", "deepseek", "groq", "openai", "mistral", "ollama"],
-        "claude",
+        &["deepseek", "claude", "groq", "openai", "mistral", "ollama"],
+        "deepseek",
     )
 }
 

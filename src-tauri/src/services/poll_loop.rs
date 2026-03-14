@@ -397,12 +397,13 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
                             log::info!("PollLoop [DeepAnalysis]: no clusters formed (insufficient data)");
                         } else {
                             log::info!("PollLoop [DeepAnalysis]: {} clusters formed, analyzing...", clusters.len());
-                            // Step 2: Deep-analyze each cluster via Claude
+                            // Step 2: Deep-analyze each cluster via configured AI provider
+                            let model_label = ai_config.model_label(&provider);
                             let mut analyzed = 0usize;
                             for cluster in &clusters {
                                 match deep_analyzer::analyze_cluster(&pool, cluster, &ai_config, &provider).await {
                                     Ok(analysis) => {
-                                        if let Err(e) = deep_analyzer::persist_analysis(&pool, &analysis).await {
+                                        if let Err(e) = deep_analyzer::persist_analysis(&pool, &analysis, &model_label).await {
                                             log::warn!("PollLoop [DeepAnalysis]: persist failed for cluster {}: {}", cluster.cluster_id, e);
                                         } else {
                                             analyzed += 1;
