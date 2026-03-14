@@ -35,7 +35,7 @@
           "metrics": {
             "usd_trade_invoicing_pct": 40,
             "us_gdp_global_share_pct": 25,
-            "source": "BIS Working Paper 2020; ECB 2023"
+            "source": "BIS Working Paper No. 900 (Gopinath 2020); ECB 'The International Role of the Euro' June 2023"
           }
         },
         {
@@ -57,21 +57,21 @@
           "label": "低融资成本特权",
           "detail": "全球美元需求压低美债收益率，支撑美国财政赤字融资",
           "status": "stressed",
-          "evidence": "2024年美国净利息支出$882B (CRFB)，占联邦收入约18%，为越战以来最高比例"
+          "evidence": "2024年美国净利息支出$882B (CBO Monthly Budget Review FY2024)，占联邦收入约18%。1990年代也曾达15%+，当前为数十年新高"
         },
         {
           "id": "military_projection",
           "label": "军事投射能力",
-          "detail": "全球800+军事基地，11艘航母战斗群",
+          "detail": "全球约750军事设施(DoD Base Structure Report FY2024)，11艘航母战斗群(US Navy)",
           "status": "strained",
-          "evidence": "155mm炮弹月产量约3.6万发(2024，目标2025年底10万发)，乌克兰日消耗约3000-7000发(强度依赖)，暴露产能缺口；红海拦截胡塞导弹/无人机成本不对称(SM-2 $2.1M / SM-6 $4.3M vs 无人机$2K-$20K)"
+          "evidence": "155mm炮弹月产量约3.6万发(Army testimony to Congress 2024，目标2025年底10万发)，乌克兰日消耗约3000-7000发(RUSI/defense analysts estimates)，暴露产能缺口；红海拦截成本不对称：SM-2 $2.1M / SM-6 $4.3M vs 胡塞无人机$2K-$20K (CSIS Missile Defense Project 2024)"
         },
         {
           "id": "energy_control",
           "label": "能源控制力",
           "detail": "中东军事存在→石油供应安全→美元定价权",
           "status": "eroding",
-          "evidence": "红海航运危机暴露美军单独维护航道的高成本；中国-伊朗25年合作协议绕过美元体系"
+          "evidence": "红海航运危机暴露美军单独维护航道的高成本(Operation Prosperity Guardian 2024)；中国-伊朗25年全面合作协议(2021年3月签署)，具体金融条款未公开"
         }
       ],
       "transmission_path": "petrodollar → trade_invoicing → reserve_currency → low_funding_cost → military_projection → energy_control → petrodollar",
@@ -116,13 +116,13 @@
           "label": "化肥成本",
           "detail": "天然气→氨→尿素/硝酸铵 生产链",
           "status": "normalized",
-          "evidence": "2022年俄乌冲突导致化肥价格翻倍(俄罗斯占全球钾肥出口23%)，2024年回落但仍高于2020水平"
+          "evidence": "2022年俄乌冲突导致化肥价格翻倍(World Bank Commodity Markets Outlook 2022)。俄罗斯+白俄罗斯合占全球钾肥出口约40%(IFA 2022)，2024年价格回落但仍高于2020水平"
         },
         {
           "id": "transport_cost",
           "label": "运输成本",
           "detail": "柴油价格→卡车/船运→粮食物流",
-          "evidence": "红海危机导致亚欧航线绕行好望角，运输时间+10天，成本+约30%"
+          "evidence": "红海危机导致亚欧航线绕行好望角，运输时间+10天，成本+约30%(Drewry World Container Index / Freightos Baltic Index 2024，具体涨幅随航线波动)"
         },
         {
           "id": "food_price",
@@ -139,7 +139,7 @@
           "id": "social_stability",
           "label": "社会稳定",
           "detail": "粮价上涨→通胀→社会不满→政治动荡",
-          "evidence": "2010-2011阿拉伯之春直接触发因素之一是粮价飙升(FAO指数达131)"
+          "evidence": "2010-2011阿拉伯之春触发因素之一是粮价飙升(FAO FFPI 2011年2月达131.9，FAO官网)"
         }
       ],
       "transmission_path": "energy_price → fertilizer_cost + transport_cost → food_price → social_stability",
@@ -151,11 +151,11 @@
       "historical_precedents": [
         {
           "event": "2007-2008全球粮食危机",
-          "lesson": "油价$147+生物燃料政策→粮价暴涨→37国粮食暴动"
+          "lesson": "油价$147(NYMEX WTI July 2008)+生物燃料政策→粮价暴涨→多国粮食骚乱(World Bank '37 countries' estimate, 2008 Food Price Crisis report)"
         },
         {
           "event": "2022俄乌冲突粮食冲击",
-          "lesson": "黑海粮食走廊中断→小麦价格+60%→非洲/中东粮食安全恶化"
+          "lesson": "黑海粮食走廊中断→小麦期货价格+约55%(CBOT March 2022)→非洲/中东粮食安全恶化(WFP)"
         }
       ],
       "affected_countries": ["TR", "IN", "BR", "AR", "ZA", "SA", "AE"],
@@ -199,7 +199,8 @@
             "target_2025_pct": 70,
             "gap": "巨大差距，且先进制程（≤14nm）自给率<5%",
             "smic_most_advanced_node_nm": 7,
-            "source": "IC Insights 2024; CSIA"
+            "smic_7nm_note": "SMIC为华为Mate 60 Pro生产Kirin 9000s芯片(2023年8月)，使用DUV多重曝光实现7nm级，良率和产能受限",
+            "source": "TechInsights (formerly IC Insights) 2024; CSIA (China Semiconductor Industry Association)"
           }
         },
         {
@@ -213,12 +214,12 @@
           "id": "military_electronics",
           "label": "军事电子依赖",
           "detail": "精确制导武器→先进芯片→台海风险=全球军事供应链风险",
-          "evidence": "F-35使用约$500K芯片组件；俄罗斯制裁后被迫从家电中拆解西方芯片"
+          "evidence": "现代武器系统高度依赖先进芯片(GAO Report on Defense Supply Chain 2023)；俄罗斯制裁后被迫从家电中拆解西方芯片(RUSI Silicon Lifeline report, Aug 2022)"
         }
       ],
       "transmission_path": "euv_lithography → foundry_concentration → ai_compute + military_electronics → china_self_sufficiency (反馈循环：管制越严→自研越急)",
       "breaking_points": [
-        "台海军事冲突 → TSMC停产 → 全球电子产业瘫痪(GDP影响估$1-2T/年)",
+        "台海军事冲突 → TSMC停产 → 全球电子产业瘫痪(Rhodium Group 2024 estimate: GDP影响$0.6-2.5T/年，具体取决于冲突规模和持续时间)",
         "ASML断供 → 中国先进制程追赶停滞",
         "中国突破EUV → 打破垄断，地缘格局重塑"
       ],
@@ -267,7 +268,7 @@
           "id": "asset_bubble",
           "label": "资产泡沫",
           "detail": "过度信用→资产价格偏离基本面",
-          "evidence": "2021年美股总市值/GDP(巴菲特指标)达200%+，历史最高"
+          "evidence": "2021年美股总市值/GDP(巴菲特指标)达约200%(Federal Reserve Z.1 Financial Accounts / Wilshire 5000)，历史最高"
         },
         {
           "id": "tightening",
@@ -290,7 +291,7 @@
           "id": "clearing",
           "label": "出清",
           "detail": "不良资产清理、僵尸企业出清、信用体系重置",
-          "evidence": "历史周期：平均7-10年完成一轮(大萧条除外)"
+          "evidence": "历史周期长度不等：1990日本~15年+、2008美国~5年、1997亚洲~3年。参考Reinhart & Rogoff 'This Time Is Different' (2009) 和 Kindleberger 'Manias, Panics, and Crashes'"
         }
       ],
       "transmission_path": "monetary_easing → credit_expansion → asset_bubble → tightening → deleveraging → clearing → monetary_easing (循环)",
@@ -343,7 +344,9 @@
           "detail": "CIPS(中国)、SPFS(俄罗斯)、mBridge(CBDC跨境)等替代SWIFT",
           "metrics": {
             "cips_participants": 1400,
-            "cips_daily_volume_billion_rmb": 500,
+            "cips_participants_note": "含直接参与者~80+间接参与者~1300+(CIPS官网2024，精确数字有限公开)",
+            "cips_daily_volume_billion_rmb": "not_publicly_disclosed",
+            "cips_volume_note": "CIPS不定期公开交易量数据，此前报道的500B RMB/日为媒体估算，不可独立验证",
             "swift_daily_volume_trillion_usd": 5,
             "mbridge_status": "MVP launched June 2024; BIS stepped back to observer Oct 2024; continues under PBoC/BoT/CBUAE/HKMA/Saudi CB",
             "source": "CIPS 2024; SWIFT; BIS Innovation Hub 2024"
@@ -355,7 +358,8 @@
           "detail": "中国与40+国家签署货币互换协议，推动本币贸易结算",
           "metrics": {
             "china_swap_agreements_count": 40,
-            "china_swap_total_billion_rmb": 4000,
+            "china_swap_total_ceiling_billion_rmb": 4000,
+            "swap_note": "此为互换协议上限总额，非实际使用金额",
             "source": "PBOC 2024"
           }
         },
@@ -418,7 +422,7 @@
           "id": "decoupling_trigger",
           "label": "中美脱钩触发",
           "detail": "2018贸易战→2020疫情→2022芯片法案→持续升级",
-          "evidence": "美国对华关税仍维持(大部分商品25%)；《芯片与科学法案》$527B(含$390B直接补贴)"
+          "evidence": "美国对华关税仍维持(大部分商品25%，USTR tariff schedule)；CHIPS and Science Act授权$280B(含$39B半导体制造直接补贴+$13.2B研发，Congress.gov H.R.4346)"
         },
         {
           "id": "friendshoring",
@@ -435,13 +439,13 @@
           "id": "cost_increase",
           "label": "成本上升",
           "detail": "供应链冗余+非最优产地→生产成本上升",
-          "evidence": "McKinsey估计供应链重构将使全球制造成本增加5-15%"
+          "evidence": "供应链重构可能使制造成本增加5-15%(McKinsey Global Institute 'Risk, resilience, and rebalancing in global value chains' 2020 — 咨询公司估算，非官方统计，范围较宽)"
         },
         {
           "id": "structural_inflation",
           "label": "结构性通胀",
           "detail": "成本推动+劳动力短缺+能源转型→通胀中枢上移",
-          "assessment": "2%通胀目标在去全球化时代可能需要上调至3%"
+          "assessment": "部分经济学家(Blanchard 2022, Summers)提出2%通胀目标在去全球化时代可能需要上调至3%。此为学术争论，非共识观点。"
         }
       ],
       "transmission_path": "decoupling_trigger → friendshoring → cost_increase → structural_inflation",
@@ -484,7 +488,7 @@
           "id": "labor_shortage",
           "label": "劳动力短缺",
           "detail": "劳动年龄人口(15-64)下降→企业招工难",
-          "evidence": "中国劳动年龄人口2012年达峰(约10亿)，2024年降至约9.6亿，每年减少约500万"
+          "evidence": "中国劳动年龄人口(15-59)约2013年达峰(NBS第六次人口普查+年度统计公报)，2023年约8.64亿(NBS统计年鉴2024)，近年每年减少约400-500万"
         },
         {
           "id": "pension_crisis",
@@ -501,7 +505,7 @@
           "id": "fiscal_pressure",
           "label": "财政压力",
           "detail": "养老+医疗支出增长→挤压其他政府支出（含军事/基建）",
-          "evidence": "日本社会保障支出占政府支出约33%，且持续上升"
+          "evidence": "日本社会保障支出占一般会计预算约33%(日本財務省 FY2024予算概要)，且持续上升"
         },
         {
           "id": "automation_or_immigration",
@@ -560,13 +564,13 @@
           "id": "more_borrowing",
           "label": "借更多债",
           "detail": "利息要靠借新债支付→债务滚雪球",
-          "evidence": "CBO预测美国2034年债务/GDP将达166%"
+          "evidence": "CBO 2024 Long-Term Budget Outlook：2034年公共持有债务/GDP约122%，2054年约166%。30年内债务翻倍趋势不可持续"
         },
         {
           "id": "credit_downgrade",
           "label": "信用评级下调",
           "detail": "债务不可持续→评级机构下调主权评级",
-          "evidence": "惠誉2023年8月将美国从AAA降至AA+；穆迪维持Aaa但展望为负面(2023.11)"
+          "evidence": "惠誉2023年8月将美国从AAA降至AA+；穆迪2025年11月将美国从Aaa降至Aa1(失去最后一家AAA评级)"
         },
         {
           "id": "capital_flight",
@@ -582,9 +586,9 @@
         "日本YCC退出→日债利率正常化→利息爆炸(255%GDP×利率)"
       ],
       "key_thresholds": {
-        "imf_danger_zone_debt_to_gdp_pct": 90,
+        "reinhart_rogoff_threshold_debt_to_gdp_pct": 90,
         "interest_to_revenue_alarm_pct": 25,
-        "note": "90%阈值来自Reinhart-Rogoff研究(有争议)，但利息/收入>25%是公认危险线"
+        "note": "90%阈值来自Reinhart-Rogoff 2010年论文'Growth in a Time of Debt'(有争议，Herndon 2013指出计算错误)。25%利息/收入线为市场经验共识，非任何机构官方阈值。两者均为参考值，非硬性红线。"
       },
       "historical_precedents": [
         {

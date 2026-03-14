@@ -1,7 +1,18 @@
 {
   "_comment": "Bilateral geopolitical relationships for AI reasoning injection. Traces structural tensions from WWI onwards, with financial transmission paths. Each edge is directional (a→b = a's posture toward b). Updated quarterly.",
-  "_updated": "2026-03-13",
+  "_updated": "2026-03-14",
   "_methodology": "Relationships scored on cooperation(-1 hostile to +1 allied) axis. Financial transmission identifies how bilateral tensions affect markets. Historical roots traced to earliest relevant structural event.",
+  "_scoring_methodology": "cooperation_score is a qualitative editorial estimate, NOT a quantitative index. Values represent the author's assessment of overall bilateral relationship temperature as of the _updated date. Scale: -1.0 (active war/total hostility) to +1.0 (formal military alliance with deep integration). These scores are for AI reasoning context only and should be treated as approximate directional indicators, not precise measurements.",
+  "_sources": [
+    "US Census Bureau (bilateral trade data)",
+    "US Treasury TIC Data (foreign holdings)",
+    "Eurostat (EU trade data)",
+    "Kiel Institute Ukraine Support Tracker",
+    "EIA (Strait of Hormuz oil flows)",
+    "European Commission (trade policy decisions)",
+    "DoD Base Structure Report (overseas installations)",
+    "IISS Military Balance (troop deployments)"
+  ],
 
   "edges": [
     {
@@ -30,6 +41,12 @@
         "scenario_if_escalation": "台海冲突=全球GDP损失约10%(比2008金融危机更严重)"
       },
       "cooperation_areas": ["气候变化(有限)", "反毒品(芬太尼)", "经贸仍有$700B+双边贸易"],
+      "data_sources": {
+        "tariffs_avg_20pct": "Peterson Institute for International Economics 2024",
+        "treasury_holdings_760B": "US Treasury TIC Data, mid-2024",
+        "taiwan_gdp_loss_10pct": "Bloomberg Economics 2022 estimate (~$10T)",
+        "bilateral_trade_700B": "US Census Bureau 2023 (~$690B)"
+      },
       "trend": "竞争深化但管控冲突(护栏机制)"
     },
 
@@ -58,6 +75,10 @@
         "channels": ["能源价格波动", "制裁→大宗商品供应中断", "核风险溢价", "欧洲经济拖累"],
         "risk_assets": ["欧洲天然气期货", "小麦期货", "卢布", "欧元"],
         "scenario_if_escalation": "核升级风险→全球避险→黄金/美债飙升"
+      },
+      "data_sources": {
+        "us_aid_ukraine_175B": "Kiel Institute Ukraine Support Tracker, total commitments through 2025",
+        "frozen_reserves_300B": "EU Council decisions 2022, widely cited (~$300B of ~$640B total)"
       },
       "trend": "深度对抗，短期无缓和可能"
     },
@@ -88,6 +109,9 @@
       "financial_transmission": {
         "channels": ["能源定价→人民币结算扩大", "军贸→国防股", "技术转让→制裁规避"],
         "assessment": "中俄走近推动世界两极化，加速去美元化"
+      },
+      "data_sources": {
+        "local_currency_settlement_90pct": "Russian Central Bank / TASS reports 2024, exact figure varies by source and measurement period"
       },
       "trend": "因共同对手(美国)而走近，但非真正联盟(利益计算为主)"
     },
@@ -172,6 +196,9 @@
         "risk_assets": ["日经225", "日元", "中日贸易相关股"]
       },
       "cooperation_areas": ["双边贸易仍$300B+", "区域供应链深度嵌套", "RCEP框架内合作"],
+      "data_sources": {
+        "bilateral_trade_300B": "Chinese Customs / JETRO 2023 (~$318B)"
+      },
       "trend": "政冷经温→政冷经也冷(趋势)"
     },
 
@@ -219,7 +246,7 @@
         {"year": 2015, "event": "沙特处决什叶教士→断交"},
         {"year": 2023, "event": "北京斡旋复交"}
       ],
-      "significance": "中国取代美国成为中东和平斡旋者 — 地缘格局标志性事件",
+      "significance": "中国首次成功斡旋中东大国和解 — 标志美国不再垄断中东外交，但一次斡旋不等于取代",
       "financial_transmission": {
         "channels": ["中东稳定→油价下行压力", "沙伊合作→也门冲突降温", "中国中东影响力→石油美元松动"],
         "risk_assets": ["原油期货", "中东主权债"]
@@ -271,6 +298,10 @@
         "人权/新疆议题"
       ],
       "cooperation_areas": ["气候合作(有限)", "双边贸易$800B+", "投资(虽下降但存量大)"],
+      "data_sources": {
+        "ev_tariffs_17_38pct": "European Commission Implementing Regulation 2024/2376",
+        "bilateral_trade_800B": "Eurostat 2023 (~€739B)"
+      },
       "financial_transmission": {
         "channels": ["欧元/人民币", "欧洲汽车股(中国竞争)", "奢侈品(中国消费)", "欧洲对华出口"],
         "risk_assets": ["欧洲汽车制造商(BMW/VW)", "奢侈品集团(LVMH)", "欧元"]
@@ -303,6 +334,10 @@
         "risk_assets": ["原油期货", "航运指数", "黄金(避险)"],
         "scenario_if_war": "霍尔木兹海峡封锁→油价$150+→全球衰退"
       },
+      "data_sources": {
+        "hormuz_20pct_oil": "EIA 'World Oil Transit Chokepoints' 2023",
+        "oil_150_scenario": "Goldman Sachs/JPMorgan analyst estimates, not official"
+      },
       "trend": "高度对抗+代理战争常态化"
     },
 
@@ -321,12 +356,15 @@
       "current_tensions": [
         "边境：LAC(实际控制线)争议未解，双方驻军常态化",
         "经济竞争：争夺友岸外包+FDI",
-        "一带一路：印度拒绝加入(唯一主要经济体)",
+        "一带一路：印度拒绝加入(主要亚洲邻国中唯一明确反对者，美日也未参与)",
         "海洋：中国在印度洋基地(吉布提、斯里兰卡)→印度安全焦虑"
       ],
       "financial_transmission": {
         "channels": ["FDI流向(中国→印度替代)", "供应链转移", "南亚地缘风险"],
         "assessment": "中印竞争加剧→跨国企业'中国+1'战略加速"
+      },
+      "data_sources": {
+        "russian_oil_5x_increase": "Kpler/Vortexa energy analytics 2024, approximate multiplier vs pre-2022 baseline"
       },
       "trend": "竞争上升，合作空间收窄"
     },
@@ -354,6 +392,11 @@
         "risk_assets": ["欧洲天然气TTF", "德国工业股(BASF等)", "欧元"],
         "scenario_if_peace": "乌克兰停战→制裁部分解除→能源成本下降→欧洲经济回暖(但完全恢复不可能)"
       },
+      "data_sources": {
+        "lng_cost_premium_30_50pct": "IEA European Gas Report 2023, approximate range",
+        "germany_defense_fund_100B_eur": "Bundestag vote Feb 2022",
+        "frozen_asset_profits": "G7 June 2024 decision, ~€3B annual yield on ~$300B principal"
+      },
       "trend": "断裂性脱钩，30年能源关系终结"
     },
 
@@ -371,6 +414,10 @@
         {"year": 2015, "event": "安保法制化 → 集体自卫权"}
       ],
       "current_significance": "印太战略核心支柱，54000美军驻日，日本防卫预算向GDP2%迈进",
+      "data_sources": {
+        "us_personnel_54000": "DoD East Asia force posture data 2024",
+        "japan_defense_2pct_target": "PM Kishida announcement, target FY2027"
+      },
       "financial_transmission": {
         "channels": ["日本国债利率→全球套利平仓", "日元避险属性", "日本防务开支→财政", "美日利差→资本流动"],
         "risk_assets": ["日元", "日经225", "日本国债"]
