@@ -1,0 +1,425 @@
+{
+  "_comment": "Bilateral geopolitical relationships for AI reasoning injection. Traces structural tensions from WWI onwards, with financial transmission paths. Each edge is directional (a→b = a's posture toward b). Updated quarterly.",
+  "_updated": "2026-03-13",
+  "_methodology": "Relationships scored on cooperation(-1 hostile to +1 allied) axis. Financial transmission identifies how bilateral tensions affect markets. Historical roots traced to earliest relevant structural event.",
+
+  "edges": [
+    {
+      "id": "US_CN",
+      "from": "US",
+      "to": "CN",
+      "label": "中美战略竞争",
+      "cooperation_score": -0.6,
+      "relationship_type": "strategic_rivalry",
+      "historical_roots": [
+        {"year": 1949, "event": "新中国成立 → 冷战对立(朝鲜战争1950-53)"},
+        {"year": 1972, "event": "尼克松访华 → 联中抗苏"},
+        {"year": 2001, "event": "中国加入WTO → 经济深度捆绑"},
+        {"year": 2018, "event": "贸易战爆发 → 结构性脱钩开始"}
+      ],
+      "current_tensions": [
+        "台海：美对台军售+海峡巡航 vs 中国统一底线",
+        "科技：芯片管制+AI限制+TikTok审查",
+        "贸易：关税壁垒(平均20%+)、产能过剩争议",
+        "军事：南海对峙、西太平洋军事竞争",
+        "金融：去美元化 vs 美债持有($760B)"
+      ],
+      "financial_transmission": {
+        "channels": ["贸易关税→通胀", "芯片管制→供应链成本", "台海风险溢价→全球股汇债", "人民币/美元汇率"],
+        "risk_assets": ["半导体ETF", "中概股", "台湾加权指数", "大宗商品"],
+        "scenario_if_escalation": "台海冲突=全球GDP损失约10%(比2008金融危机更严重)"
+      },
+      "cooperation_areas": ["气候变化(有限)", "反毒品(芬太尼)", "经贸仍有$700B+双边贸易"],
+      "trend": "竞争深化但管控冲突(护栏机制)"
+    },
+
+    {
+      "id": "US_RU",
+      "from": "US",
+      "to": "RU",
+      "label": "美俄对抗",
+      "cooperation_score": -0.8,
+      "relationship_type": "confrontation",
+      "historical_roots": [
+        {"year": 1917, "event": "十月革命 → 意识形态对立"},
+        {"year": 1945, "event": "冷战开始 → 核军备竞赛"},
+        {"year": 1991, "event": "苏联解体 → 短暂缓和"},
+        {"year": 2008, "event": "格鲁吉亚战争 → 关系恶化"},
+        {"year": 2014, "event": "克里米亚 → 制裁开始"},
+        {"year": 2022, "event": "全面入侵乌克兰 → 全面对抗"}
+      ],
+      "current_tensions": [
+        "乌克兰战争：美援乌$175B+ vs 俄军事行动",
+        "能源武器化：Nord Stream、欧洲能源脱俄",
+        "核威慑：INF条约退出后核态势升级",
+        "制裁：冻结$300B俄央行储备、SWIFT切断"
+      ],
+      "financial_transmission": {
+        "channels": ["能源价格波动", "制裁→大宗商品供应中断", "核风险溢价", "欧洲经济拖累"],
+        "risk_assets": ["欧洲天然气期货", "小麦期货", "卢布", "欧元"],
+        "scenario_if_escalation": "核升级风险→全球避险→黄金/美债飙升"
+      },
+      "trend": "深度对抗，短期无缓和可能"
+    },
+
+    {
+      "id": "CN_RU",
+      "from": "CN",
+      "to": "RU",
+      "label": "中俄准联盟",
+      "cooperation_score": 0.7,
+      "relationship_type": "strategic_partnership",
+      "historical_roots": [
+        {"year": 1950, "event": "中苏同盟"},
+        {"year": 1960, "event": "中苏决裂"},
+        {"year": 1989, "event": "关系正常化"},
+        {"year": 2022, "event": "无上限伙伴关系声明"}
+      ],
+      "current_tensions": [
+        "中亚影响力竞争(中国一带一路 vs 俄罗斯传统势力范围)",
+        "中国对俄援助的平衡(避免触发西方二级制裁)"
+      ],
+      "cooperation_areas": [
+        "能源：西伯利亚力量管道+LNG长期合同",
+        "军事：联合军演(常态化)、武器技术交流",
+        "去美元化：双边本币结算(人民币/卢布)占比提升至90%+",
+        "外交：联合国安理会协调投票"
+      ],
+      "financial_transmission": {
+        "channels": ["能源定价→人民币结算扩大", "军贸→国防股", "技术转让→制裁规避"],
+        "assessment": "中俄走近推动世界两极化，加速去美元化"
+      },
+      "trend": "因共同对手(美国)而走近，但非真正联盟(利益计算为主)"
+    },
+
+    {
+      "id": "US_XM",
+      "from": "US",
+      "to": "XM",
+      "label": "跨大西洋联盟",
+      "cooperation_score": 0.6,
+      "relationship_type": "alliance_with_friction",
+      "historical_roots": [
+        {"year": 1945, "event": "马歇尔计划 → 战后重建绑定"},
+        {"year": 1949, "event": "北约成立 → 军事联盟"},
+        {"year": 1999, "event": "欧元诞生 → 货币竞争(潜在)"},
+        {"year": 2018, "event": "贸易摩擦(钢铝关税)"}
+      ],
+      "current_tensions": [
+        "贸易：美国IRA(通胀削减法案)补贴→欧洲制造业外流",
+        "能源：Nord Stream后欧洲被迫购买美国LNG(价格更高)",
+        "中国政策分歧：美强硬脱钩 vs 欧主张接触",
+        "防务负担：北约2%GDP目标，多数欧洲国家未达标"
+      ],
+      "financial_transmission": {
+        "channels": ["EUR/USD汇率", "能源成本→欧洲竞争力", "资本流向(欧→美)", "利差交易"],
+        "risk_assets": ["欧元", "欧洲工业股", "美国LNG公司"],
+        "scenario_if_divergence": "欧洲独立外交路线→北约弱化→地缘格局重塑"
+      },
+      "trend": "联盟维持但经济利益分化加深"
+    },
+
+    {
+      "id": "US_SA",
+      "from": "US",
+      "to": "SA",
+      "label": "美沙关系重塑",
+      "cooperation_score": 0.2,
+      "relationship_type": "transactional",
+      "historical_roots": [
+        {"year": 1945, "event": "昆西号协议(安全换石油)"},
+        {"year": 1974, "event": "石油美元体系建立"},
+        {"year": 2001, "event": "911后关系紧张(15/19劫机者为沙特)"},
+        {"year": 2018, "event": "卡舒吉事件→人权争议"},
+        {"year": 2023, "event": "沙特-伊朗北京和解 → 美沙专属关系松动"}
+      ],
+      "current_tensions": [
+        "石油美元：沙特不再排斥非美元石油结算",
+        "OPEC+减产：与美国增产诉求矛盾",
+        "中国关系：沙特加入金砖、与中国贸易人民币结算试点",
+        "安全保障：美国从中东收缩 vs 沙特安全需求"
+      ],
+      "financial_transmission": {
+        "channels": ["石油定价权", "石油美元回流(美债购买)", "OPEC+产量决策→油价", "沙特主权基金投资方向"],
+        "risk_assets": ["原油期货", "美国能源股", "沙特Tadawul指数"],
+        "scenario_if_break": "沙特接受人民币石油结算→石油美元基础动摇"
+      },
+      "trend": "从盟友→交易伙伴，沙特追求多方对冲"
+    },
+
+    {
+      "id": "CN_JP",
+      "from": "CN",
+      "to": "JP",
+      "label": "中日结构性矛盾",
+      "cooperation_score": -0.3,
+      "relationship_type": "economic_interdependence_political_rivalry",
+      "historical_roots": [
+        {"year": 1894, "event": "甲午战争 → 现代矛盾起点"},
+        {"year": 1937, "event": "全面侵华 → 深层历史创伤"},
+        {"year": 1972, "event": "中日邦交正常化"},
+        {"year": 2010, "event": "中国GDP超日本 → 权力转移"},
+        {"year": 2012, "event": "钓鱼岛/尖阁国有化 → 关系恶化"}
+      ],
+      "current_tensions": [
+        "领土：钓鱼岛/尖阁诸岛争端",
+        "历史：历史认知问题(靖国神社、教科书)",
+        "台海：日本安保政策转向，台湾有事=日本有事",
+        "科技：日本跟随美国对华半导体设备出口管制"
+      ],
+      "financial_transmission": {
+        "channels": ["日元/人民币汇率", "日企在华投资(下降趋势)", "稀土供应安全", "亚洲供应链布局"],
+        "risk_assets": ["日经225", "日元", "中日贸易相关股"]
+      },
+      "cooperation_areas": ["双边贸易仍$300B+", "区域供应链深度嵌套", "RCEP框架内合作"],
+      "trend": "政冷经温→政冷经也冷(趋势)"
+    },
+
+    {
+      "id": "US_IN",
+      "from": "US",
+      "to": "IN",
+      "label": "美印战略接近",
+      "cooperation_score": 0.5,
+      "relationship_type": "emerging_partnership",
+      "historical_roots": [
+        {"year": 1947, "event": "印度独立 → 不结盟运动"},
+        {"year": 1971, "event": "印巴战争 → 美印对立(美支持巴基斯坦)"},
+        {"year": 2005, "event": "美印核协议 → 关系升温"},
+        {"year": 2020, "event": "QUAD强化 → 印太战略重要棋子"}
+      ],
+      "current_tensions": [
+        "印度购买俄罗斯石油(大幅增加，2022后增5倍)不符美国制裁意图",
+        "贸易：美印贸易逆差+印度保护主义",
+        "人权/民主争议"
+      ],
+      "cooperation_areas": [
+        "QUAD(美日印澳)安全框架",
+        "友岸外包：苹果/三星制造转移至印度",
+        "技术合作：半导体(Micron印度工厂)、AI",
+        "共同应对中国"
+      ],
+      "financial_transmission": {
+        "channels": ["外资流入印度市场", "卢比国际化(缓慢)", "印度制造替代中国制造"],
+        "risk_assets": ["Nifty 50", "印度卢比", "印度IT/制造股"]
+      },
+      "trend": "战略接近但印度坚持战略自主(不会成为美国附庸)"
+    },
+
+    {
+      "id": "SA_IR",
+      "from": "SA",
+      "to": "IR",
+      "label": "沙伊宿敌和解",
+      "cooperation_score": 0.1,
+      "relationship_type": "cautious_rapprochement",
+      "historical_roots": [
+        {"year": 1979, "event": "伊朗伊斯兰革命 → 逊尼-什叶对立加剧"},
+        {"year": 2003, "event": "伊拉克战争后什叶新月崛起"},
+        {"year": 2015, "event": "沙特处决什叶教士→断交"},
+        {"year": 2023, "event": "北京斡旋复交"}
+      ],
+      "significance": "中国取代美国成为中东和平斡旋者 — 地缘格局标志性事件",
+      "financial_transmission": {
+        "channels": ["中东稳定→油价下行压力", "沙伊合作→也门冲突降温", "中国中东影响力→石油美元松动"],
+        "risk_assets": ["原油期货", "中东主权债"]
+      },
+      "trend": "脆弱和解，结构性矛盾(逊尼vs什叶、地区主导权)未解"
+    },
+
+    {
+      "id": "US_TR",
+      "from": "US",
+      "to": "TR",
+      "label": "美土矛盾北约盟友",
+      "cooperation_score": 0.0,
+      "relationship_type": "troubled_alliance",
+      "historical_roots": [
+        {"year": 1952, "event": "土耳其加入北约"},
+        {"year": 2016, "event": "未遂政变 → 美土信任危机"},
+        {"year": 2019, "event": "土购买S-400 → 美制裁+F-35踢出"}
+      ],
+      "current_tensions": [
+        "S-400导弹系统：北约兼容性问题",
+        "叙利亚库尔德人：美国支持的YPG vs 土耳其视其为恐怖组织",
+        "埃尔多安外交独立性：平衡美俄中",
+        "土耳其通胀/里拉危机→地缘不确定性"
+      ],
+      "financial_transmission": {
+        "channels": ["里拉波动", "土耳其主权CDS", "欧洲难民危机(土耳其门户)", "北约团结度"],
+        "risk_assets": ["土耳其里拉", "BIST 100指数", "土耳其外债"]
+      },
+      "trend": "名义盟友，实际各怀心思"
+    },
+
+    {
+      "id": "CN_XM",
+      "from": "CN",
+      "to": "XM",
+      "label": "中欧经贸竞争",
+      "cooperation_score": 0.1,
+      "relationship_type": "competitive_interdependence",
+      "historical_roots": [
+        {"year": 2001, "event": "中国入世 → 欧中贸易激增"},
+        {"year": 2019, "event": "欧盟定义中国为'系统性竞争对手'"},
+        {"year": 2024, "event": "欧盟对华电动车加征关税"}
+      ],
+      "current_tensions": [
+        "电动车关税：欧盟加征17-38%反补贴税",
+        "产能过剩争议：欧洲指控中国倾销",
+        "一带一路投资放缓+去风险",
+        "人权/新疆议题"
+      ],
+      "cooperation_areas": ["气候合作(有限)", "双边贸易$800B+", "投资(虽下降但存量大)"],
+      "financial_transmission": {
+        "channels": ["欧元/人民币", "欧洲汽车股(中国竞争)", "奢侈品(中国消费)", "欧洲对华出口"],
+        "risk_assets": ["欧洲汽车制造商(BMW/VW)", "奢侈品集团(LVMH)", "欧元"]
+      },
+      "trend": "从伙伴→竞争对手，经济绑定使完全脱钩不可能"
+    },
+
+    {
+      "id": "US_IR",
+      "from": "US",
+      "to": "IR",
+      "label": "美伊对抗",
+      "cooperation_score": -0.9,
+      "relationship_type": "adversarial",
+      "historical_roots": [
+        {"year": 1953, "event": "CIA推翻摩萨台 → 反美种子"},
+        {"year": 1979, "event": "伊斯兰革命+人质危机 → 全面对抗"},
+        {"year": 2015, "event": "JCPOA伊核协议 → 短暂缓和"},
+        {"year": 2018, "event": "特朗普退出JCPOA → 极限施压"},
+        {"year": 2020, "event": "暗杀苏莱曼尼 → 对抗升级"}
+      ],
+      "current_tensions": [
+        "核计划：伊朗浓缩铀接近武器级(60%→90%只需数周)",
+        "代理人战争：胡塞(也门)、真主党(黎巴嫩)、哈马斯(加沙)",
+        "红海航运安全：胡塞袭击→美军拦截→成本不对称",
+        "制裁：全面制裁但中印仍购买伊朗石油"
+      ],
+      "financial_transmission": {
+        "channels": ["霍尔木兹海峡风险溢价(全球20%石油通过)", "制裁规避→影子石油贸易", "中东代理战→区域不稳定→油价"],
+        "risk_assets": ["原油期货", "航运指数", "黄金(避险)"],
+        "scenario_if_war": "霍尔木兹海峡封锁→油价$150+→全球衰退"
+      },
+      "trend": "高度对抗+代理战争常态化"
+    },
+
+    {
+      "id": "IN_CN",
+      "from": "IN",
+      "to": "CN",
+      "label": "中印边境对峙+经济竞争",
+      "cooperation_score": -0.4,
+      "relationship_type": "rivalry",
+      "historical_roots": [
+        {"year": 1962, "event": "中印边境战争"},
+        {"year": 2017, "event": "洞朗对峙"},
+        {"year": 2020, "event": "加勒万河谷冲突(双方伤亡)"}
+      ],
+      "current_tensions": [
+        "边境：LAC(实际控制线)争议未解，双方驻军常态化",
+        "经济竞争：争夺友岸外包+FDI",
+        "一带一路：印度拒绝加入(唯一主要经济体)",
+        "海洋：中国在印度洋基地(吉布提、斯里兰卡)→印度安全焦虑"
+      ],
+      "financial_transmission": {
+        "channels": ["FDI流向(中国→印度替代)", "供应链转移", "南亚地缘风险"],
+        "assessment": "中印竞争加剧→跨国企业'中国+1'战略加速"
+      },
+      "trend": "竞争上升，合作空间收窄"
+    },
+
+    {
+      "id": "XM_RU",
+      "from": "XM",
+      "to": "RU",
+      "label": "欧俄能源脱钩",
+      "cooperation_score": -0.7,
+      "relationship_type": "ruptured_interdependence",
+      "historical_roots": [
+        {"year": 1970, "event": "西欧-苏联天然气管道 → 能源依赖开始"},
+        {"year": 2011, "event": "Nord Stream 1启用"},
+        {"year": 2022, "event": "俄乌战争 → 能源脱钩 + Nord Stream爆炸"}
+      ],
+      "current_tensions": [
+        "能源：欧洲LNG成本比管道气高30-50%，竞争力下降",
+        "军事：欧洲重整军备(德国€100B特别国防基金)",
+        "难民/移民：乌克兰难民+混合战争(白俄罗斯边境)",
+        "冻结资产：$300B俄央行储备的利息用于援乌(法律争议)"
+      ],
+      "financial_transmission": {
+        "channels": ["欧洲能源成本", "工业竞争力下降(尤其德国化工)", "国防开支增加→财政压力", "欧元区经济放缓"],
+        "risk_assets": ["欧洲天然气TTF", "德国工业股(BASF等)", "欧元"],
+        "scenario_if_peace": "乌克兰停战→制裁部分解除→能源成本下降→欧洲经济回暖(但完全恢复不可能)"
+      },
+      "trend": "断裂性脱钩，30年能源关系终结"
+    },
+
+    {
+      "id": "US_JP_alliance",
+      "from": "US",
+      "to": "JP",
+      "label": "美日安保联盟",
+      "cooperation_score": 0.8,
+      "relationship_type": "military_alliance",
+      "historical_roots": [
+        {"year": 1945, "event": "日本投降 → 美国占领"},
+        {"year": 1951, "event": "旧金山和约 + 美日安保条约"},
+        {"year": 1985, "event": "广场协议 → 经济摩擦"},
+        {"year": 2015, "event": "安保法制化 → 集体自卫权"}
+      ],
+      "current_significance": "印太战略核心支柱，54000美军驻日，日本防卫预算向GDP2%迈进",
+      "financial_transmission": {
+        "channels": ["日本国债利率→全球套利平仓", "日元避险属性", "日本防务开支→财政", "美日利差→资本流动"],
+        "risk_assets": ["日元", "日经225", "日本国债"]
+      },
+      "trend": "因中国崛起而持续强化"
+    },
+
+    {
+      "id": "BR_AR_LATAM",
+      "from": "BR",
+      "to": "AR",
+      "label": "南美双雄+区域格局",
+      "cooperation_score": 0.3,
+      "relationship_type": "regional_partners",
+      "historical_roots": [
+        {"year": 1991, "event": "南方共同市场(Mercosur)成立"},
+        {"year": 2023, "event": "阿根廷经济危机+米莱当选 → 政策转向亲美"}
+      ],
+      "current_tensions": [
+        "政治分歧：巴西左翼(Lula,金砖)vs阿根廷右翼(Milei,亲美)",
+        "经济：阿根廷美元化讨论vs巴西推动本币结算",
+        "Mercosur内部：是否与欧盟FTA"
+      ],
+      "financial_transmission": {
+        "channels": ["拉美情绪(risk-on/off)", "大宗商品(巴西铁矿/大豆)", "新兴市场资金流", "阿根廷违约风险"],
+        "risk_assets": ["巴西雷亚尔", "阿根廷比索/蓝色美元", "拉美ETF"]
+      },
+      "trend": "方向分歧但经济互补"
+    }
+  ],
+
+  "meta_patterns": [
+    {
+      "id": "bipolar_drift",
+      "name": "两极化漂移",
+      "description": "全球正从美国单极向美中双极格局过渡，但不是冷战式铁幕，而是选择性脱钩+经济互嵌",
+      "indicators": ["军事联盟重组(QUAD/AUKUS vs 上合)", "贸易阵营化", "技术标准分裂(5G/AI)"]
+    },
+    {
+      "id": "middle_power_hedging",
+      "name": "中等强国对冲",
+      "description": "印度、沙特、土耳其、巴西等中等强国拒绝选边，利用大国竞争最大化自身利益",
+      "indicators": ["印度同时参加QUAD和购买俄油", "沙特同时与美中做生意", "土耳其在北约但买S-400"]
+    },
+    {
+      "id": "resource_nationalism",
+      "name": "资源民族主义回归",
+      "description": "关键资源国利用稀缺性要价：锂(智利)、镍(印尼)、稀土(中国)、天然气(卡塔尔)、铀(哈萨克斯坦)",
+      "indicators": ["出口管制增加", "资源国有化", "加工环节本土化要求"]
+    }
+  ]
+}
