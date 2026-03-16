@@ -8,7 +8,7 @@ use crate::models::ai::{
 };
 use crate::models::credit::{confidence_grade, GlobalCycleOverview};
 use crate::services::ai_config::ResolvedAiConfig;
-use crate::services::{ai_router, summarizer};
+use crate::services::{ai_router, knowledge_base, summarizer};
 
 // ===========================================================================
 // Legacy cycle reasoning (kept for backward compat)
@@ -66,7 +66,16 @@ pub async fn reason_cycle(
         indicators_json
     );
 
-    let response = ai_router::reason(&user_prompt, Some(CYCLE_SYSTEM_PROMPT), config, provider)
+    // Enrich system prompt with country profiles and causal chains
+    let system_prompt = format!(
+        "{}\n\n=== 知识库 ===\n\n--- 15国结构画像 ---\n{}\n\n--- 结构性因果链 ---\n{}\n\n--- 数据可信度评分 ---\n{}",
+        CYCLE_SYSTEM_PROMPT,
+        knowledge_base::country_profiles_slim(),
+        knowledge_base::power_structures_slim(),
+        knowledge_base::DATA_RELIABILITY,
+    );
+
+    let response = ai_router::reason(&user_prompt, Some(&system_prompt), config, provider)
         .await?;
 
     if response.is_empty() {
@@ -246,8 +255,17 @@ pub async fn reason_five_layer(
 
     let prompt = build_five_layer_prompt(input)?;
 
+    // Enrich system prompt with country profiles and causal chains
+    let five_layer_enriched = format!(
+        "{}\n\n=== 知识库 ===\n\n--- 15国结构画像 ---\n{}\n\n--- 结构性因果链 ---\n{}\n\n--- 数据可信度评分 ---\n{}",
+        FIVE_LAYER_SYSTEM_PROMPT,
+        knowledge_base::country_profiles_slim(),
+        knowledge_base::power_structures_slim(),
+        knowledge_base::DATA_RELIABILITY,
+    );
+
     let response =
-        ai_router::reason(&prompt, Some(FIVE_LAYER_SYSTEM_PROMPT), config, provider).await?;
+        ai_router::reason(&prompt, Some(&five_layer_enriched), config, provider).await?;
 
     if response.is_empty() {
         return Ok(default_five_layer(&input.cycle_overview, "Claude returned empty response"));

@@ -6,6 +6,7 @@ use uuid::Uuid;
 use crate::errors::AppError;
 use crate::models::credit::confidence_grade;
 use crate::services::game_map;
+use crate::services::knowledge_base;
 
 // ---------------------------------------------------------------------------
 // Scenario data structures
@@ -129,7 +130,16 @@ pub async fn update_scenarios(
     // Build prompt
     let prompt = build_scenario_prompt(&active, &dynamics, &previous);
 
-    let response = crate::services::ai_router::reason(&prompt, Some(SCENARIO_SYSTEM_PROMPT), config, provider)
+    // Enrich system prompt with causal chains and geopolitical graph
+    let system_prompt = format!(
+        "{}\n\n=== 知识库 ===\n\n--- 结构性因果链 ---\n{}\n\n--- 地缘关系图谱 ---\n{}\n\n--- 政策日历 ---\n{}",
+        SCENARIO_SYSTEM_PROMPT,
+        knowledge_base::power_structures_slim(),
+        knowledge_base::geopolitical_graph_slim(),
+        knowledge_base::POLICY_CALENDAR,
+    );
+
+    let response = crate::services::ai_router::reason(&prompt, Some(&system_prompt), config, provider)
         .await?;
 
     if response.is_empty() {

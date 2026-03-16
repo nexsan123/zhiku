@@ -6,6 +6,7 @@ use uuid::Uuid;
 use crate::errors::AppError;
 use crate::services::ai_config::ResolvedAiConfig;
 use crate::services::ai_router;
+use crate::services::knowledge_base;
 
 /// Internal result of AI news summarization.
 #[derive(Debug, Deserialize)]
@@ -71,7 +72,14 @@ pub async fn summarize_news(
         .replace("{title}", title)
         .replace("{description}", description);
 
-    let response = ai_router::reason(&prompt, None, config, provider).await?;
+    // Inject media bias registry as system prompt for source reliability assessment
+    let system_prompt = format!(
+        "你是一位独立的金融新闻分析师。你不带任何政治立场，只提取事实和金融影响。\n\n\
+         以下是新闻源偏见参考数据，用于评估来源可信度和检测政治偏见：\n{}",
+        knowledge_base::media_bias_slim(),
+    );
+
+    let response = ai_router::reason(&prompt, Some(&system_prompt), config, provider).await?;
 
     if response.is_empty() {
         return Err(AppError::Network(

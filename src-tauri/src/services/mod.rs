@@ -10,6 +10,7 @@ pub mod poll_loop;
 pub mod claude_client;
 pub mod summarizer;
 pub mod indicator_engine;
+pub mod knowledge_base;
 pub mod cycle_reasoner;
 pub mod market_context;
 pub mod qt_rest;

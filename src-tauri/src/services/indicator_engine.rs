@@ -15,7 +15,7 @@ pub async fn calculate_cycle_indicators(
     pool: &SqlitePool,
 ) -> Result<CycleIndicators, AppError> {
     let monetary = calculate_monetary(pool).await;
-    let credit = calculate_credit();
+    let credit = calculate_credit(pool).await;
     let economic = calculate_economic(pool).await;
     let market = calculate_market(pool).await;
     let sentiment = calculate_sentiment(pool).await;
@@ -32,7 +32,70 @@ pub async fn calculate_cycle_indicators(
     })
 }
 
-/// Monetary cycle: FEDFUNDS rate + M2 growth + direction + stance.
+// ---------------------------------------------------------------------------
+// Helper: date arithmetic for YoY calculations
+// ---------------------------------------------------------------------------
+
+/// Parse "YYYY-MM-DD" (or "YYYY-MM") and return the month difference
+/// between two period strings.  Returns `(later - earlier)` in months.
+fn months_diff(earlier: &str, later: &str) -> i32 {
+    let parse = |s: &str| -> (i32, i32) {
+        let parts: Vec<&str> = s.split('-').collect();
+        let y = parts.first().and_then(|v| v.parse().ok()).unwrap_or(0);
+        let m = parts.get(1).and_then(|v| v.parse().ok()).unwrap_or(1);
+        (y, m)
+    };
+    let (ly, lm) = parse(later);
+    let (ey, em) = parse(earlier);
+    (ly - ey) * 12 + (lm - em)
+}
+
+/// Year-over-year growth rate (%) from a sorted (DESC) vec of (value, period).
+/// Looks for a row >= 11 months before the latest row.
+/// Fallback: annualise from earliest available data.
+fn yoy_growth(rows: &[(f64, String)]) -> f64 {
+    if rows.len() < 2 {
+        return 0.0;
+    }
+    let latest_val = rows[0].0;
+    let latest_period = &rows[0].1;
+
+    // Find value ~12 months ago (first row whose distance >= 11 months)
+    let year_ago = rows.iter().find(|(_, p)| months_diff(p, latest_period) >= 11);
+
+    match year_ago {
+        Some((ya_val, _)) if *ya_val > 0.0 => (latest_val - ya_val) / ya_val * 100.0,
+        _ => {
+            // Fallback: annualise from earliest available row
+            let earliest = &rows[rows.len() - 1];
+            let months = months_diff(&earliest.1, latest_period).max(1) as f64;
+            if earliest.0 > 0.0 {
+                ((latest_val / earliest.0).powf(12.0 / months) - 1.0) * 100.0
+            } else {
+                0.0
+            }
+        }
+    }
+}
+
+/// Get the latest value for a FRED indicator from macro_data.
+async fn latest_macro_value(pool: &SqlitePool, indicator: &str) -> f64 {
+    sqlx::query_scalar(
+        "SELECT value FROM macro_data WHERE indicator = ?1 ORDER BY period DESC LIMIT 1",
+    )
+    .bind(indicator)
+    .fetch_optional(pool)
+    .await
+    .ok()
+    .flatten()
+    .unwrap_or(0.0)
+}
+
+// ---------------------------------------------------------------------------
+// Monetary cycle
+// ---------------------------------------------------------------------------
+
+/// Monetary cycle: FEDFUNDS rate + M2 YoY growth + direction + stance.
 async fn calculate_monetary(pool: &SqlitePool) -> MonetaryCycle {
     // Latest federal funds rate
     let fed_rate: f64 = sqlx::query_scalar(
@@ -44,19 +107,16 @@ async fn calculate_monetary(pool: &SqlitePool) -> MonetaryCycle {
     .flatten()
     .unwrap_or(0.0);
 
-    // M2 growth: compare latest two M2SL values
-    let m2_rows: Vec<(f64,)> = sqlx::query_as(
-        "SELECT value FROM macro_data WHERE indicator = 'M2SL' ORDER BY period DESC LIMIT 2",
+    // M2 year-over-year growth rate (%)
+    // Fetch up to 24 months of M2SL data — enough for YoY with margin
+    let m2_rows: Vec<(f64, String)> = sqlx::query_as(
+        "SELECT value, period FROM macro_data WHERE indicator = 'M2SL' ORDER BY period DESC LIMIT 24",
     )
     .fetch_all(pool)
     .await
     .unwrap_or_default();
 
-    let m2_growth = if m2_rows.len() >= 2 && m2_rows[1].0 > 0.0 {
-        ((m2_rows[0].0 - m2_rows[1].0) / m2_rows[1].0) * 100.0
-    } else {
-        0.0
-    };
+    let m2_growth = yoy_growth(&m2_rows);
 
     // Rate direction: compare latest two FEDFUNDS values
     let rate_rows: Vec<(f64,)> = sqlx::query_as(
@@ -97,26 +157,75 @@ async fn calculate_monetary(pool: &SqlitePool) -> MonetaryCycle {
     }
 }
 
-/// Credit cycle: placeholder values (no data source yet).
-fn calculate_credit() -> CreditCycle {
+// ---------------------------------------------------------------------------
+// Credit cycle — real DGS10/DGS2 spread
+// ---------------------------------------------------------------------------
+
+/// Credit cycle: yield-curve spread (DGS10 - DGS2) from macro_data.
+async fn calculate_credit(pool: &SqlitePool) -> CreditCycle {
+    let dgs10 = latest_macro_value(pool, "DGS10").await;
+    let dgs2 = latest_macro_value(pool, "DGS2").await;
+
+    let credit_spread = if dgs10 > 0.0 && dgs2 > 0.0 {
+        dgs10 - dgs2
+    } else {
+        0.0
+    };
+
+    let yield_curve = if credit_spread < -0.2 {
+        "inverted"
+    } else if credit_spread < 0.2 {
+        "flat"
+    } else {
+        "normal"
+    }
+    .to_string();
+
+    let phase = determine_credit_phase(credit_spread);
+
     CreditCycle {
-        credit_spread: 0.0,
-        yield_curve: "unavailable".to_string(),
-        phase: "unknown".to_string(),
+        credit_spread,
+        yield_curve,
+        phase,
     }
 }
 
-/// Economic cycle: GDP growth + unemployment + CPI inflation + phase.
-async fn calculate_economic(pool: &SqlitePool) -> EconomicCycle {
-    let gdp_growth: f64 = sqlx::query_scalar(
-        "SELECT value FROM macro_data WHERE indicator = 'GDP' ORDER BY period DESC LIMIT 1",
-    )
-    .fetch_optional(pool)
-    .await
-    .ok()
-    .flatten()
-    .unwrap_or(0.0);
+/// Determine credit-cycle phase from the 10Y-2Y spread.
+fn determine_credit_phase(spread: f64) -> String {
+    if spread < -0.2 {
+        "tightening"
+    } else if spread < 0.2 {
+        "neutral"
+    } else if spread <= 1.0 {
+        "easing"
+    } else {
+        "accommodative"
+    }
+    .to_string()
+}
 
+// ---------------------------------------------------------------------------
+// Economic cycle
+// ---------------------------------------------------------------------------
+
+/// Economic cycle: GDP QoQ-annualised growth + unemployment + CPI YoY inflation + phase.
+async fn calculate_economic(pool: &SqlitePool) -> EconomicCycle {
+    // GDP quarter-over-quarter annualised growth rate (%)
+    // GDP is quarterly in macro_data; take latest two quarters
+    let gdp_rows: Vec<(f64,)> = sqlx::query_as(
+        "SELECT value FROM macro_data WHERE indicator = 'GDP' ORDER BY period DESC LIMIT 2",
+    )
+    .fetch_all(pool)
+    .await
+    .unwrap_or_default();
+
+    let gdp_growth = if gdp_rows.len() >= 2 && gdp_rows[1].0 > 0.0 {
+        ((gdp_rows[0].0 / gdp_rows[1].0).powf(4.0) - 1.0) * 100.0
+    } else {
+        0.0
+    };
+
+    // Unemployment rate — already a percentage, use as-is
     let unemployment: f64 = sqlx::query_scalar(
         "SELECT value FROM macro_data WHERE indicator = 'UNRATE' ORDER BY period DESC LIMIT 1",
     )
@@ -126,14 +235,16 @@ async fn calculate_economic(pool: &SqlitePool) -> EconomicCycle {
     .flatten()
     .unwrap_or(0.0);
 
-    let cpi_inflation: f64 = sqlx::query_scalar(
-        "SELECT value FROM macro_data WHERE indicator = 'CPIAUCSL' ORDER BY period DESC LIMIT 1",
+    // CPI year-over-year inflation rate (%)
+    // Fetch up to 24 months of CPIAUCSL — enough for YoY with margin
+    let cpi_rows: Vec<(f64, String)> = sqlx::query_as(
+        "SELECT value, period FROM macro_data WHERE indicator = 'CPIAUCSL' ORDER BY period DESC LIMIT 24",
     )
-    .fetch_optional(pool)
+    .fetch_all(pool)
     .await
-    .ok()
-    .flatten()
-    .unwrap_or(0.0);
+    .unwrap_or_default();
+
+    let cpi_inflation = yoy_growth(&cpi_rows);
 
     let phase = determine_economic_phase(gdp_growth, unemployment, cpi_inflation);
 
@@ -145,7 +256,7 @@ async fn calculate_economic(pool: &SqlitePool) -> EconomicCycle {
     }
 }
 
-/// Determine economic cycle phase from GDP, unemployment, CPI.
+/// Determine economic cycle phase from GDP growth %, unemployment %, CPI inflation %.
 fn determine_economic_phase(gdp: f64, unemployment: f64, cpi: f64) -> String {
     if gdp < 0.0 {
         "recession".to_string()
@@ -161,6 +272,10 @@ fn determine_economic_phase(gdp: f64, unemployment: f64, cpi: f64) -> String {
         "unknown".to_string()
     }
 }
+
+// ---------------------------------------------------------------------------
+// Market cycle
+// ---------------------------------------------------------------------------
 
 /// Market cycle: S&P 500 trend + VIX + DXY + phase.
 async fn calculate_market(pool: &SqlitePool) -> MarketCycle {
@@ -231,6 +346,10 @@ fn determine_market_phase(sp500_trend: f64, vix: f64) -> String {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Sentiment cycle
+// ---------------------------------------------------------------------------
+
 /// Sentiment cycle: Fear & Greed index + news sentiment average + phase.
 async fn calculate_sentiment(pool: &SqlitePool) -> SentimentCycle {
     // Fear & Greed index from macro_data
@@ -279,6 +398,10 @@ fn determine_sentiment_phase(fear_greed: f64) -> String {
     }
     .to_string()
 }
+
+// ---------------------------------------------------------------------------
+// Geopolitical risk
+// ---------------------------------------------------------------------------
 
 /// Geopolitical risk: count + titles of geopolitical news in last 24h.
 async fn calculate_geopolitical(pool: &SqlitePool) -> GeopoliticalRisk {

@@ -5,6 +5,7 @@ use uuid::Uuid;
 use crate::errors::AppError;
 use crate::models::credit::confidence_grade;
 use crate::models::intelligence::{DeepAnalysis, DeepMotiveAnalysis, LayerImpact, NewsCluster};
+use crate::services::knowledge_base;
 use crate::services::summarizer;
 
 /// System prompt for deep analysis (second pass, provider-agnostic).
@@ -72,8 +73,22 @@ pub async fn analyze_cluster(
 
     let user_prompt = build_prompt(cluster, &news_details);
 
+    // Enrich system prompt with all 4 knowledge bases for deep analysis
+    let system_prompt = format!(
+        "{}\n\n=== 知识库（结构化背景数据，辅助推理） ===\n\n\
+         --- 15国结构画像 ---\n{}\n\n\
+         --- 结构性因果链 ---\n{}\n\n\
+         --- 地缘关系图谱 ---\n{}\n\n\
+         --- 媒体偏见注册表 ---\n{}",
+        DEEP_ANALYSIS_SYSTEM_PROMPT,
+        knowledge_base::country_profiles_slim(),
+        knowledge_base::power_structures_slim(),
+        knowledge_base::geopolitical_graph_slim(),
+        knowledge_base::media_bias_slim(),
+    );
+
     let response =
-        crate::services::ai_router::reason(&user_prompt, Some(DEEP_ANALYSIS_SYSTEM_PROMPT), config, provider)
+        crate::services::ai_router::reason(&user_prompt, Some(&system_prompt), config, provider)
             .await?;
 
     if response.is_empty() {
