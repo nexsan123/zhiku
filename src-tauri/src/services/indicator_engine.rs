@@ -16,9 +16,19 @@ pub async fn calculate_cycle_indicators(
 ) -> Result<CycleIndicators, AppError> {
     let monetary = calculate_monetary(pool).await;
     let credit = calculate_credit(pool).await;
-    let economic = calculate_economic(pool).await;
-    let market = calculate_market(pool).await;
     let sentiment = calculate_sentiment(pool).await;
+
+    // Economic phase now uses multi-factor scoring:
+    // rate_direction, credit_spread, and fear_greed feed into the phase determination
+    let economic = calculate_economic(
+        pool,
+        &monetary.rate_direction,
+        credit.credit_spread,
+        sentiment.fear_greed,
+    )
+    .await;
+
+    let market = calculate_market(pool).await;
     let geopolitical = calculate_geopolitical(pool).await;
 
     Ok(CycleIndicators {
@@ -209,7 +219,13 @@ fn determine_credit_phase(spread: f64) -> String {
 // ---------------------------------------------------------------------------
 
 /// Economic cycle: GDP QoQ-annualised growth + unemployment + CPI YoY inflation + phase.
-async fn calculate_economic(pool: &SqlitePool) -> EconomicCycle {
+/// Phase uses multi-factor scoring with rate direction, credit spread, and sentiment.
+async fn calculate_economic(
+    pool: &SqlitePool,
+    rate_direction: &str,
+    credit_spread: f64,
+    fear_greed: f64,
+) -> EconomicCycle {
     // GDP quarter-over-quarter annualised growth rate (%)
     // GDP is quarterly in macro_data; take latest two quarters
     let gdp_rows: Vec<(f64,)> = sqlx::query_as(
@@ -246,7 +262,14 @@ async fn calculate_economic(pool: &SqlitePool) -> EconomicCycle {
 
     let cpi_inflation = yoy_growth(&cpi_rows);
 
-    let phase = determine_economic_phase(gdp_growth, unemployment, cpi_inflation);
+    let phase = determine_economic_phase(
+        gdp_growth,
+        unemployment,
+        cpi_inflation,
+        rate_direction,
+        credit_spread,
+        fear_greed,
+    );
 
     EconomicCycle {
         gdp_growth,
@@ -256,21 +279,140 @@ async fn calculate_economic(pool: &SqlitePool) -> EconomicCycle {
     }
 }
 
-/// Determine economic cycle phase from GDP growth %, unemployment %, CPI inflation %.
-fn determine_economic_phase(gdp: f64, unemployment: f64, cpi: f64) -> String {
-    if gdp < 0.0 {
-        "recession".to_string()
-    } else if gdp > 0.0 && gdp < 2.0 && unemployment > 6.0 {
-        "recovery".to_string()
-    } else if gdp > 0.0 && unemployment < 5.0 && cpi < 3.0 {
-        "early_expansion".to_string()
-    } else if gdp > 0.0 && cpi > 4.0 {
-        "late_expansion".to_string()
-    } else if gdp > 0.0 {
-        "mid_expansion".to_string()
+/// Multi-factor economic cycle phase scoring.
+///
+/// Uses 6 indicators across 5 dimensions to score each phase candidate.
+/// The phase with the highest total score wins.
+///
+/// Phases:
+///   recession     — GDP negative, unemployment rising, credit tightening
+///   recovery      — GDP turning positive, unemployment still high, rates being cut
+///   early_expansion — GDP moderate, unemployment falling, CPI low, rates low
+///   mid_expansion — GDP solid, unemployment moderate-low, CPI moderate
+///   late_expansion — GDP strong/decelerating, unemployment very low, CPI rising
+fn determine_economic_phase(
+    gdp: f64,
+    unemployment: f64,
+    cpi: f64,
+    rate_direction: &str,
+    credit_spread: f64,
+    fear_greed: f64,
+) -> String {
+    // Score each phase: higher = more likely
+    let mut scores: [(f64, &str); 5] = [
+        (0.0, "recession"),
+        (0.0, "recovery"),
+        (0.0, "early_expansion"),
+        (0.0, "mid_expansion"),
+        (0.0, "late_expansion"),
+    ];
+
+    // --- GDP dimension (weight: 3) ---
+    if gdp < -1.0 {
+        scores[0].0 += 3.0; // recession
+    } else if gdp < 0.0 {
+        scores[0].0 += 2.0; // recession
+        scores[1].0 += 1.0; // recovery (borderline)
+    } else if gdp < 2.0 {
+        scores[1].0 += 2.5; // recovery
+        scores[2].0 += 1.5; // early_expansion
+    } else if gdp < 3.5 {
+        scores[2].0 += 2.5; // early_expansion
+        scores[3].0 += 2.0; // mid_expansion
+    } else if gdp < 5.0 {
+        scores[3].0 += 3.0; // mid_expansion
+        scores[4].0 += 1.5; // late_expansion
     } else {
-        "unknown".to_string()
+        scores[4].0 += 2.5; // late_expansion (very high GDP = overheating)
+        scores[3].0 += 1.5; // mid_expansion
     }
+
+    // --- Unemployment dimension (weight: 2) ---
+    if unemployment > 7.0 {
+        scores[0].0 += 2.0; // recession
+        scores[1].0 += 1.5; // recovery
+    } else if unemployment > 5.5 {
+        scores[1].0 += 2.0; // recovery
+        scores[2].0 += 1.0; // early_expansion
+    } else if unemployment > 4.5 {
+        scores[2].0 += 1.5; // early_expansion
+        scores[3].0 += 2.0; // mid_expansion
+    } else if unemployment > 3.8 {
+        scores[3].0 += 2.0; // mid_expansion
+        scores[4].0 += 1.5; // late_expansion
+    } else {
+        scores[4].0 += 2.5; // late_expansion (very low = labor market tight)
+    }
+
+    // --- CPI dimension (weight: 2) ---
+    if cpi < 1.5 {
+        scores[0].0 += 1.0; // recession (deflation risk)
+        scores[1].0 += 1.5; // recovery
+        scores[2].0 += 1.0; // early_expansion
+    } else if cpi < 2.5 {
+        scores[2].0 += 2.0; // early_expansion (target range)
+        scores[3].0 += 1.5; // mid_expansion
+    } else if cpi < 3.5 {
+        scores[3].0 += 2.0; // mid_expansion
+        scores[4].0 += 1.0; // late_expansion
+    } else if cpi < 5.0 {
+        scores[4].0 += 2.5; // late_expansion (inflation heating up)
+    } else {
+        scores[4].0 += 2.0; // late_expansion
+        scores[0].0 += 1.0; // recession (stagflation risk)
+    }
+
+    // --- Rate direction dimension (weight: 1.5) ---
+    match rate_direction {
+        "cutting" => {
+            scores[1].0 += 1.5; // recovery (easing into downturn/recovery)
+            scores[2].0 += 1.0; // early_expansion
+        }
+        "pausing" => {
+            scores[2].0 += 0.5; // early_expansion
+            scores[3].0 += 1.5; // mid_expansion (rates stable)
+        }
+        "hiking" => {
+            scores[4].0 += 1.5; // late_expansion (tightening)
+            scores[3].0 += 0.5; // mid_expansion
+        }
+        _ => {} // unknown, no score
+    }
+
+    // --- Credit spread dimension (weight: 1.5) ---
+    if credit_spread < -0.2 {
+        scores[0].0 += 1.5; // recession (inverted curve = recession predictor)
+        scores[4].0 += 0.5; // late_expansion (inversion before recession)
+    } else if credit_spread < 0.2 {
+        scores[4].0 += 1.0; // late_expansion (flat curve)
+        scores[0].0 += 0.5; // recession risk
+    } else if credit_spread < 1.0 {
+        scores[3].0 += 1.0; // mid_expansion (normal curve)
+        scores[2].0 += 0.5; // early_expansion
+    } else {
+        scores[1].0 += 1.5; // recovery (steep curve = post-crisis)
+        scores[2].0 += 1.0; // early_expansion
+    }
+
+    // --- Sentiment cross-check (weight: 1, acts as tiebreaker) ---
+    if fear_greed < 20.0 {
+        scores[0].0 += 1.0; // recession (extreme fear)
+        scores[1].0 += 0.5; // recovery (fear at bottom)
+    } else if fear_greed < 35.0 {
+        scores[1].0 += 0.5; // recovery
+        scores[2].0 += 0.5; // early_expansion
+    } else if fear_greed < 55.0 {
+        scores[3].0 += 0.5; // mid_expansion (neutral)
+    } else if fear_greed < 75.0 {
+        scores[3].0 += 0.5; // mid_expansion (optimism)
+        scores[4].0 += 0.5; // late_expansion
+    } else {
+        scores[4].0 += 1.0; // late_expansion (euphoria = top signal)
+    }
+
+    // Pick highest score
+    scores.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+    scores[0].1.to_string()
 }
 
 // ---------------------------------------------------------------------------
