@@ -295,3 +295,32 @@ pub async fn get_alerts(
         .map_err(|e| e.to_string())
 }
 
+/// Get trend data for a specific indicator over the last N days.
+///
+/// Returns time-series data points from indicator_history table.
+/// Default: 30 days if `days` not specified.
+///
+/// Frontend: invoke('get_indicator_trend', { indicator, days })
+#[tauri::command]
+pub async fn get_indicator_trend(
+    pool: State<'_, SqlitePool>,
+    indicator: String,
+    days: Option<i64>,
+) -> Result<Vec<crate::services::trend_tracker::TrendPoint>, String> {
+    crate::services::trend_tracker::get_trend(pool.inner(), &indicator, days.unwrap_or(30))
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Get all available indicator names with latest values and data point counts.
+///
+/// Frontend: invoke('get_available_indicators')
+#[tauri::command]
+pub async fn get_available_indicators(
+    pool: State<'_, SqlitePool>,
+) -> Result<Vec<crate::services::trend_tracker::IndicatorSummary>, String> {
+    crate::services::trend_tracker::get_available_indicators(pool.inner())
+        .await
+        .map_err(|e| e.to_string())
+}
+

@@ -54,6 +54,8 @@ pub fn run() {
             commands::game_map::get_decision_calendar,
             commands::game_map::get_active_scenarios,
             commands::game_map::trigger_scenario_update,
+            commands::ai::get_indicator_trend,
+            commands::ai::get_available_indicators,
         ])
         .setup(|app| {
             let app_data_dir = app

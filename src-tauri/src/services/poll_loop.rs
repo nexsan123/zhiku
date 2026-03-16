@@ -769,7 +769,24 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         });
     }
 
-    log::info!("SmartPollLoop: all 20 tasks spawned (12 data + 1 cleanup + cycle-reasoning + five-layer-reasoning + scorecard-backfill + market-context + deep-analysis + scenario-engine + daily-brief + alert-engine)");
+    // Trend tracker: snapshot computed indicators every 6 hours
+    {
+        let pool = pool.clone();
+        let snapshot_interval = Duration::from_secs(6 * 60 * 60);
+        tauri::async_runtime::spawn(async move {
+            // Wait 4 minutes for indicator data sources to populate first
+            tokio::time::sleep(Duration::from_secs(4 * 60)).await;
+            loop {
+                match crate::services::trend_tracker::snapshot_indicators(&pool).await {
+                    Ok(count) => log::info!("PollLoop [TrendTracker]: snapshot {} indicators", count),
+                    Err(e) => log::warn!("PollLoop [TrendTracker]: {}", e),
+                }
+                tokio::time::sleep(snapshot_interval).await;
+            }
+        });
+    }
+
+    log::info!("SmartPollLoop: all 21 tasks spawned (12 data + 1 cleanup + cycle-reasoning + five-layer-reasoning + scorecard-backfill + market-context + deep-analysis + scenario-engine + daily-brief + alert-engine + trend-tracker)");
 }
 
 /// Push WS alerts to QuantTerminal after MarketContext write.

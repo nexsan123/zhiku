@@ -98,6 +98,17 @@ CREATE TABLE IF NOT EXISTS reasoning_scorecard (
     human_note TEXT,
     reviewed_at TEXT
 );
+
+CREATE TABLE IF NOT EXISTS indicator_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    indicator TEXT NOT NULL,
+    value REAL NOT NULL,
+    label TEXT,
+    snapshot_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_indicator_history_lookup
+ON indicator_history(indicator, snapshot_at);
 "#;
 
 /// Initialize the SQLite database: create pool, run migrations.

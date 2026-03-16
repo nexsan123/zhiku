@@ -1,12 +1,14 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 
-use axum::{extract::State, routing::get, Json, Router};
+use axum::{extract::Query, extract::State, routing::get, Json, Router};
 use sqlx::SqlitePool;
 use tokio::net::TcpListener;
 
 use crate::services::{
     cycle_reasoner, deep_analyzer, dollar_tide, game_map,
     global_aggregator, indicator_engine, market_radar, scenario_engine,
+    trend_tracker,
 };
 
 /// Shared state for the REST server.
@@ -32,6 +34,7 @@ pub fn start_rest_server(pool: SqlitePool) {
             .route("/api/v1/game-map", get(get_game_map))
             .route("/api/v1/intelligence", get(get_intelligence))
             .route("/api/v1/adjustment-factors", get(handle_adjustment_factors))
+            .route("/api/v1/trends", get(handle_trends))
             .with_state(state);
 
         let listener = match TcpListener::bind("127.0.0.1:9601").await {
@@ -350,4 +353,35 @@ async fn handle_adjustment_factors(
         "validUntil": valid_until,
         "generatedAt": chrono::Utc::now().to_rfc3339()
     }))
+}
+
+/// GET /api/v1/trends?indicator=fear_greed&days=30
+///
+/// Query historical trend data for a specific indicator.
+/// Defaults: indicator=fear_greed, days=30.
+async fn handle_trends(
+    State(state): State<Arc<RestState>>,
+    Query(params): Query<HashMap<String, String>>,
+) -> Json<serde_json::Value> {
+    let indicator = params
+        .get("indicator")
+        .cloned()
+        .unwrap_or_else(|| "fear_greed".to_string());
+    let days: i64 = params
+        .get("days")
+        .and_then(|d| d.parse().ok())
+        .unwrap_or(30);
+
+    match trend_tracker::get_trend(&state.pool, &indicator, days).await {
+        Ok(points) => {
+            let count = points.len();
+            Json(serde_json::json!({
+                "indicator": indicator,
+                "days": days,
+                "points": points,
+                "count": count,
+            }))
+        }
+        Err(e) => Json(serde_json::json!({"error": e.to_string()})),
+    }
 }
