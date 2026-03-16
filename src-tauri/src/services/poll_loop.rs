@@ -5,8 +5,9 @@ use tauri::{Emitter, Manager};
 use crate::models::news::ApiStatus;
 use crate::services::{
     bis_client, coingecko_client, cycle_reasoner, db, deep_analyzer, eia_client,
-    fear_greed_client, game_map, imf_client, indicator_engine, market_context, mempool_client,
-    news_cluster, reasoning_scorer, rss_fetcher, scenario_engine, summarizer, yahoo_client,
+    fear_greed_client, game_map, global_aggregator, imf_client, indicator_engine, market_context,
+    mempool_client, news_cluster, reasoning_scorer, rss_fetcher, scenario_engine, summarizer,
+    yahoo_client,
 };
 
 /// Configuration for poll intervals per data source.
@@ -467,6 +468,84 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         });
     }
 
+    // Five-layer reasoning: comprehensive 5-layer synthesis every 12 hours (edict-004 Phase E)
+    {
+        let pool = pool.clone();
+        let app = app_handle.clone();
+        let five_layer_interval = Duration::from_secs(12 * 60 * 60); // 12 hours
+        tauri::async_runtime::spawn(async move {
+            // Wait 5 minutes for data sources and cycle reasoning to populate first
+            tokio::time::sleep(Duration::from_secs(5 * 60)).await;
+            loop {
+                log::info!("PollLoop [FiveLayerReasoning]: starting five-layer reasoning pass");
+                let start = std::time::Instant::now();
+
+                // Build FiveLayerInput from current data
+                let indicators = match indicator_engine::calculate_cycle_indicators(&pool).await {
+                    Ok(ind) => ind,
+                    Err(e) => {
+                        log::warn!("PollLoop [FiveLayerReasoning] indicators failed: {}", e);
+                        tokio::time::sleep(five_layer_interval).await;
+                        continue;
+                    }
+                };
+
+                let cycle_overview = match global_aggregator::compute_global_overview(&pool).await {
+                    Ok(ov) => ov,
+                    Err(e) => {
+                        log::warn!("PollLoop [FiveLayerReasoning] global overview failed: {}", e);
+                        tokio::time::sleep(five_layer_interval).await;
+                        continue;
+                    }
+                };
+
+                // Gather intelligence summaries (latest 5 deep analyses)
+                let intelligence_summaries = match deep_analyzer::get_recent_analyses(&pool, 5).await {
+                    Ok(analyses) => analyses.iter().map(|a| a.key_observation.clone()).collect(),
+                    Err(_) => Vec::new(),
+                };
+
+                // Gather active scenario titles
+                let active_scenarios = match scenario_engine::get_active_scenarios(&pool).await {
+                    Ok(matrix) => matrix.scenarios.iter().map(|s| s.title.clone()).collect(),
+                    Err(_) => Vec::new(),
+                };
+
+                let input = cycle_reasoner::FiveLayerInput {
+                    cycle_overview,
+                    indicators,
+                    intelligence_summaries,
+                    active_scenarios,
+                };
+
+                let (ai_config, provider) = crate::services::ai_config::resolve_reasoning_config(&app);
+                match cycle_reasoner::reason_five_layer(&pool, &input, &ai_config, &provider).await {
+                    Ok(reasoning) => {
+                        let model_label = ai_config.model_label(&provider);
+                        if let Err(e) = cycle_reasoner::persist_five_layer(&pool, &reasoning, &model_label).await {
+                            log::warn!("PollLoop [FiveLayerReasoning] persist failed: {}", e);
+                        }
+
+                        // Emit event for frontend
+                        app.emit("five-layer-updated", &reasoning)
+                            .unwrap_or_else(|e| log::warn!("Failed to emit five-layer-updated: {}", e));
+
+                        log::info!(
+                            "PollLoop [FiveLayerReasoning]: completed, confidence={:.2}, took {}ms",
+                            reasoning.confidence,
+                            start.elapsed().as_millis()
+                        );
+                    }
+                    Err(e) => {
+                        log::warn!("PollLoop [FiveLayerReasoning] reasoning failed: {}", e);
+                    }
+                }
+
+                tokio::time::sleep(five_layer_interval).await;
+            }
+        });
+    }
+
     // BIS central bank policy rates polling (no API key required)
     {
         let pool = pool.clone();
@@ -612,7 +691,7 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         });
     }
 
-    log::info!("SmartPollLoop: all 17 tasks spawned (12 data + 1 cleanup + cycle-reasoning + scorecard-backfill + market-context + deep-analysis + scenario-engine)");
+    log::info!("SmartPollLoop: all 18 tasks spawned (12 data + 1 cleanup + cycle-reasoning + five-layer-reasoning + scorecard-backfill + market-context + deep-analysis + scenario-engine)");
 }
 
 /// Push WS alerts to QuantTerminal after MarketContext write.
