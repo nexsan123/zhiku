@@ -30,3 +30,4 @@ pub mod deep_analyzer;
 pub mod game_map;
 pub mod scenario_engine;
 pub mod news_heatmap;
+pub mod reasoning_scorer;

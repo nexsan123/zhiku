@@ -6,7 +6,7 @@ use crate::models::news::ApiStatus;
 use crate::services::{
     bis_client, coingecko_client, cycle_reasoner, db, deep_analyzer, eia_client,
     fear_greed_client, game_map, imf_client, indicator_engine, market_context, mempool_client,
-    news_cluster, rss_fetcher, scenario_engine, summarizer, yahoo_client,
+    news_cluster, reasoning_scorer, rss_fetcher, scenario_engine, summarizer, yahoo_client,
 };
 
 /// Configuration for poll intervals per data source.
@@ -316,6 +316,11 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
                     log::warn!("PollLoop [CycleReasoning] persist failed: {}", e);
                 }
 
+                // Record scorecard for this reasoning (non-blocking on failure)
+                if let Err(e) = reasoning_scorer::record_scorecard(&pool, &reasoning).await {
+                    log::warn!("PollLoop [CycleReasoning] scorecard failed: {}", e);
+                }
+
                 let elapsed_ms = start.elapsed().as_millis() as i64;
                 let status = if reasoning.confidence > 0.0 { "online" } else { "idle" };
                 let error_msg = if reasoning.confidence == 0.0 {
@@ -586,7 +591,28 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         });
     }
 
-    log::info!("SmartPollLoop: all 16 tasks spawned (12 data + 1 cleanup + cycle-reasoning + market-context + deep-analysis + scenario-engine)");
+    // Scorecard backfill: check for results to score, runs daily
+    {
+        let pool = pool.clone();
+        tauri::async_runtime::spawn(async move {
+            // Wait 15 minutes for initial data sources to populate
+            tokio::time::sleep(Duration::from_secs(15 * 60)).await;
+            let backfill_interval = Duration::from_secs(24 * 60 * 60); // 24 hours
+            loop {
+                match reasoning_scorer::backfill_actuals(&pool).await {
+                    Ok(count) => {
+                        if count > 0 {
+                            log::info!("PollLoop [Scorecard]: backfilled {} records", count);
+                        }
+                    }
+                    Err(e) => log::warn!("PollLoop [Scorecard]: backfill failed: {}", e),
+                }
+                tokio::time::sleep(backfill_interval).await;
+            }
+        });
+    }
+
+    log::info!("SmartPollLoop: all 17 tasks spawned (12 data + 1 cleanup + cycle-reasoning + scorecard-backfill + market-context + deep-analysis + scenario-engine)");
 }
 
 /// Push WS alerts to QuantTerminal after MarketContext write.

@@ -5,7 +5,7 @@ use std::str::FromStr;
 
 use crate::errors::AppError;
 
-/// SQL migration: creates all 6 core tables.
+/// SQL migration: creates all 7 core tables.
 /// All statements use IF NOT EXISTS for idempotency (RT-002).
 const MIGRATION_SQL: &str = r#"
 CREATE TABLE IF NOT EXISTS news (
@@ -75,6 +75,28 @@ CREATE TABLE IF NOT EXISTS api_status (
     last_check TEXT,
     last_error TEXT,
     response_ms INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS reasoning_scorecard (
+    id TEXT PRIMARY KEY,
+    reasoning_id TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    predicted_direction TEXT NOT NULL DEFAULT 'neutral',
+    predicted_signals TEXT DEFAULT '[]',
+    predicted_sectors TEXT DEFAULT '[]',
+    predicted_tail_risks TEXT DEFAULT '[]',
+    confidence REAL NOT NULL DEFAULT 0.0,
+    contradictions TEXT DEFAULT '[]',
+    contradiction_count INTEGER DEFAULT 0,
+    actual_sp500_7d REAL,
+    actual_sp500_30d REAL,
+    actual_vix_7d REAL,
+    actual_sector_perf TEXT,
+    direction_correct_7d INTEGER,
+    direction_correct_30d INTEGER,
+    human_verdict TEXT,
+    human_note TEXT,
+    reviewed_at TEXT
 );
 "#;
 
