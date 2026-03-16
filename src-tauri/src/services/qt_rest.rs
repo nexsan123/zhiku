@@ -31,6 +31,7 @@ pub fn start_rest_server(pool: SqlitePool) {
             .route("/api/v1/dollar-tide", get(get_dollar_tide))
             .route("/api/v1/game-map", get(get_game_map))
             .route("/api/v1/intelligence", get(get_intelligence))
+            .route("/api/v1/adjustment-factors", get(handle_adjustment_factors))
             .with_state(state);
 
         let listener = match TcpListener::bind("127.0.0.1:9601").await {
@@ -217,5 +218,136 @@ async fn get_intelligence(State(state): State<Arc<RestState>>) -> Json<serde_jso
     Json(serde_json::json!({
         "analyses": analyses,
         "count": analyses.len(),
+    }))
+}
+
+/// GET /api/v1/adjustment-factors -- quantitative strategy adjustment factors for QuantTerminal
+///
+/// Computes position bias, risk multiplier, urgency level, and sector weights
+/// from the 6-dimensional cycle indicators. QT consumes these directly to
+/// calibrate strategy parameters without manual mapping.
+async fn handle_adjustment_factors(
+    State(state): State<Arc<RestState>>,
+) -> Json<serde_json::Value> {
+    let indicators = match indicator_engine::calculate_cycle_indicators(&state.pool).await {
+        Ok(ind) => ind,
+        Err(e) => {
+            return Json(serde_json::json!({ "error": e.to_string() }));
+        }
+    };
+
+    // Position bias: base from economic phase, adjusted by sentiment
+    let base_position: f64 = match indicators.economic.phase.as_str() {
+        "recession" => 0.2,
+        "recovery" => 0.5,
+        "early_expansion" => 0.7,
+        "mid_expansion" => 0.75,
+        "late_expansion" => 0.6,
+        _ => 0.5,
+    };
+
+    let sentiment_adj = if indicators.sentiment.fear_greed < 20.0 {
+        -0.15
+    } else if indicators.sentiment.fear_greed < 35.0 {
+        -0.05
+    } else if indicators.sentiment.fear_greed > 80.0 {
+        -0.1
+    } else {
+        0.0
+    };
+
+    let position_bias = (base_position + sentiment_adj).clamp(0.1, 0.95);
+
+    // Risk multiplier: VIX stress * geopolitical risk
+    let vix_factor: f64 = if indicators.market.vix_level > 30.0 {
+        0.5
+    } else if indicators.market.vix_level > 25.0 {
+        0.7
+    } else if indicators.market.vix_level > 20.0 {
+        0.85
+    } else {
+        1.0
+    };
+
+    let geo_factor = match indicators.geopolitical.risk_level.as_str() {
+        "critical" => 0.6,
+        "high" => 0.75,
+        "elevated" => 0.9,
+        _ => 1.0,
+    };
+
+    let risk_multiplier = (vix_factor * geo_factor).clamp(0.3, 1.0);
+
+    // Urgency level
+    let urgency = if indicators.sentiment.fear_greed < 15.0
+        || indicators.market.vix_level > 35.0
+    {
+        "action"
+    } else if indicators.sentiment.fear_greed < 25.0
+        || indicators.market.vix_level > 25.0
+        || indicators.geopolitical.risk_level == "critical"
+    {
+        "monitor"
+    } else {
+        "normal"
+    };
+
+    // Sector weights
+    let mut sector_weights = serde_json::Map::new();
+    sector_weights.insert(
+        "energy".to_string(),
+        serde_json::json!(
+            if indicators.geopolitical.risk_level == "critical"
+                || indicators.geopolitical.risk_level == "high"
+            {
+                1.3
+            } else {
+                1.0
+            }
+        ),
+    );
+    sector_weights.insert(
+        "defensive".to_string(),
+        serde_json::json!(if indicators.sentiment.fear_greed < 30.0 {
+            1.2
+        } else {
+            1.0
+        }),
+    );
+    sector_weights.insert(
+        "tech".to_string(),
+        serde_json::json!(
+            if indicators.monetary.rate_direction == "cutting"
+                && indicators.economic.phase.contains("expansion")
+            {
+                1.15
+            } else {
+                1.0
+            }
+        ),
+    );
+    sector_weights.insert(
+        "cyclical".to_string(),
+        serde_json::json!(if indicators.economic.phase == "late_expansion" {
+            0.8
+        } else {
+            1.0
+        }),
+    );
+
+    let valid_until = (chrono::Utc::now() + chrono::Duration::hours(6)).to_rfc3339();
+
+    Json(serde_json::json!({
+        "positionBias": position_bias,
+        "riskMultiplier": risk_multiplier,
+        "urgency": urgency,
+        "sectorWeights": sector_weights,
+        "cyclePhase": indicators.economic.phase,
+        "fearGreed": indicators.sentiment.fear_greed,
+        "vix": indicators.market.vix_level,
+        "geopoliticalRisk": indicators.geopolitical.risk_level,
+        "rateDirection": indicators.monetary.rate_direction,
+        "validUntil": valid_until,
+        "generatedAt": chrono::Utc::now().to_rfc3339()
     }))
 }

@@ -691,7 +691,33 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         });
     }
 
-    log::info!("SmartPollLoop: all 18 tasks spawned (12 data + 1 cleanup + cycle-reasoning + five-layer-reasoning + scorecard-backfill + market-context + deep-analysis + scenario-engine)");
+    // Daily brief: generate comprehensive intelligence brief every 6 hours
+    {
+        let pool = pool.clone();
+        let app = app_handle.clone();
+        let brief_interval = Duration::from_secs(6 * 60 * 60);
+        tauri::async_runtime::spawn(async move {
+            // Wait 3 minutes for other data sources to populate first
+            tokio::time::sleep(Duration::from_secs(3 * 60)).await;
+            loop {
+                log::info!("PollLoop [DailyBrief]: generating intelligence brief");
+                match crate::services::daily_brief::generate_daily_brief(&pool).await {
+                    Ok(brief) => {
+                        log::info!(
+                            "PollLoop [DailyBrief]: generated, headline={}",
+                            brief.headline
+                        );
+                        app.emit("daily-brief-updated", &brief)
+                            .unwrap_or_else(|e| log::warn!("Failed to emit daily-brief: {}", e));
+                    }
+                    Err(e) => log::warn!("PollLoop [DailyBrief]: failed: {}", e),
+                }
+                tokio::time::sleep(brief_interval).await;
+            }
+        });
+    }
+
+    log::info!("SmartPollLoop: all 19 tasks spawned (12 data + 1 cleanup + cycle-reasoning + five-layer-reasoning + scorecard-backfill + market-context + deep-analysis + scenario-engine + daily-brief)");
 }
 
 /// Push WS alerts to QuantTerminal after MarketContext write.
