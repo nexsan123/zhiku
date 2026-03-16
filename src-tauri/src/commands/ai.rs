@@ -280,3 +280,18 @@ pub async fn get_daily_brief(
         .map_err(|e| e.to_string())
 }
 
+/// Get recent financial alerts (last 20, most recent first).
+///
+/// Returns alerts triggered by threshold rules against cycle indicators,
+/// persisted in the signals table.
+///
+/// Frontend: invoke('get_alerts')
+#[tauri::command]
+pub async fn get_alerts(
+    pool: State<'_, SqlitePool>,
+) -> Result<Vec<crate::services::alert_engine::Alert>, String> {
+    crate::services::alert_engine::get_recent_alerts(pool.inner())
+        .await
+        .map_err(|e| e.to_string())
+}
+

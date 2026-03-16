@@ -2,9 +2,9 @@ use sqlx::SqlitePool;
 use std::time::Duration;
 use tauri::{Emitter, Manager};
 
-use crate::models::news::ApiStatus;
+use crate::models::news::{ApiStatus, ApiStatusResponse};
 use crate::services::{
-    bis_client, coingecko_client, cycle_reasoner, db, deep_analyzer, eia_client,
+    alert_engine, bis_client, coingecko_client, cycle_reasoner, db, deep_analyzer, eia_client,
     fear_greed_client, game_map, global_aggregator, imf_client, indicator_engine, market_context,
     mempool_client, news_cluster, reasoning_scorer, rss_fetcher, scenario_engine, summarizer,
     yahoo_client,
@@ -717,7 +717,59 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         });
     }
 
-    log::info!("SmartPollLoop: all 19 tasks spawned (12 data + 1 cleanup + cycle-reasoning + five-layer-reasoning + scorecard-backfill + market-context + deep-analysis + scenario-engine + daily-brief)");
+    // Alert engine: check threshold rules every 30 minutes
+    {
+        let pool = pool.clone();
+        let app = app_handle.clone();
+        let alert_interval = Duration::from_secs(30 * 60);
+        tauri::async_runtime::spawn(async move {
+            tokio::time::sleep(Duration::from_secs(2 * 60)).await; // 2min initial delay
+            loop {
+                match alert_engine::check_alerts(&pool).await {
+                    Ok(alerts) => {
+                        if !alerts.is_empty() {
+                            log::info!(
+                                "PollLoop [AlertEngine]: {} new alerts triggered",
+                                alerts.len()
+                            );
+                            for alert in &alerts {
+                                log::info!(
+                                    "  ALERT [{}] {}: {}",
+                                    alert.severity,
+                                    alert.title,
+                                    alert.detail
+                                );
+                            }
+                            // Emit to frontend
+                            app.emit("alerts-triggered", &alerts).unwrap_or_else(|e| {
+                                log::warn!("Failed to emit alerts: {}", e)
+                            });
+
+                            // Send desktop notification for critical alerts
+                            for alert in &alerts {
+                                if alert.severity == "critical" {
+                                    app.emit(
+                                        "show-notification",
+                                        serde_json::json!({
+                                            "title": alert.title,
+                                            "body": &alert.detail,
+                                        }),
+                                    )
+                                    .unwrap_or_else(|e| {
+                                        log::warn!("Notification emit failed: {}", e)
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    Err(e) => log::warn!("PollLoop [AlertEngine]: {}", e),
+                }
+                tokio::time::sleep(alert_interval).await;
+            }
+        });
+    }
+
+    log::info!("SmartPollLoop: all 20 tasks spawned (12 data + 1 cleanup + cycle-reasoning + five-layer-reasoning + scorecard-backfill + market-context + deep-analysis + scenario-engine + daily-brief + alert-engine)");
 }
 
 /// Push WS alerts to QuantTerminal after MarketContext write.
@@ -804,14 +856,15 @@ async fn update_and_emit(
         log::warn!("Failed to update api_status for {}: {}", service, e);
     }
 
-    // Emit event to frontend
-    let payload = ApiStatus {
+    // Emit event to frontend (enriched with freshness)
+    let raw = ApiStatus {
         service: service.to_string(),
         status: status.to_string(),
         last_check: Some(now),
         last_error: error.map(|s| s.to_string()),
         response_ms: Some(response_ms),
     };
+    let payload = ApiStatusResponse::from(raw);
 
     app.emit("api-status-changed", &payload)
         .unwrap_or_else(|e| {

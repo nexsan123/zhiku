@@ -32,3 +32,4 @@ pub mod scenario_engine;
 pub mod news_heatmap;
 pub mod reasoning_scorer;
 pub mod daily_brief;
+pub mod alert_engine;

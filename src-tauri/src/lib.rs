@@ -35,6 +35,7 @@ pub fn run() {
             commands::ai::trigger_five_layer_reasoning,
             commands::ai::get_deep_analyses,
             commands::ai::get_daily_brief,
+            commands::ai::get_alerts,
             commands::shell::open_url,
             commands::settings::get_settings,
             commands::settings::set_setting,

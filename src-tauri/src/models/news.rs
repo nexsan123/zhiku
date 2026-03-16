@@ -80,6 +80,62 @@ pub struct ApiStatus {
     pub response_ms: Option<i64>,
 }
 
+/// API status enriched with runtime-computed freshness.
+/// Extends ApiStatus with freshness label and minutes_ago.
+/// Fields: 7 (service, status, last_check, last_error, response_ms, freshness, minutes_ago)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ApiStatusResponse {
+    pub service: String,
+    pub status: String,
+    pub last_check: Option<String>,
+    pub last_error: Option<String>,
+    pub response_ms: Option<i64>,
+    pub freshness: String,
+    pub minutes_ago: Option<i64>,
+}
+
+/// Compute freshness label and minutes_ago from an optional RFC3339 timestamp.
+/// Returns ("unknown", None) if last_check is None or unparseable.
+fn compute_freshness(last_check: &Option<String>) -> (String, Option<i64>) {
+    let ts = match last_check {
+        Some(s) => s,
+        None => return ("unknown".to_string(), None),
+    };
+    if let Ok(dt) = chrono::DateTime::parse_from_rfc3339(ts) {
+        let minutes = (chrono::Utc::now() - dt.with_timezone(&chrono::Utc)).num_minutes();
+        let label = if minutes < 5 {
+            "live"
+        } else if minutes < 30 {
+            "recent"
+        } else if minutes < 120 {
+            "aging"
+        } else if minutes < 1440 {
+            "stale"
+        } else {
+            "expired"
+        };
+        (label.to_string(), Some(minutes))
+    } else {
+        ("unknown".to_string(), None)
+    }
+}
+
+impl From<ApiStatus> for ApiStatusResponse {
+    fn from(row: ApiStatus) -> Self {
+        let (freshness, minutes_ago) = compute_freshness(&row.last_check);
+        ApiStatusResponse {
+            service: row.service,
+            status: row.status,
+            last_check: row.last_check,
+            last_error: row.last_error,
+            response_ms: row.response_ms,
+            freshness,
+            minutes_ago,
+        }
+    }
+}
+
 /// Per-country news heatmap aggregation for the map pulse layer.
 /// Used by: get_news_heatmap command
 /// Fields: 5 (country_code, news_count, avg_sentiment, top_keywords, latest_title)
