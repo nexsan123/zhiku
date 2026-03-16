@@ -25,6 +25,7 @@
     "fredPhase": "FRED Indicators — Phase 2",
     "bisRates": "BIS Rates",
     "bisPhase": "BIS Rates — Phase 2",
+    "dailyBrief": "Daily Intel Brief",
     "marketRadar": "Market Radar",
     "indices": "Indices",
     "forex": "Forex",
@@ -105,6 +106,7 @@
     "lastCheck": "Last check: ",
     "response": "Response: ",
     "ms": "ms",
+    "freshness": "Freshness: ",
     "ready": "Ready",
     "degraded": "Degraded",
     "initializing": "Initializing"
@@ -380,6 +382,33 @@
     "scenarios": "Scenarios",
     "aiTag": "AI Scenario",
     "noData": "No game map data available yet"
+  },
+  "dailyBrief": {
+    "loading": "Loading daily intel brief...",
+    "failed": "Failed to load daily brief",
+    "noData": "No daily brief available",
+    "noDataSub": "Waiting for AI engine to generate...",
+    "attentionItems": "Attention Items",
+    "qtSuggestion": "QT Adjustment",
+    "dataSnapshot": "Data Snapshot",
+    "positionBias": "Position Bias",
+    "riskMultiplier": "Risk Multiplier",
+    "priority": {
+      "high": "HIGH",
+      "medium": "MED",
+      "low": "LOW"
+    },
+    "snap": {
+      "cycle": "Cycle",
+      "fearGreed": "F&G",
+      "sp500": "SPX",
+      "geoRisk": "Geo Risk"
+    }
+  },
+  "alert": {
+    "critical": "Critical",
+    "warning": "Warning",
+    "info": "Info"
   },
   "cycle": {
     "title": "Financial Cycle Reasoning",

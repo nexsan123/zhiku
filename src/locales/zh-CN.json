@@ -25,6 +25,7 @@
     "fredPhase": "FRED 指标 — 第二阶段",
     "bisRates": "BIS 利率",
     "bisPhase": "BIS 利率 — 第二阶段",
+    "dailyBrief": "每日情报简报",
     "marketRadar": "市场雷达",
     "indices": "指数行情",
     "forex": "外汇市场",
@@ -105,6 +106,7 @@
     "lastCheck": "上次检查：",
     "response": "响应：",
     "ms": "毫秒",
+    "freshness": "新鲜度：",
     "ready": "就绪",
     "degraded": "降级",
     "initializing": "初始化中"
@@ -380,6 +382,33 @@
     "scenarios": "情景推演",
     "aiTag": "AI 推演",
     "noData": "暂无博弈图谱数据"
+  },
+  "dailyBrief": {
+    "loading": "正在加载每日情报简报...",
+    "failed": "情报简报加载失败",
+    "noData": "暂无每日简报",
+    "noDataSub": "等待 AI 引擎生成...",
+    "attentionItems": "关注事项",
+    "qtSuggestion": "QT 调节建议",
+    "dataSnapshot": "数据快照",
+    "positionBias": "仓位偏向",
+    "riskMultiplier": "风险乘数",
+    "priority": {
+      "high": "高",
+      "medium": "中",
+      "low": "低"
+    },
+    "snap": {
+      "cycle": "周期阶段",
+      "fearGreed": "恐贪指数",
+      "sp500": "标普趋势",
+      "geoRisk": "地缘风险"
+    }
+  },
+  "alert": {
+    "critical": "危急",
+    "warning": "预警",
+    "info": "提示"
   },
   "cycle": {
     "title": "金融周期推理",

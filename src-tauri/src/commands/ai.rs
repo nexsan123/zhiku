@@ -3,8 +3,8 @@ use tauri::{Emitter, State};
 
 use crate::models::ai::{AiBriefItem, CycleIndicators, CycleReasoning, FiveLayerReasoning};
 use crate::services::{
-    cycle_reasoner, deep_analyzer, global_aggregator, indicator_engine, scenario_engine,
-    summarizer,
+    company_intel, cycle_reasoner, deep_analyzer, global_aggregator, indicator_engine,
+    scenario_engine, summarizer,
 };
 
 /// Summarize all pending (unsummarized) news articles using AI.
@@ -320,6 +320,23 @@ pub async fn get_available_indicators(
     pool: State<'_, SqlitePool>,
 ) -> Result<Vec<crate::services::trend_tracker::IndicatorSummary>, String> {
     crate::services::trend_tracker::get_available_indicators(pool.inner())
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Analyze a company by searching news and generating AI investment analysis.
+///
+/// Searches the news table for articles matching the query (company name or ticker),
+/// aggregates results, and optionally generates AI-powered investment analysis.
+///
+/// Frontend: invoke('analyze_company', { query })
+#[tauri::command]
+pub async fn analyze_company(
+    pool: State<'_, SqlitePool>,
+    app: tauri::AppHandle,
+    query: String,
+) -> Result<company_intel::CompanyIntel, String> {
+    company_intel::analyze_company(pool.inner(), &query, &app)
         .await
         .map_err(|e| e.to_string())
 }

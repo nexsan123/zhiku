@@ -116,6 +116,14 @@
 .tooltip-status--offline { color: var(--color-semantic-error); }
 .tooltip-status--idle { color: var(--color-text-disabled); }
 
+/* Per-freshness text color in tooltip */
+.tooltip-freshness--live { color: var(--color-semantic-success); }
+.tooltip-freshness--recent { color: var(--color-semantic-success); }
+.tooltip-freshness--aging { color: var(--color-semantic-warning); }
+.tooltip-freshness--stale { color: var(--color-semantic-warning); }
+.tooltip-freshness--expired { color: var(--color-semantic-error); }
+.tooltip-freshness--unknown { color: var(--color-text-disabled); }
+
 /* AI models indicator group */
 .status-bar__ai-models {
   display: flex;

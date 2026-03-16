@@ -56,6 +56,7 @@ pub fn run() {
             commands::game_map::trigger_scenario_update,
             commands::ai::get_indicator_trend,
             commands::ai::get_available_indicators,
+            commands::ai::analyze_company,
         ])
         .setup(|app| {
             let app_data_dir = app
@@ -87,7 +88,7 @@ pub fn run() {
             app.manage(mc_pool.clone());
 
             // Phase 5: QuantTerminal integration servers
-            services::qt_rest::start_rest_server(pool.clone());
+            services::qt_rest::start_rest_server(pool.clone(), app.handle().clone());
             let ws_broadcaster = services::qt_ws::start_ws_server();
             app.manage(ws_broadcaster);
 

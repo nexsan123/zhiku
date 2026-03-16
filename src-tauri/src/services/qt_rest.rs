@@ -6,7 +6,7 @@ use sqlx::SqlitePool;
 use tokio::net::TcpListener;
 
 use crate::services::{
-    cycle_reasoner, deep_analyzer, dollar_tide, game_map,
+    company_intel, cycle_reasoner, deep_analyzer, dollar_tide, game_map,
     global_aggregator, indicator_engine, market_radar, scenario_engine,
     trend_tracker,
 };
@@ -14,12 +14,13 @@ use crate::services::{
 /// Shared state for the REST server.
 struct RestState {
     pool: SqlitePool,
+    app_handle: tauri::AppHandle,
 }
 
 /// Start the REST API server on port 9601.
 /// Non-blocking -- spawns on its own tokio task via RT-001.
-pub fn start_rest_server(pool: SqlitePool) {
-    let state = Arc::new(RestState { pool });
+pub fn start_rest_server(pool: SqlitePool, app_handle: tauri::AppHandle) {
+    let state = Arc::new(RestState { pool, app_handle });
 
     tauri::async_runtime::spawn(async move {
         let app = Router::new()
@@ -35,6 +36,7 @@ pub fn start_rest_server(pool: SqlitePool) {
             .route("/api/v1/intelligence", get(get_intelligence))
             .route("/api/v1/adjustment-factors", get(handle_adjustment_factors))
             .route("/api/v1/trends", get(handle_trends))
+            .route("/api/v1/company-intel", get(handle_company_intel))
             .with_state(state);
 
         let listener = match TcpListener::bind("127.0.0.1:9601").await {
@@ -383,5 +385,28 @@ async fn handle_trends(
             }))
         }
         Err(e) => Json(serde_json::json!({"error": e.to_string()})),
+    }
+}
+
+/// GET /api/v1/company-intel?q=Apple
+///
+/// Search news related to a company, aggregate, and optionally analyze with AI.
+/// Returns matched news items (up to 10) and AI-generated investment analysis.
+async fn handle_company_intel(
+    State(state): State<Arc<RestState>>,
+    Query(params): Query<HashMap<String, String>>,
+) -> Json<serde_json::Value> {
+    let query = match params.get("q") {
+        Some(q) if !q.is_empty() => q.clone(),
+        _ => {
+            return Json(serde_json::json!({
+                "error": "Missing 'q' parameter. Example: /api/v1/company-intel?q=Apple"
+            }));
+        }
+    };
+
+    match company_intel::analyze_company(&state.pool, &query, &state.app_handle).await {
+        Ok(intel) => Json(serde_json::to_value(&intel).unwrap_or_default()),
+        Err(e) => Json(serde_json::json!({ "error": e.to_string() })),
     }
 }

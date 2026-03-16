@@ -13,6 +13,7 @@ import {
   Link2,
   Building2,
   Compass,
+  FileText,
 } from 'lucide-react';
 import { useAppStore } from '@stores/app-store';
 import { TitleBar } from '@components/title-bar';
@@ -34,7 +35,9 @@ import { WtoPanel } from '@components/panels/WtoPanel';
 import { SupplyChainPanel } from '@components/panels/SupplyChainPanel';
 import { GulfFdiPanel } from '@components/panels/GulfFdiPanel';
 import { CmdKModal } from '@components/cmd-k';
+import { AlertToast } from '@components/AlertToast';
 import { SettingsPage } from './components/settings/SettingsPage';
+import { DailyBriefPanel } from '@components/panels/DailyBriefPanel';
 import { listenApiStatusChanged } from '@services/tauri-bridge';
 import i18n from './i18n';
 
@@ -151,6 +154,12 @@ function App() {
               <BisPanel />
             </ErrorBoundary>
           </Panel>
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <Panel title={t('panel.dailyBrief')} icon={<FileText size={13} />} panelId={'daily-brief' as any}>
+            <ErrorBoundary>
+              <DailyBriefPanel />
+            </ErrorBoundary>
+          </Panel>
         </PanelStack>
 
         {/* Center — Map placeholder (Phase 5: deck.gl) */}
@@ -212,6 +221,7 @@ function App() {
       <StatusBar />
       <CmdKModal open={cmdKOpen} onClose={() => setCmdKOpen(false)} />
       <SettingsPage open={settingsOpen} onClose={closeSettings} initialTab={settingsInitialTab} />
+      <AlertToast />
     </div>
   );
 }

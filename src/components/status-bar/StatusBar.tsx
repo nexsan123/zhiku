@@ -13,6 +13,8 @@ interface ServiceStatusItem {
   lastCheck?: string;
   lastError?: string;
   responseMs?: number;
+  freshness?: string;       // "live" | "recent" | "aging" | "stale" | "expired" | "unknown"
+  minutesAgo?: number | null;
 }
 
 interface StatusDotProps {
@@ -65,6 +67,11 @@ function StatusDot({ item, displayLabel }: StatusDotProps) {
           {item.responseMs !== undefined && (
             <div className="status-dot-tooltip__row">
               {t('statusBar.response')}{item.responseMs}{t('statusBar.ms')}
+            </div>
+          )}
+          {item.freshness && item.freshness !== 'unknown' && (
+            <div className="status-dot-tooltip__row">
+              {t('statusBar.freshness')}<span className={`tooltip-freshness--${item.freshness}`}>{item.freshness}{item.minutesAgo != null ? ` (${item.minutesAgo}m)` : ''}</span>
             </div>
           )}
           {item.lastError && (

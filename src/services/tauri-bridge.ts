@@ -60,6 +60,8 @@ export interface BackendApiStatus {
   lastCheck: string | null;
   lastError: string | null;
   responseMs: number | null;
+  freshness?: string;       // "live" | "recent" | "aging" | "stale" | "expired" | "unknown"
+  minutesAgo?: number | null;
 }
 
 // ============================================================
@@ -1041,4 +1043,113 @@ export function listenDeepAnalysisCompleted(callback: () => void): Promise<() =>
 export function listenScenarioUpdated(callback: () => void): Promise<() => void> {
   if (!isTauri()) return Promise.resolve(() => undefined);
   return listen('scenario-updated', () => callback());
+}
+
+// ============================================================
+// Daily Brief types (get_daily_brief / daily-brief-updated)
+// ============================================================
+
+export interface AttentionItem {
+  priority: 'high' | 'medium' | 'low';
+  category: string;
+  content: string;
+  reason: string;
+}
+
+export interface SectorAdjustment {
+  sector: string;
+  weight: number;
+  reason: string;
+}
+
+export interface QtSuggestion {
+  positionBias: number;
+  riskMultiplier: number;
+  urgency: string;
+  sectorAdjustments: SectorAdjustment[];
+  reasoning: string;
+}
+
+export interface DataSnapshot {
+  cyclePhase: string;
+  cycleConfidence: number;
+  fearGreed: number;
+  fedRate: number;
+  cpiYoy: number;
+  gdpGrowth: number;
+  creditSpread: number;
+  sp500Trend: number;
+  geopoliticalRisk: string;
+  geopoliticalEvents: number;
+}
+
+export interface DailyBrief {
+  id: string;
+  headline: string;
+  keyContradictions: string[];
+  attentionItems: AttentionItem[];
+  qtSuggestion: QtSuggestion;
+  dataSnapshot: DataSnapshot;
+  generatedAt: string;
+  model: string;
+}
+
+export async function getDailyBrief(): Promise<DailyBrief | null> {
+  if (isTauri()) {
+    return invoke<DailyBrief | null>('get_daily_brief');
+  }
+  return null;
+}
+
+export function listenDailyBriefUpdated(callback: () => void): Promise<() => void> {
+  if (isTauri()) {
+    return listen('daily-brief-updated', () => callback());
+  }
+  return Promise.resolve(() => undefined);
+}
+
+// ============================================================
+// Alert types (get_alerts / alerts-triggered)
+// ============================================================
+
+export interface Alert {
+  id: string;
+  severity: 'critical' | 'warning' | 'info';
+  category: string;
+  title: string;
+  detail: string;
+  indicatorValue: number;
+  threshold: number;
+  createdAt: string;
+}
+
+export async function getAlerts(): Promise<Alert[]> {
+  if (isTauri()) {
+    return invoke<Alert[]>('get_alerts');
+  }
+  return [];
+}
+
+export function listenAlertsTriggered(callback: (alerts: Alert[]) => void): Promise<() => void> {
+  if (isTauri()) {
+    return listen<Alert[]>('alerts-triggered', (event) => callback(event.payload));
+  }
+  return Promise.resolve(() => undefined);
+}
+
+// ============================================================
+// Indicator trend (get_indicator_trend)
+// ============================================================
+
+export interface TrendPoint {
+  value: number;
+  label: string | null;
+  timestamp: string;
+}
+
+export async function getIndicatorTrend(indicator: string, days?: number): Promise<TrendPoint[]> {
+  if (isTauri()) {
+    return invoke<TrendPoint[]>('get_indicator_trend', { indicator, days: days ?? 30 });
+  }
+  return [];
 }
