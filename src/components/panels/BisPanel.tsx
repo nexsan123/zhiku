@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw } from 'lucide-react';
-import { getMacroData } from '@services/tauri-bridge';
+import { getMacroData, listenMacroUpdated } from '@services/tauri-bridge';
 import type { MacroDataItem } from '@services/tauri-bridge';
 import './BisPanel.css';
 
@@ -83,7 +83,13 @@ export function BisPanel() {
   useEffect(() => {
     void load();
     const timer = setInterval(() => void load(), 5 * 60 * 1000);
-    return () => clearInterval(timer);
+    let cleanup: (() => void) | null = null;
+    const unlistenPromise = listenMacroUpdated(() => void load());
+    void unlistenPromise.then((fn) => { cleanup = fn; });
+    return () => {
+      clearInterval(timer);
+      if (cleanup) { cleanup(); } else { void unlistenPromise.then((fn) => fn()); }
+    };
   }, [load]);
 
   // ---- Loading state ----

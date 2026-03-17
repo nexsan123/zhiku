@@ -79,6 +79,16 @@
   padding: 0 var(--spacing-3) var(--spacing-3);
 }
 
+/* CmdK navigation highlight flash */
+@keyframes panel-highlight-flash {
+  0%   { border-color: var(--color-accent-primary); box-shadow: 0 0 12px var(--glass-glow-accent); }
+  100% { border-color: var(--glass-border-default); box-shadow: none; }
+}
+
+.panel--highlight {
+  animation: panel-highlight-flash 1.5s ease-out;
+}
+
 /* Placeholder text for unimplemented panels */
 .panel-placeholder {
   font-size: var(--font-size-xs);

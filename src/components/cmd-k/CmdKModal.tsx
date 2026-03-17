@@ -112,10 +112,15 @@ export function CmdKModal({ open, onClose }: { open: boolean; onClose: () => voi
         if (panels[item.id as keyof typeof panels] && !panels[item.id as keyof typeof panels].expanded) {
           togglePanel(item.id as Parameters<typeof togglePanel>[0]);
         }
-        // Scroll panel into view
+        // Scroll panel into view with highlight flash
         setTimeout(() => {
-          document.getElementById(`panel-${item.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
+          const el = document.getElementById(`panel-${item.id}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            el.classList.add('panel--highlight');
+            setTimeout(() => el.classList.remove('panel--highlight'), 1500);
+          }
+        }, 300);
       }
     } else if (item.type === 'source') {
       openSettings('data-sources');

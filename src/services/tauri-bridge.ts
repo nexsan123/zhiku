@@ -386,6 +386,17 @@ export function listenMarketUpdated(callback: () => void): Promise<() => void> {
   return listen('market-updated', () => callback());
 }
 
+/**
+ * Listen for 'macro-updated' Tauri events (FRED/EIA/BIS/IMF data refresh).
+ * Returns a cleanup function (call on component unmount).
+ */
+export function listenMacroUpdated(callback: () => void): Promise<() => void> {
+  if (!isTauri()) {
+    return Promise.resolve(() => undefined);
+  }
+  return listen('macro-updated', () => callback());
+}
+
 // ============================================================
 // AI Brief commands
 // ============================================================
@@ -658,11 +669,9 @@ export async function summarizePendingNews(): Promise<number> {
   }
 }
 
-export async function listenAiSummaryCompleted(callback: () => void): Promise<() => void> {
-  if (!isTauri()) return () => {};
-  const { listen: tauriListen } = await import('@tauri-apps/api/event');
-  const unlisten = await tauriListen('ai-summary-completed', () => callback());
-  return unlisten;
+export function listenAiSummaryCompleted(callback: () => void): Promise<() => void> {
+  if (!isTauri()) return Promise.resolve(() => undefined);
+  return listen('ai-summary-completed', () => callback());
 }
 
 // ============================================================

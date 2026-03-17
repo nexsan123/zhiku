@@ -51,12 +51,185 @@ impl Default for PollConfig {
 pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: SqlitePool, config: PollConfig) {
     log::info!("SmartPollLoop starting...");
 
+    // AI model startup health check (one-shot, 5s delay)
+    {
+        let pool = pool.clone();
+        let app = app_handle.clone();
+        tauri::async_runtime::spawn(async move {
+            // Wait 5 seconds for DB and store to be ready
+            tokio::time::sleep(Duration::from_secs(5)).await;
+            log::info!("PollLoop [AI HealthCheck]: starting startup health checks");
+
+            let client = match reqwest::Client::builder()
+                .timeout(Duration::from_secs(10))
+                .build()
+            {
+                Ok(c) => c,
+                Err(e) => {
+                    log::warn!("PollLoop [AI HealthCheck]: failed to build HTTP client: {}", e);
+                    return;
+                }
+            };
+
+            // Ollama: GET http://localhost:11434/api/tags (no key needed)
+            {
+                let start = std::time::Instant::now();
+                let (status, error) = match client
+                    .get("http://localhost:11434/api/tags")
+                    .send()
+                    .await
+                {
+                    Ok(resp) if resp.status().is_success() => {
+                        log::info!("PollLoop [AI HealthCheck]: Ollama online");
+                        ("online".to_string(), None)
+                    }
+                    Ok(resp) => {
+                        let msg = format!("HTTP {}", resp.status());
+                        log::info!("PollLoop [AI HealthCheck]: Ollama responded but not OK: {}", msg);
+                        ("offline".to_string(), Some(msg))
+                    }
+                    Err(e) => {
+                        log::info!("PollLoop [AI HealthCheck]: Ollama offline: {}", e);
+                        ("offline".to_string(), Some(e.to_string()))
+                    }
+                };
+                let elapsed_ms = start.elapsed().as_millis() as i64;
+                update_and_emit(&pool, &app, "ollama", &status, error.as_deref(), elapsed_ms).await;
+            }
+
+            // Groq: GET https://api.groq.com/openai/v1/models with Bearer token
+            {
+                let config = crate::services::ai_config::resolve_provider_config(&app, "groq");
+                let start = std::time::Instant::now();
+                let (status, error) = if config.api_key.is_empty() {
+                    ("idle".to_string(), Some("API key not configured".to_string()))
+                } else {
+                    match client
+                        .get("https://api.groq.com/openai/v1/models")
+                        .bearer_auth(&config.api_key)
+                        .send()
+                        .await
+                    {
+                        Ok(resp) if resp.status().is_success() => {
+                            log::info!("PollLoop [AI HealthCheck]: Groq online");
+                            ("online".to_string(), None)
+                        }
+                        Ok(resp) => {
+                            let msg = format!("HTTP {}", resp.status());
+                            log::info!("PollLoop [AI HealthCheck]: Groq error: {}", msg);
+                            ("offline".to_string(), Some(msg))
+                        }
+                        Err(e) => {
+                            log::info!("PollLoop [AI HealthCheck]: Groq offline: {}", e);
+                            ("offline".to_string(), Some(e.to_string()))
+                        }
+                    }
+                };
+                let elapsed_ms = start.elapsed().as_millis() as i64;
+                update_and_emit(&pool, &app, "groq", &status, error.as_deref(), elapsed_ms).await;
+            }
+
+            // DeepSeek: GET {endpoint}/v1/models with Bearer token
+            {
+                let config = crate::services::ai_config::resolve_provider_config(&app, "deepseek");
+                let start = std::time::Instant::now();
+                let (status, error) = if config.api_key.is_empty() {
+                    ("idle".to_string(), Some("API key not configured".to_string()))
+                } else {
+                    let base = if config.endpoint_url.is_empty() {
+                        "https://api.deepseek.com".to_string()
+                    } else {
+                        config.endpoint_url.trim_end_matches('/').to_string()
+                    };
+                    let url = format!("{}/v1/models", base);
+                    match client
+                        .get(&url)
+                        .bearer_auth(&config.api_key)
+                        .send()
+                        .await
+                    {
+                        Ok(resp) if resp.status().is_success() => {
+                            log::info!("PollLoop [AI HealthCheck]: DeepSeek online");
+                            ("online".to_string(), None)
+                        }
+                        Ok(resp) => {
+                            let msg = format!("HTTP {}", resp.status());
+                            log::info!("PollLoop [AI HealthCheck]: DeepSeek error: {}", msg);
+                            ("offline".to_string(), Some(msg))
+                        }
+                        Err(e) => {
+                            log::info!("PollLoop [AI HealthCheck]: DeepSeek offline: {}", e);
+                            ("offline".to_string(), Some(e.to_string()))
+                        }
+                    }
+                };
+                let elapsed_ms = start.elapsed().as_millis() as i64;
+                update_and_emit(&pool, &app, "deepseek", &status, error.as_deref(), elapsed_ms).await;
+            }
+
+            // Claude: GET https://api.anthropic.com/v1/models with x-api-key + anthropic-version
+            {
+                let config = crate::services::ai_config::resolve_provider_config(&app, "claude");
+                let start = std::time::Instant::now();
+                let (status, error) = if config.api_key.is_empty() {
+                    ("idle".to_string(), Some("API key not configured".to_string()))
+                } else {
+                    match client
+                        .get("https://api.anthropic.com/v1/models")
+                        .header("x-api-key", &config.api_key)
+                        .header("anthropic-version", "2023-06-01")
+                        .send()
+                        .await
+                    {
+                        Ok(resp) if resp.status().is_success() => {
+                            log::info!("PollLoop [AI HealthCheck]: Claude online");
+                            ("online".to_string(), None)
+                        }
+                        Ok(resp) => {
+                            let msg = format!("HTTP {}", resp.status());
+                            log::info!("PollLoop [AI HealthCheck]: Claude error: {}", msg);
+                            ("offline".to_string(), Some(msg))
+                        }
+                        Err(e) => {
+                            log::info!("PollLoop [AI HealthCheck]: Claude offline: {}", e);
+                            ("offline".to_string(), Some(e.to_string()))
+                        }
+                    }
+                };
+                let elapsed_ms = start.elapsed().as_millis() as i64;
+                update_and_emit(&pool, &app, "claude", &status, error.as_deref(), elapsed_ms).await;
+            }
+
+            log::info!("PollLoop [AI HealthCheck]: startup health checks completed");
+        });
+    }
+
+    // Initial delay: allow tauri-plugin-store and DB pool to fully initialize
+    // before any poll task reads API keys from the store.
+    // All poll tasks below share this delay by starting after it.
+    {
+        let pool = pool.clone();
+        let app = app_handle.clone();
+        tauri::async_runtime::spawn(async move {
+            tokio::time::sleep(Duration::from_secs(8)).await;
+            // Emit a ready signal so frontend knows polling is about to start
+            let _ = app.emit("poll-loop-ready", true);
+            log::info!("PollLoop: store/DB warmup complete, poll tasks will begin fetching");
+            // Force an initial status update for all services as "checking"
+            for svc in &["rss", "yahoo", "fred", "eia", "fear_greed", "coingecko", "bis", "imf", "wto", "mempool"] {
+                update_and_emit(&pool, &app, svc, "checking", None, 0).await;
+            }
+        });
+    }
+
     // RSS feed polling
     {
         let pool = pool.clone();
         let app = app_handle.clone();
         let interval = config.rss_interval;
         tauri::async_runtime::spawn(async move {
+            // Wait for store/DB warmup before first fetch
+            tokio::time::sleep(Duration::from_secs(10)).await;
             loop {
                 // Read RSSHub base URL from settings store (re-read each cycle for hot-reload)
                 let rsshub_raw = read_store_key(&app, "rsshub_base_url");
@@ -115,6 +288,7 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         let app = app_handle.clone();
         let interval = config.yahoo_interval;
         tauri::async_runtime::spawn(async move {
+            tokio::time::sleep(Duration::from_secs(10)).await;
             loop {
                 let start = std::time::Instant::now();
                 let (status, error) = match yahoo_client::fetch_all_quotes(&pool).await {
@@ -143,6 +317,7 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         let app = app_handle.clone();
         let interval = config.fred_interval;
         tauri::async_runtime::spawn(async move {
+            tokio::time::sleep(Duration::from_secs(10)).await;
             loop {
                 let api_key = read_store_key(&app, "fred_api_key");
                 let start = std::time::Instant::now();
@@ -153,6 +328,9 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
                                 ("idle".to_string(), Some("API key not configured".to_string()))
                             } else {
                                 log::info!("PollLoop [FRED]: {} observations", count);
+                                if count > 0 {
+                                    let _ = app.emit("macro-updated", count);
+                                }
                                 ("online".to_string(), None)
                             }
                         }
@@ -174,6 +352,7 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         let app = app_handle.clone();
         let interval = config.eia_interval;
         tauri::async_runtime::spawn(async move {
+            tokio::time::sleep(Duration::from_secs(10)).await;
             loop {
                 let api_key = read_store_key(&app, "eia_api_key");
                 let start = std::time::Instant::now();
@@ -183,6 +362,9 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
                             ("idle".to_string(), Some("API key not configured".to_string()))
                         } else {
                             log::info!("PollLoop [EIA]: {} data points", count);
+                            if count > 0 {
+                                let _ = app.emit("macro-updated", count);
+                            }
                             ("online".to_string(), None)
                         }
                     }
@@ -204,6 +386,7 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         let app = app_handle.clone();
         let interval = config.fear_greed_interval;
         tauri::async_runtime::spawn(async move {
+            tokio::time::sleep(Duration::from_secs(10)).await;
             loop {
                 let start = std::time::Instant::now();
                 let (status, error) = match fear_greed_client::fetch_fear_greed(&pool).await {
@@ -230,6 +413,7 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         let app = app_handle.clone();
         let interval = config.coingecko_interval;
         tauri::async_runtime::spawn(async move {
+            tokio::time::sleep(Duration::from_secs(10)).await;
             loop {
                 let start = std::time::Instant::now();
                 let (status, error) = match coingecko_client::fetch_crypto_prices(&pool).await {
@@ -552,6 +736,7 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         let app = app_handle.clone();
         let interval = config.bis_interval;
         tauri::async_runtime::spawn(async move {
+            tokio::time::sleep(Duration::from_secs(10)).await;
             loop {
                 let start = std::time::Instant::now();
                 // Fetch policy rates + credit datasets in one pass
@@ -576,6 +761,9 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
                 }
 
                 log::info!("PollLoop [BIS]: {} total observations", total);
+                if total > 0 {
+                    let _ = app.emit("macro-updated", total);
+                }
                 let (status, error) = if any_error.is_some() && total == 0 {
                     ("offline".to_string(), any_error)
                 } else {
@@ -594,6 +782,7 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         let app = app_handle.clone();
         let interval = config.imf_interval;
         tauri::async_runtime::spawn(async move {
+            tokio::time::sleep(Duration::from_secs(10)).await;
             loop {
                 let start = std::time::Instant::now();
                 let (status, error) = match imf_client::fetch_all_data(&pool).await {
@@ -619,6 +808,7 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         let app = app_handle.clone();
         let interval = config.wto_interval;
         tauri::async_runtime::spawn(async move {
+            tokio::time::sleep(Duration::from_secs(10)).await;
             loop {
                 let api_key = read_store_key(&app, "wto_api_key");
                 let start = std::time::Instant::now();
@@ -650,6 +840,7 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         let app = app_handle.clone();
         let interval = config.mempool_interval;
         tauri::async_runtime::spawn(async move {
+            tokio::time::sleep(Duration::from_secs(10)).await;
             loop {
                 let start = std::time::Instant::now();
                 let (status, error) = match mempool_client::fetch_mempool_data(&pool).await {
@@ -786,7 +977,7 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         });
     }
 
-    log::info!("SmartPollLoop: all 21 tasks spawned (12 data + 1 cleanup + cycle-reasoning + five-layer-reasoning + scorecard-backfill + market-context + deep-analysis + scenario-engine + daily-brief + alert-engine + trend-tracker)");
+    log::info!("SmartPollLoop: all 22 tasks spawned (1 ai-health-check + 12 data + 1 cleanup + cycle-reasoning + five-layer-reasoning + scorecard-backfill + market-context + deep-analysis + scenario-engine + daily-brief + alert-engine + trend-tracker)");
 }
 
 /// Push WS alerts to QuantTerminal after MarketContext write.

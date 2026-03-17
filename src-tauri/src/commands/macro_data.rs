@@ -8,9 +8,17 @@ use crate::services::fred_client;
 /// Frontend: invoke('get_macro_data')
 #[tauri::command]
 pub async fn get_macro_data(pool: State<'_, SqlitePool>) -> Result<Vec<MacroData>, String> {
+    // Return the latest observation per indicator (not global LIMIT which
+    // would be dominated by whichever source was fetched most recently).
     let rows = sqlx::query_as::<_, MacroData>(
-        "SELECT id, indicator, value, period, source, fetched_at
-         FROM macro_data ORDER BY fetched_at DESC LIMIT 200",
+        "SELECT m.id, m.indicator, m.value, m.period, m.source, m.fetched_at
+         FROM macro_data m
+         INNER JOIN (
+             SELECT indicator, MAX(period) AS max_period
+             FROM macro_data
+             GROUP BY indicator
+         ) latest ON m.indicator = latest.indicator AND m.period = latest.max_period
+         ORDER BY m.source, m.indicator",
     )
     .fetch_all(pool.inner())
     .await

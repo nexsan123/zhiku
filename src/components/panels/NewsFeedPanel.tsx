@@ -87,37 +87,58 @@ export function NewsFeedPanel() {
     return () => { cancelled = true; };
   }, []);
 
+  // Always render the modal portal regardless of loadState — it uses
+  // createPortal(…, document.body) so it lives outside this component's
+  // DOM subtree. Rendering it unconditionally means a click that fires
+  // setSelectedNews() right before a loadState transition (e.g. news-updated
+  // triggers a reload) will still show the modal instead of losing the state.
+  const modal = (
+    <NewsDetailModal
+      news={selectedNews}
+      onClose={() => setSelectedNews(null)}
+    />
+  );
+
   // Loading state
   if (loadState === 'loading') {
     return (
-      <div className="news-feed__state">
-        <RefreshCw size={16} className="news-feed__spinner" />
-        <span className="news-feed__state-text">{t('state.loadingNews')}</span>
-      </div>
+      <>
+        <div className="news-feed__state">
+          <RefreshCw size={16} className="news-feed__spinner" />
+          <span className="news-feed__state-text">{t('state.loadingNews')}</span>
+        </div>
+        {modal}
+      </>
     );
   }
 
   // Error state
   if (loadState === 'error') {
     return (
-      <div className="news-feed__state news-feed__state--error">
-        <p className="news-feed__state-text">{t('state.failedNews')}</p>
-        {errorMsg && <p className="news-feed__error-detail">{errorMsg}</p>}
-        <button className="news-feed__retry-btn" onClick={() => void load()}>
-          {t('state.retry')}
-        </button>
-      </div>
+      <>
+        <div className="news-feed__state news-feed__state--error">
+          <p className="news-feed__state-text">{t('state.failedNews')}</p>
+          {errorMsg && <p className="news-feed__error-detail">{errorMsg}</p>}
+          <button className="news-feed__retry-btn" onClick={() => void load()}>
+            {t('state.retry')}
+          </button>
+        </div>
+        {modal}
+      </>
     );
   }
 
   // Empty state
   if (items.length === 0) {
     return (
-      <div className="news-feed__state">
-        <Inbox size={20} className="news-feed__empty-icon" />
-        <p className="news-feed__state-text">{t('state.noNews')}</p>
-        <p className="news-feed__state-sub">{t('state.waitingFetch')}</p>
-      </div>
+      <>
+        <div className="news-feed__state">
+          <Inbox size={20} className="news-feed__empty-icon" />
+          <p className="news-feed__state-text">{t('state.noNews')}</p>
+          <p className="news-feed__state-sub">{t('state.waitingFetch')}</p>
+        </div>
+        {modal}
+      </>
     );
   }
 
@@ -223,10 +244,7 @@ export function NewsFeedPanel() {
           );
         })}
       </ul>
-      <NewsDetailModal
-        news={selectedNews}
-        onClose={() => setSelectedNews(null)}
-      />
+      {modal}
     </>
   );
 }

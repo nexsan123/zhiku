@@ -12,7 +12,7 @@
   border-top: 1px solid var(--glass-border-subtle);
   z-index: var(--z-status-bar);
   flex-shrink: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* Left: API service indicators */
@@ -20,7 +20,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-3);
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* Status dot item (dot + label) — position:relative for tooltip anchor */

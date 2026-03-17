@@ -1,15 +1,14 @@
 import type { ApiServiceStatus } from '@contracts/app-types';
 
 /**
- * Mock API 状态数据 — Phase 4 占位符
- * 联调时由 Tauri event 推送替换
+ * Initial API status — all services start as 'checking' with a timestamp.
+ * Backend events will overwrite these as real data arrives.
  */
 export const MOCK_API_STATUS: Record<string, ApiServiceStatus> = {
   ollama: {
     service: 'ollama',
-    status: 'online',
+    status: 'checking',
     lastCheck: new Date().toISOString(),
-    responseMs: 45,
   },
   groq: {
     service: 'groq',
@@ -18,56 +17,62 @@ export const MOCK_API_STATUS: Record<string, ApiServiceStatus> = {
   },
   claude: {
     service: 'claude',
-    status: 'offline',
+    status: 'checking',
     lastCheck: new Date().toISOString(),
-    lastError: 'API key not configured',
   },
   fred: {
     service: 'fred',
-    status: 'online',
+    status: 'checking',
     lastCheck: new Date().toISOString(),
-    responseMs: 120,
   },
   yahoo: {
     service: 'yahoo',
-    status: 'online',
+    status: 'checking',
     lastCheck: new Date().toISOString(),
-    responseMs: 88,
   },
   eia: {
     service: 'eia',
-    status: 'idle',
+    status: 'checking',
+    lastCheck: new Date().toISOString(),
   },
   bis: {
     service: 'bis',
-    status: 'idle',
+    status: 'checking',
+    lastCheck: new Date().toISOString(),
   },
   imf: {
     service: 'imf',
-    status: 'idle',
+    status: 'checking',
+    lastCheck: new Date().toISOString(),
   },
   wto: {
     service: 'wto',
-    status: 'idle',
+    status: 'checking',
+    lastCheck: new Date().toISOString(),
   },
   coingecko: {
     service: 'coingecko',
-    status: 'idle',
+    status: 'checking',
+    lastCheck: new Date().toISOString(),
   },
   rss: {
     service: 'rss',
-    status: 'idle',
+    status: 'checking',
+    lastCheck: new Date().toISOString(),
   },
   fear_greed: {
     service: 'fear_greed',
-    status: 'idle',
+    status: 'checking',
+    lastCheck: new Date().toISOString(),
   },
   qt_rest: {
     service: 'qt_rest',
-    status: 'idle',
+    status: 'checking',
+    lastCheck: new Date().toISOString(),
   },
   qt_ws: {
     service: 'qt_ws',
-    status: 'idle',
+    status: 'checking',
+    lastCheck: new Date().toISOString(),
   },
 };

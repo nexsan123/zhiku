@@ -7,10 +7,15 @@ import './CycleReasoningPanel.css';
 
 type LoadState = 'loading' | 'loaded' | 'error';
 
-/** Format ISO timestamp to locale time string. */
+/** Format ISO timestamp to full date + AM/PM time. e.g. "2026-03-16 02:35 PM" */
 function formatTimestamp(iso: string): string {
   try {
-    return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const d = new Date(iso);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    return `${year}-${month}-${day} ${time}`;
   } catch {
     return iso;
   }

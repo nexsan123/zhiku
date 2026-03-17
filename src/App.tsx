@@ -92,11 +92,11 @@ function App() {
   // ---- Ctrl+[ / Ctrl+] keyboard shortcuts for panel collapse + Cmd/Ctrl+K for search ----
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === '[') {
+      if (e.ctrlKey && e.key.toLowerCase() === 'l') {
         e.preventDefault();
         toggleLeftPanel();
       }
-      if (e.ctrlKey && e.key === ']') {
+      if (e.ctrlKey && e.key.toLowerCase() === 'r') {
         e.preventDefault();
         toggleRightPanel();
       }

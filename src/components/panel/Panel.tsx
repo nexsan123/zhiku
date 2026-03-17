@@ -16,7 +16,7 @@ export function Panel({ title, icon, panelId, children }: PanelProps) {
   const expanded = panels[panelId]?.expanded ?? true;
 
   return (
-    <section className={`panel ${expanded ? 'panel--expanded' : 'panel--collapsed'}`}>
+    <section id={`panel-${panelId}`} className={`panel ${expanded ? 'panel--expanded' : 'panel--collapsed'}`}>
       <button
         className="panel__header"
         onClick={() => togglePanel(panelId)}
