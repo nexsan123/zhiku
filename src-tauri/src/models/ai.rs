@@ -75,6 +75,51 @@ pub struct GeopoliticalRisk {
     pub event_count: i64,
 }
 
+/// Commodity cycle indicators from Yahoo Finance (CL=F, GC=F, HG=F, NG=F).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CommodityCycle {
+    pub oil_price: f64,
+    pub oil_trend: f64,
+    pub gold_price: f64,
+    pub gold_trend: f64,
+    pub copper_price: f64,
+    pub copper_trend: f64,
+    pub natgas_price: f64,
+    pub natgas_trend: f64,
+    pub phase: String,
+}
+
+/// Crypto liquidity signal from CoinGecko (BTC-CG).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CryptoSignal {
+    pub btc_price: f64,
+    pub btc_trend: f64,
+    pub phase: String,
+}
+
+/// IMF fiscal snapshot for US and CN (debt/GDP, fiscal balance, GDP growth).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FiscalSnapshot {
+    pub us_debt_gdp: f64,
+    pub cn_debt_gdp: f64,
+    pub us_fiscal_balance: f64,
+    pub cn_fiscal_balance: f64,
+    pub us_gdp_growth: f64,
+    pub cn_gdp_growth: f64,
+}
+
+/// EIA energy price data (WTI, Brent, spread).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EnergyData {
+    pub wti_price: f64,
+    pub brent_price: f64,
+    pub spread: f64,
+}
+
 /// Aggregated cycle indicators (Layer 2 output).
 /// Computed locally in Rust from SQLite data — no external API call.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -86,6 +131,10 @@ pub struct CycleIndicators {
     pub market: MarketCycle,
     pub sentiment: SentimentCycle,
     pub geopolitical: GeopoliticalRisk,
+    pub commodities: CommodityCycle,
+    pub crypto: CryptoSignal,
+    pub fiscal: FiscalSnapshot,
+    pub energy: EnergyData,
     pub calculated_at: String,
 }
 

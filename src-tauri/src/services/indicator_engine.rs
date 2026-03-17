@@ -3,11 +3,11 @@ use sqlx::SqlitePool;
 
 use crate::errors::AppError;
 use crate::models::ai::{
-    CreditCycle, CycleIndicators, EconomicCycle, GeopoliticalRisk, MarketCycle, MonetaryCycle,
-    SentimentCycle,
+    CommodityCycle, CreditCycle, CryptoSignal, CycleIndicators, EconomicCycle, EnergyData,
+    FiscalSnapshot, GeopoliticalRisk, MarketCycle, MonetaryCycle, SentimentCycle,
 };
 
-/// Calculate all 6 cycle indicators from SQLite data.
+/// Calculate all 10 cycle indicators from SQLite data.
 ///
 /// Each sub-indicator is computed independently. If a database query fails,
 /// the sub-indicator returns a safe default value (never panics).
@@ -30,6 +30,10 @@ pub async fn calculate_cycle_indicators(
 
     let market = calculate_market(pool).await;
     let geopolitical = calculate_geopolitical(pool).await;
+    let commodities = calculate_commodities(pool).await;
+    let crypto = calculate_crypto(pool).await;
+    let fiscal = calculate_fiscal(pool).await;
+    let energy = calculate_energy(pool).await;
 
     Ok(CycleIndicators {
         monetary,
@@ -38,6 +42,10 @@ pub async fn calculate_cycle_indicators(
         market,
         sentiment,
         geopolitical,
+        commodities,
+        crypto,
+        fiscal,
+        energy,
         calculated_at: Utc::now().to_rfc3339(),
     })
 }
@@ -593,4 +601,105 @@ fn determine_risk_level(count: i64) -> String {
         "critical"
     }
     .to_string()
+}
+
+// ---------------------------------------------------------------------------
+// Commodity cycle (Yahoo Finance: CL=F, GC=F, HG=F, NG=F)
+// ---------------------------------------------------------------------------
+
+/// Commodity cycle: oil, gold, copper, natural gas prices + 24h trends + phase.
+async fn calculate_commodities(pool: &SqlitePool) -> CommodityCycle {
+    let oil_price = latest_price(pool, "CL=F").await;
+    let oil_trend = calculate_price_trend(pool, "CL=F").await;
+    let gold_price = latest_price(pool, "GC=F").await;
+    let gold_trend = calculate_price_trend(pool, "GC=F").await;
+    let copper_price = latest_price(pool, "HG=F").await;
+    let copper_trend = calculate_price_trend(pool, "HG=F").await;
+    let natgas_price = latest_price(pool, "NG=F").await;
+    let natgas_trend = calculate_price_trend(pool, "NG=F").await;
+
+    let phase = if oil_trend > 5.0 && copper_trend > 3.0 {
+        "inflationary"
+    } else if oil_trend < -3.0 && copper_trend < -3.0 {
+        "deflationary"
+    } else {
+        "neutral"
+    }
+    .to_string();
+
+    CommodityCycle {
+        oil_price,
+        oil_trend,
+        gold_price,
+        gold_trend,
+        copper_price,
+        copper_trend,
+        natgas_price,
+        natgas_trend,
+        phase,
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Crypto signal (CoinGecko BTC-CG, fallback BTC-USD)
+// ---------------------------------------------------------------------------
+
+/// Crypto liquidity signal: BTC price + 24h trend + phase.
+async fn calculate_crypto(pool: &SqlitePool) -> CryptoSignal {
+    // Try CoinGecko symbol first, fall back to Yahoo
+    let mut btc_price = latest_price(pool, "BTC-CG").await;
+    let mut btc_trend = calculate_price_trend(pool, "BTC-CG").await;
+    if btc_price == 0.0 {
+        btc_price = latest_price(pool, "BTC-USD").await;
+        btc_trend = calculate_price_trend(pool, "BTC-USD").await;
+    }
+
+    let phase = if btc_trend > 5.0 {
+        "risk_on"
+    } else if btc_trend < -5.0 {
+        "risk_off"
+    } else {
+        "neutral"
+    }
+    .to_string();
+
+    CryptoSignal {
+        btc_price,
+        btc_trend,
+        phase,
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Fiscal snapshot (IMF WEO: debt/GDP, fiscal balance, GDP growth)
+// ---------------------------------------------------------------------------
+
+/// IMF fiscal snapshot: US and CN debt-to-GDP, fiscal balance, GDP growth.
+/// Indicator names follow imf_client.rs pattern: IMF_{INDICATOR}_{COUNTRY}.
+async fn calculate_fiscal(pool: &SqlitePool) -> FiscalSnapshot {
+    FiscalSnapshot {
+        us_debt_gdp: latest_macro_value(pool, "IMF_GGXWDG_NGDP_US").await,
+        cn_debt_gdp: latest_macro_value(pool, "IMF_GGXWDG_NGDP_CN").await,
+        us_fiscal_balance: latest_macro_value(pool, "IMF_GGXCNL_NGDP_US").await,
+        cn_fiscal_balance: latest_macro_value(pool, "IMF_GGXCNL_NGDP_CN").await,
+        us_gdp_growth: latest_macro_value(pool, "IMF_NGDP_RPCH_US").await,
+        cn_gdp_growth: latest_macro_value(pool, "IMF_NGDP_RPCH_CN").await,
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Energy data (EIA: wti_price, brent_price)
+// ---------------------------------------------------------------------------
+
+/// EIA energy prices: WTI, Brent, and the Brent-WTI spread.
+async fn calculate_energy(pool: &SqlitePool) -> EnergyData {
+    let wti_price = latest_macro_value(pool, "wti_price").await;
+    let brent_price = latest_macro_value(pool, "brent_price").await;
+    let spread = brent_price - wti_price;
+
+    EnergyData {
+        wti_price,
+        brent_price,
+        spread,
+    }
 }

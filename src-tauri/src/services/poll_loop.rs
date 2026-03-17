@@ -216,9 +216,12 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
             let _ = app.emit("poll-loop-ready", true);
             log::info!("PollLoop: store/DB warmup complete, poll tasks will begin fetching");
             // Force an initial status update for all services as "checking"
-            for svc in &["rss", "yahoo", "fred", "eia", "fear_greed", "coingecko", "bis", "imf", "wto", "mempool"] {
+            for svc in &["rss", "yahoo", "fred", "eia", "fear_greed", "coingecko", "bis", "imf"] {
                 update_and_emit(&pool, &app, svc, "checking", None, 0).await;
             }
+            // WTO and mempool are paused — no consumer in reasoning chain
+            update_and_emit(&pool, &app, "wto", "idle", Some("paused: no consumer"), 0).await;
+            update_and_emit(&pool, &app, "mempool", "idle", Some("paused: no consumer"), 0).await;
         });
     }
 
@@ -808,29 +811,9 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         let app = app_handle.clone();
         let interval = config.wto_interval;
         tauri::async_runtime::spawn(async move {
-            tokio::time::sleep(Duration::from_secs(10)).await;
-            loop {
-                let api_key = read_store_key(&app, "wto_api_key");
-                let start = std::time::Instant::now();
-                let (status, error) =
-                    match crate::services::wto_client::fetch_wto_data(&pool, &api_key).await {
-                        Ok(count) => {
-                            if api_key.is_empty() {
-                                ("idle".to_string(), Some("API key not configured".to_string()))
-                            } else {
-                                log::info!("PollLoop [WTO]: {} data points", count);
-                                ("online".to_string(), None)
-                            }
-                        }
-                        Err(e) => {
-                            log::warn!("PollLoop [WTO] error: {}", e);
-                            ("offline".to_string(), Some(e.to_string()))
-                        }
-                    };
-                let elapsed_ms = start.elapsed().as_millis() as i64;
-                update_and_emit(&pool, &app, "wto", &status, error.as_deref(), elapsed_ms).await;
-                tokio::time::sleep(interval).await;
-            }
+            log::info!("PollLoop [WTO]: paused — no consumer in reasoning chain");
+            // Keep the task alive but idle; remove early return when WTO gains a consumer
+            let _ = (pool, app, interval);
         });
     }
 
@@ -840,24 +823,9 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         let app = app_handle.clone();
         let interval = config.mempool_interval;
         tauri::async_runtime::spawn(async move {
-            tokio::time::sleep(Duration::from_secs(10)).await;
-            loop {
-                let start = std::time::Instant::now();
-                let (status, error) = match mempool_client::fetch_mempool_data(&pool).await {
-                    Ok(count) => {
-                        log::info!("PollLoop [mempool]: {} indicators updated", count);
-                        ("online".to_string(), None)
-                    }
-                    Err(e) => {
-                        log::warn!("PollLoop [mempool] error: {}", e);
-                        ("offline".to_string(), Some(e.to_string()))
-                    }
-                };
-                let elapsed_ms = start.elapsed().as_millis() as i64;
-                update_and_emit(&pool, &app, "mempool", &status, error.as_deref(), elapsed_ms)
-                    .await;
-                tokio::time::sleep(interval).await;
-            }
+            log::info!("PollLoop [mempool]: paused — no consumer in reasoning chain");
+            // Keep the task alive but idle; remove early return when mempool gains a consumer
+            let _ = (pool, app, interval);
         });
     }
 
