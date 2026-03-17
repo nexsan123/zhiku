@@ -54,7 +54,11 @@ const CYCLE_SYSTEM_PROMPT: &str = r#"你是一位独立的全球金融周期分�
 - energy: EIA 能源价格（WTI/Brent 及价差），Brent-WTI 价差反映全球供需结构"#;
 
 /// Run legacy cycle reasoning using configured AI provider.
+///
+/// Queries the previous cycle_reasoning result from ai_analysis to provide
+/// temporal continuity (feedback loop) in the system prompt.
 pub async fn reason_cycle(
+    pool: &SqlitePool,
     indicators: &CycleIndicators,
     config: &ResolvedAiConfig,
     provider: &str,
@@ -73,13 +77,30 @@ pub async fn reason_cycle(
     );
 
     // Enrich system prompt with country profiles and causal chains
-    let system_prompt = format!(
+    let mut system_prompt = format!(
         "{}\n\n=== 知识库 ===\n\n--- 15国结构画像 ---\n{}\n\n--- 结构性因果链 ---\n{}\n\n--- 数据可信度评分 ---\n{}",
         CYCLE_SYSTEM_PROMPT,
         knowledge_base::country_profiles_slim(),
         knowledge_base::power_structures_slim(),
         knowledge_base::DATA_RELIABILITY,
     );
+
+    // Feedback loop: inject previous reasoning result
+    let prev = sqlx::query_scalar::<_, String>(
+        "SELECT output FROM ai_analysis WHERE analysis_type = 'cycle_reasoning' ORDER BY created_at DESC LIMIT 1",
+    )
+    .fetch_optional(pool)
+    .await
+    .ok()
+    .flatten();
+
+    if let Some(ref prev_text) = prev {
+        let truncated: String = prev_text.chars().take(500).collect();
+        system_prompt.push_str(&format!(
+            "\n\n--- PREVIOUS ASSESSMENT ---\n{}\n请关注与上期的变化，如有重大转折需明确标注。\n--- END PREVIOUS ---",
+            truncated
+        ));
+    }
 
     let response = ai_router::reason(&user_prompt, Some(&system_prompt), config, provider)
         .await?;
@@ -248,8 +269,11 @@ pub struct FiveLayerInput {
 }
 
 /// Run five-layer reasoning using configured AI provider.
+///
+/// Queries the previous five_layer_reasoning result from ai_analysis to provide
+/// temporal continuity (feedback loop) in the user prompt.
 pub async fn reason_five_layer(
-    _pool: &SqlitePool,
+    pool: &SqlitePool,
     input: &FiveLayerInput,
     config: &ResolvedAiConfig,
     provider: &str,
@@ -259,15 +283,25 @@ pub async fn reason_five_layer(
         return Ok(default_five_layer(&input.cycle_overview, "No API key configured"));
     }
 
-    let prompt = build_five_layer_prompt(input)?;
+    // Feedback loop: query previous five-layer reasoning
+    let prev = sqlx::query_scalar::<_, String>(
+        "SELECT output FROM ai_analysis WHERE analysis_type = 'five_layer_reasoning' ORDER BY created_at DESC LIMIT 1",
+    )
+    .fetch_optional(pool)
+    .await
+    .ok()
+    .flatten();
 
-    // Enrich system prompt with country profiles and causal chains
+    let prompt = build_five_layer_prompt(input, prev.as_deref())?;
+
+    // Enrich system prompt with country profiles, causal chains, and geopolitical graph
     let five_layer_enriched = format!(
-        "{}\n\n=== 知识库 ===\n\n--- 15国结构画像 ---\n{}\n\n--- 结构性因果链 ---\n{}\n\n--- 数据可信度评分 ---\n{}",
+        "{}\n\n=== 知识库 ===\n\n--- 15国结构画像 ---\n{}\n\n--- 结构性因果链 ---\n{}\n\n--- 数据可信度评分 ---\n{}\n\n--- 地缘关系图 ---\n{}",
         FIVE_LAYER_SYSTEM_PROMPT,
         knowledge_base::country_profiles_slim(),
         knowledge_base::power_structures_slim(),
         knowledge_base::DATA_RELIABILITY,
+        knowledge_base::geopolitical_graph_slim(),
     );
 
     let response =
@@ -343,8 +377,19 @@ pub async fn get_latest_five_layer(
 // Five-layer internals
 // ---------------------------------------------------------------------------
 
-fn build_five_layer_prompt(input: &FiveLayerInput) -> Result<String, AppError> {
-    let mut prompt = String::from("=== FIVE-LAYER DATA INPUT ===\n\n");
+fn build_five_layer_prompt(input: &FiveLayerInput, previous_reasoning: Option<&str>) -> Result<String, AppError> {
+    let mut prompt = String::new();
+
+    // Feedback loop: inject previous assessment before data input
+    if let Some(prev_text) = previous_reasoning {
+        let truncated: String = prev_text.chars().take(500).collect();
+        prompt.push_str(&format!(
+            "--- PREVIOUS ASSESSMENT ---\n{}\n请关注与上期的变化，如有重大转折需明确标注。\n--- END PREVIOUS ---\n\n",
+            truncated
+        ));
+    }
+
+    prompt.push_str("=== FIVE-LAYER DATA INPUT ===\n\n");
 
     // Layer 1: Physical (real commodity + energy data)
     prompt.push_str("--- LAYER 1: PHYSICAL ---\n");
@@ -427,12 +472,33 @@ fn build_five_layer_prompt(input: &FiveLayerInput) -> Result<String, AppError> {
         tide.dxy_trend_3m, tide.dxy_trend_6m, tide.fed_policy, tide.m2_growth, tide.yield_spread
     ));
 
-    // Layer 4: Geopolitical + Intelligence
+    // Layer 4: Geopolitical + Intelligence + supplementary news categories
     prompt.push_str("--- LAYER 4: GEOPOLITICAL ---\n");
+    let geo = &input.indicators.geopolitical;
     prompt.push_str(&format!(
-        "Risk level: {}\nEvents (24h): {}\n",
-        input.indicators.geopolitical.risk_level, input.indicators.geopolitical.event_count
+        "Risk level: {}\nGeopolitical events (24h): {}\n",
+        geo.risk_level, geo.event_count
     ));
+    for title in geo.key_events.iter().take(5) {
+        prompt.push_str(&format!("  {}\n", title));
+    }
+    // Supplementary news categories
+    prompt.push_str(&format!("Trade events (24h): {}\n", geo.trade_count));
+    for title in geo.trade_events.iter().take(3) {
+        prompt.push_str(&format!("  {}\n", title));
+    }
+    prompt.push_str(&format!("Macro policy (24h): {}\n", geo.macro_policy_count));
+    for title in geo.macro_policy_events.iter().take(3) {
+        prompt.push_str(&format!("  {}\n", title));
+    }
+    prompt.push_str(&format!("Central bank (24h): {}\n", geo.central_bank_count));
+    for title in geo.central_bank_events.iter().take(3) {
+        prompt.push_str(&format!("  {}\n", title));
+    }
+    prompt.push_str(&format!("Energy news (24h): {}\n", geo.energy_count));
+    for title in geo.energy_events.iter().take(3) {
+        prompt.push_str(&format!("  {}\n", title));
+    }
     if !input.intelligence_summaries.is_empty() {
         prompt.push_str("Recent intelligence:\n");
         for (i, s) in input.intelligence_summaries.iter().take(5).enumerate() {

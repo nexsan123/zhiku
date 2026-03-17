@@ -162,7 +162,7 @@ pub async fn trigger_cycle_reasoning(
         .map_err(|e| e.to_string())?;
 
     // Layer 3: AI reasoning (uses user-configured provider/model/endpoint)
-    let reasoning = cycle_reasoner::reason_cycle(&indicators, &ai_config, &provider)
+    let reasoning = cycle_reasoner::reason_cycle(pool.inner(), &indicators, &ai_config, &provider)
         .await
         .map_err(|e| e.to_string())?;
 

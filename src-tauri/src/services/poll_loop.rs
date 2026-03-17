@@ -487,7 +487,7 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
 
                 // Layer 3: AI reasoning (uses user-configured provider/model/endpoint)
                 let (ai_config, provider) = crate::services::ai_config::resolve_reasoning_config(&app);
-                let reasoning = match cycle_reasoner::reason_cycle(&indicators, &ai_config, &provider).await {
+                let reasoning = match cycle_reasoner::reason_cycle(&pool, &indicators, &ai_config, &provider).await {
                     Ok(r) => r,
                     Err(e) => {
                         log::warn!("PollLoop [CycleReasoning] reasoning failed: {}", e);

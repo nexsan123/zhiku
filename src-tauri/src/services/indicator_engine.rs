@@ -553,49 +553,80 @@ fn determine_sentiment_phase(fear_greed: f64) -> String {
 // Geopolitical risk
 // ---------------------------------------------------------------------------
 
-/// Geopolitical risk: count + titles of geopolitical news in last 24h.
-async fn calculate_geopolitical(pool: &SqlitePool) -> GeopoliticalRisk {
-    // Count geopolitical news in last 24h
-    let event_count: i64 = sqlx::query_scalar(
+/// Query a single news category: count + top N titles from last 24h.
+async fn query_news_category(pool: &SqlitePool, category: &str, limit: usize) -> (i64, Vec<String>) {
+    let count: i64 = sqlx::query_scalar(
         r#"SELECT COUNT(*) FROM news
-           WHERE category = 'geopolitical'
+           WHERE category = ?1
              AND published_at >= datetime('now', '-24 hours')"#,
     )
+    .bind(category)
     .fetch_one(pool)
     .await
     .unwrap_or(0);
 
-    // Top 5 geopolitical news titles
     let title_rows: Vec<(String,)> = sqlx::query_as(
         r#"SELECT title FROM news
-           WHERE category = 'geopolitical'
+           WHERE category = ?1
              AND published_at >= datetime('now', '-24 hours')
-           ORDER BY published_at DESC LIMIT 5"#,
+           ORDER BY published_at DESC LIMIT ?2"#,
     )
+    .bind(category)
+    .bind(limit as i64)
     .fetch_all(pool)
     .await
     .unwrap_or_default();
 
-    let key_events: Vec<String> = title_rows.into_iter().map(|(t,)| t).collect();
+    let titles: Vec<String> = title_rows.into_iter().map(|(t,)| t).collect();
+    (count, titles)
+}
 
-    let risk_level = determine_risk_level(event_count);
+/// Geopolitical risk: count + titles across 5 news categories in last 24h.
+async fn calculate_geopolitical(pool: &SqlitePool) -> GeopoliticalRisk {
+    // Primary: geopolitical news (top 5)
+    let (event_count, key_events) = query_news_category(pool, "geopolitical", 5).await;
+
+    // Supplementary categories (top 3 each)
+    let (trade_count_i64, trade_events) = query_news_category(pool, "trade", 3).await;
+    let (macro_policy_count_i64, macro_policy_events) = query_news_category(pool, "macro_policy", 3).await;
+    let (central_bank_count_i64, central_bank_events) = query_news_category(pool, "central_bank", 3).await;
+    let (energy_count_i64, energy_events) = query_news_category(pool, "energy", 3).await;
+
+    let trade_count = trade_count_i64 as usize;
+    let macro_policy_count = macro_policy_count_i64 as usize;
+    let central_bank_count = central_bank_count_i64 as usize;
+    let energy_count = energy_count_i64 as usize;
+
+    let risk_level = determine_risk_level_weighted(event_count, trade_count, central_bank_count);
 
     GeopoliticalRisk {
         risk_level,
         key_events,
         event_count,
+        trade_events,
+        trade_count,
+        macro_policy_events,
+        macro_policy_count,
+        central_bank_events,
+        central_bank_count,
+        energy_events,
+        energy_count,
     }
 }
 
-/// Determine geopolitical risk level from event count.
-fn determine_risk_level(count: i64) -> String {
-    if count == 0 {
+/// Determine geopolitical risk level using weighted event counts.
+///
+/// Geopolitical events have weight 1.0, trade events 0.5, central-bank events 0.3.
+/// When trade_count and cb_count are both 0, this produces the same result as before.
+fn determine_risk_level_weighted(geo_count: i64, trade_count: usize, cb_count: usize) -> String {
+    let effective = geo_count as f64 + trade_count as f64 * 0.5 + cb_count as f64 * 0.3;
+    if effective < 0.5 {
         "low"
-    } else if count <= 2 {
+    } else if effective <= 2.5 {
         "moderate"
-    } else if count <= 5 {
+    } else if effective <= 5.5 {
         "elevated"
-    } else if count <= 10 {
+    } else if effective <= 10.5 {
         "high"
     } else {
         "critical"

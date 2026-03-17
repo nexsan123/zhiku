@@ -67,12 +67,25 @@ pub struct SentimentCycle {
 }
 
 /// Geopolitical risk assessment from news categorization.
+/// Covers geopolitical + trade + macro_policy + central_bank + energy news.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GeopoliticalRisk {
     pub risk_level: String,
     pub key_events: Vec<String>,
     pub event_count: i64,
+    /// Trade-related news titles (top 3, last 24h).
+    pub trade_events: Vec<String>,
+    pub trade_count: usize,
+    /// Macro-policy news titles (top 3, last 24h).
+    pub macro_policy_events: Vec<String>,
+    pub macro_policy_count: usize,
+    /// Central-bank news titles (top 3, last 24h).
+    pub central_bank_events: Vec<String>,
+    pub central_bank_count: usize,
+    /// Energy news titles (top 3, last 24h).
+    pub energy_events: Vec<String>,
+    pub energy_count: usize,
 }
 
 /// Commodity cycle indicators from Yahoo Finance (CL=F, GC=F, HG=F, NG=F).

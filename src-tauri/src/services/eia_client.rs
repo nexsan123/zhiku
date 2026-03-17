@@ -24,10 +24,26 @@ struct EiaResponseBody {
     data: Option<Vec<EiaDataPoint>>,
 }
 
+/// EIA v2 data point.
+///
+/// `value` is `serde_json::Value` because EIA API v2 returns numeric values
+/// as JSON strings (e.g. `"72.15"`) rather than bare numbers.
 #[derive(Debug, Deserialize)]
 struct EiaDataPoint {
-    value: Option<f64>,
+    value: Option<serde_json::Value>,
     period: Option<String>,
+}
+
+/// Extract an f64 from a serde_json::Value that may be a Number or a String.
+///
+/// EIA API v2 returns values as JSON strings (e.g. `"72.15"`).
+/// This helper handles both representations defensively.
+fn extract_f64(val: &serde_json::Value) -> Option<f64> {
+    match val {
+        serde_json::Value::Number(n) => n.as_f64(),
+        serde_json::Value::String(s) => s.trim().parse::<f64>().ok(),
+        _ => None,
+    }
 }
 
 /// Fetch oil prices from EIA API and insert into `macro_data`.
@@ -93,8 +109,20 @@ async fn fetch_single_series(
         )));
     }
 
-    let eia_data: EiaResponse = response.json().await.map_err(|e| {
-        AppError::Parse(format!("EIA parse error for {}: {}", series_facet, e))
+    // Read body as text first for debugging, then parse
+    let body = response.text().await.map_err(|e| {
+        AppError::Network(format!("EIA response read failed for {}: {}", series_facet, e))
+    })?;
+
+    log::debug!("EIA [{}] raw response: {}", series_facet, &body[..body.len().min(500)]);
+
+    let eia_data: EiaResponse = serde_json::from_str(&body).map_err(|e| {
+        AppError::Parse(format!(
+            "EIA parse error for {}: {} | body preview: {}",
+            series_facet,
+            e,
+            &body[..body.len().min(300)]
+        ))
     })?;
 
     let data_points = eia_data
@@ -106,11 +134,21 @@ async fn fetch_single_series(
     let mut inserted: usize = 0;
 
     for point in &data_points {
-        let value = match point.value {
+        let value = match point.value.as_ref().and_then(extract_f64) {
             Some(v) => v,
             None => continue,
         };
         let period = point.period.as_deref().unwrap_or("unknown");
+
+        // Log first successful value extraction for verification
+        if inserted == 0 {
+            log::info!(
+                "EIA [{}] parsed: value={:.2}, period={}",
+                indicator_name,
+                value,
+                period
+            );
+        }
 
         // Check for existing entry to avoid duplicates
         let exists: i64 = sqlx::query_scalar(
