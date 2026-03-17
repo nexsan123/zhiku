@@ -1,0 +1,160 @@
+/* NewsDetailModal — glassmorphism news detail popup */
+
+/* ---- Overlay ---- */
+.news-detail-modal__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-4);
+}
+
+/* ---- Modal container ---- */
+/* ⚠️ ASSUMPTION: using --glass-bg-elevated (modal tier) per glassmorphism-spec.md layer hierarchy */
+.news-detail-modal {
+  width: 100%;
+  max-width: 560px;
+  background: var(--glass-bg-elevated);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(var(--blur-modal));
+  -webkit-backdrop-filter: blur(var(--blur-modal));
+  box-shadow: var(--shadow-lg), 0 0 40px var(--glass-glow-accent);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  padding: var(--spacing-5);
+  animation: news-detail-modal-enter var(--duration-normal) var(--easing-spring) both;
+}
+
+/* ---- Enter animation ---- */
+@keyframes news-detail-modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ---- Header row ---- */
+.news-detail-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+}
+
+/* ---- Category badge ---- */
+.news-detail-modal__category {
+  display: inline-block;
+  padding: var(--spacing-0-5) var(--spacing-2);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  letter-spacing: 0.06em;
+  opacity: 0.9;
+}
+
+/* ---- Close button ---- */
+.news-detail-modal__close {
+  background: none;
+  border: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--duration-fast) var(--easing-default),
+              background var(--duration-fast) var(--easing-default);
+  flex-shrink: 0;
+}
+
+.news-detail-modal__close:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-hover);
+}
+
+/* ---- Title ---- */
+.news-detail-modal__title {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-tight);
+  margin: 0;
+}
+
+/* ---- Meta row ---- */
+.news-detail-modal__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.news-detail-modal__source {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-accent-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.news-detail-modal__separator {
+  color: var(--color-text-disabled);
+  font-size: var(--font-size-xs);
+}
+
+.news-detail-modal__time {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-disabled);
+}
+
+/* ---- Summary text ---- */
+.news-detail-modal__summary {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-relaxed);
+  margin: 0;
+}
+
+/* ---- Footer ---- */
+.news-detail-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--spacing-2);
+  border-top: 1px solid var(--glass-border-subtle);
+}
+
+/* ---- Open-in-browser button ---- */
+.news-detail-modal__open-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-2) var(--spacing-3);
+  background: var(--color-accent-subtle);
+  border: 1px solid var(--color-accent-primary);
+  border-radius: var(--radius-sm);
+  color: var(--color-accent-primary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--easing-default),
+              color var(--duration-fast) var(--easing-default);
+}
+
+.news-detail-modal__open-btn:hover {
+  background: var(--color-accent-primary);
+  color: var(--color-bg-base);
+}

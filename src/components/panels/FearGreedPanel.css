@@ -1,0 +1,149 @@
+/* FearGreedPanel — CNN Fear & Greed Index display */
+
+/* ---- Loading state ---- */
+.fear-greed__state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) 0;
+  color: var(--color-text-disabled);
+}
+
+.fear-greed__state--error {
+  color: var(--color-semantic-error);
+}
+
+.fear-greed__state-text {
+  font-size: var(--font-size-xs);
+  text-align: center;
+}
+
+.fear-greed__retry-btn {
+  padding: var(--spacing-1) var(--spacing-3);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  color: var(--color-semantic-error);
+  background: var(--color-semantic-error-subtle);
+  border: 1px solid var(--color-semantic-error);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: opacity var(--duration-fast) var(--easing-default);
+}
+
+.fear-greed__retry-btn:hover {
+  opacity: 0.8;
+}
+
+@keyframes fear-greed-spin {
+  to { transform: rotate(360deg); }
+}
+
+.fear-greed__spinner {
+  animation: fear-greed-spin 1.2s linear infinite;
+  color: var(--color-accent-primary);
+}
+
+/* ---- Main container ---- */
+.fear-greed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+/* ---- Header: big number + label ---- */
+.fear-greed__header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-2);
+}
+
+.fear-greed__value {
+  font-size: var(--font-size-2xl);
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+}
+
+.fear-greed__label {
+  font-size: var(--font-size-sm);
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+}
+
+/* ---- Value and label colors by zone ---- */
+/* extreme-fear: error red */
+.fear-greed__value--extreme-fear,
+.fear-greed__label--extreme-fear {
+  color: var(--color-semantic-error);
+}
+
+/* fear: warning orange */
+.fear-greed__value--fear,
+.fear-greed__label--fear {
+  color: var(--color-intel-p1);
+}
+
+/* neutral: muted */
+.fear-greed__value--neutral,
+.fear-greed__label--neutral {
+  color: var(--color-text-secondary);
+}
+
+/* greed: teal accent */
+.fear-greed__value--greed,
+.fear-greed__label--greed {
+  color: var(--color-accent-primary);
+}
+
+/* extreme-greed: full success green */
+.fear-greed__value--extreme-greed,
+.fear-greed__label--extreme-greed {
+  color: var(--color-semantic-success);
+}
+
+/* ---- Progress bar ---- */
+.fear-greed__bar-track {
+  position: relative;
+  height: 8px;
+  border-radius: var(--radius-full);
+  overflow: visible;
+}
+
+/* Full-width gradient: fear (error red) → neutral → greed (success green) */
+.fear-greed__bar-gradient {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-full);
+  background: linear-gradient(
+    to right,
+    var(--color-semantic-error) 0%,
+    var(--color-intel-p1) 25%,
+    var(--color-text-tertiary) 50%,
+    var(--color-accent-primary) 75%,
+    var(--color-semantic-success) 100%
+  );
+  opacity: 0.6;
+}
+
+/* Cursor marker — a small white notch at the current value position */
+.fear-greed__bar-cursor {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 14px;
+  border-radius: var(--radius-full);
+  background: var(--color-text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---- Scale labels ---- */
+.fear-greed__scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--color-text-disabled);
+}

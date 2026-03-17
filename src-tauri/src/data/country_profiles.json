@@ -1,0 +1,990 @@
+{
+  "meta": {
+    "version": "2026-Q1",
+    "last_reviewed": "2026-03-14",
+    "principle": "Every data point must have a source. Distinguish fact from judgment. Credibility graded.",
+    "principle_zh": "每条数据必须有source，区分fact与judgment，对一切报道保留怀疑态度",
+    "data_vintage": "2024 (verified against IMF WEO / World Bank / SIPRI / FAS / EIA / COFER)",
+    "review_cadence": "quarterly"
+  },
+  "credibility_scale": {
+    "official_statistics": 0.9,
+    "international_org": 0.85,
+    "academic_research": 0.8,
+    "think_tank_report": 0.7,
+    "industry_data": 0.7,
+    "media_report": 0.5,
+    "analyst_opinion": 0.3,
+    "note": "Some countries' official statistics have lower credibility — marked per-country via stats_credibility"
+  },
+  "countries": {
+    "US": {
+      "name_zh": "美国",
+      "name_en": "United States",
+      "iso3": "USA",
+      "tier": "core",
+      "stats_credibility": 0.9,
+      "economic_base": {
+        "gdp_usd": 29168000000000,
+        "gdp_rank": 1,
+        "gdp_source": "IMF WEO 2024 estimate",
+        "gdp_composition_pct": { "services": 77.6, "industry": 17.9, "agriculture": 4.5 },
+        "gdp_composition_source": "BEA (Bureau of Economic Analysis) / World Bank 2023",
+        "primary_industries": ["金融服务", "科技/软件", "军工/航空航天", "农业(大豆/玉米/小麦)", "能源(页岩油气)"],
+        "manufacturing_value_added_global_pct": 16.6,
+        "manufacturing_source": "UNIDO 2023",
+        "trade_balance_usd": -773000000000,
+        "trade_source": "US Census Bureau 2023",
+        "industrial_role": "消费终端+技术研发+金融中枢+农业出口",
+        "verified": true
+      },
+      "energy": {
+        "oil_production_crude_bpd": 13300000,
+        "total_petroleum_liquids_bpd": 21910000,
+        "oil_production_note": "13.3M is crude-only; 21.91M includes crude + condensate + NGL",
+        "oil_consumption_bpd": 20010000,
+        "net_oil_status": "gross_exporter_since_2019_but_still_imports_heavy_crude",
+        "natural_gas_production_bcm": 1035,
+        "natural_gas_consumption_bcm": 880,
+        "lng_export_rank": 1,
+        "energy_mix_pct": { "petroleum": 36, "natural_gas": 33, "renewables": 13, "coal": 10, "nuclear": 8 },
+        "strategic_petroleum_reserve_barrels": 347000000,
+        "spr_note": "2020年为6.38亿桶，拜登政府释放近半应对2022油价飙升",
+        "source": "EIA Monthly Energy Review 2024",
+        "key_vulnerability": "虽净出口但仍需进口重质原油(炼厂配置)；SPR处于历史低位",
+        "verified": true
+      },
+      "military": {
+        "budget_usd": 997000000000,
+        "budget_pct_gdp": 3.4,
+        "budget_source": "SIPRI Military Expenditure Database 2024",
+        "active_personnel": 1328000,
+        "reserve_personnel": 800000,
+        "personnel_source": "DoD Manpower Data Center 2024",
+        "carrier_strike_groups": 11,
+        "carrier_source": "US Navy, 11 CSGs as of 2024",
+        "overseas_bases_approx": 750,
+        "bases_source": "DoD Base Structure Report FY2024 (~750 installations in 80+ countries)",
+        "nuclear_warheads_total": 5177,
+        "nuclear_stockpile": 3700,
+        "nuclear_deployed_strategic": 1670,
+        "nuclear_source": "FAS Nuclear Notebook, Jan 2026",
+        "force_projection": "global",
+        "readiness_data": [
+          {
+            "issue": "155mm弹药月产能 vs 消耗",
+            "production_monthly": 28000,
+            "target_2026": 100000,
+            "ukraine_consumption_monthly": 90000,
+            "gap_pct": -69,
+            "source": "CSIS 'Replenishing the Arsenal' Jan 2024",
+            "credibility": 0.7,
+            "credibility_note": "CSIS is a think tank; figures are estimates, not official DoD production data"
+          },
+          {
+            "issue": "海军舰船维护延迟",
+            "accumulated_delay_days": 33000,
+            "source": "GAO Report GAO-24-106437, 2024",
+            "credibility": 0.9
+          },
+          {
+            "issue": "军工产业基础收缩",
+            "prime_contractors_1990": 51,
+            "prime_contractors_2024": 5,
+            "source": "DoD Industrial Base Assessment 2023",
+            "credibility": 0.8
+          }
+        ],
+        "verified": true
+      },
+      "financial_position": {
+        "national_debt_usd": 34600000000000,
+        "debt_to_gdp_pct": 124,
+        "annual_interest_payment_usd": 882000000000,
+        "annual_interest_note": "FY2024 actual (CRFB / House Budget Committee confirmed); $882B exceeded defense $874B",
+        "interest_exceeds_defense": true,
+        "foreign_holders_pct": 30,
+        "largest_foreign_holder": "Japan ($1.1T), then China ($770B, declining)",
+        "reserve_currency_share_pct": 57.39,
+        "reserve_source": "IMF COFER Q4 2024",
+        "swift_transaction_share_pct": 47,
+        "swift_source": "SWIFT RMB Tracker 2024",
+        "source": "US Treasury / CBO 2024",
+        "key_vulnerability": "利息支出FY2024($882B)首次超国防预算($874B)；外国持有比例持续下降",
+        "verified": true
+      },
+      "geopolitical": {
+        "alliances": ["NATO(创始)", "AUKUS", "QUAD", "Five Eyes", "美日安保", "美韩同盟"],
+        "un_security_council": "permanent_veto",
+        "chokepoints_influence": ["全球SLOC(海军)", "巴拿马运河(条约影响力)"],
+        "sanctions_tools": ["SWIFT控制", "美元结算垄断", "二级制裁(secondary sanctions)", "出口管制(EAR/Entity List)"],
+        "sphere_of_influence": "西半球+欧洲+西太平洋",
+        "influence_trend": "收缩中(中东撤退+亚太再平衡受阻)",
+        "verified": false
+      }
+    },
+
+    "CN": {
+      "name_zh": "中国",
+      "name_en": "China",
+      "iso3": "CHN",
+      "tier": "core",
+      "stats_credibility": 0.65,
+      "stats_credibility_note": "GDP等宏观数据存疑(李克强指数)，贸易数据较可靠，地方政府债务数据不透明",
+      "economic_base": {
+        "gdp_usd": 18533000000000,
+        "gdp_rank": 2,
+        "gdp_source": "IMF WEO 2024 estimate",
+        "gdp_composition_pct": { "services": 53.3, "industry": 38.3, "agriculture": 7.1 },
+        "gdp_composition_source": "NBS China / World Bank 2023",
+        "primary_industries": ["制造业(全球占比30%+)", "基建/建筑", "电子/通信设备", "新能源(光伏/电池/电动车)", "稀土加工"],
+        "manufacturing_value_added_global_pct": 31.6,
+        "manufacturing_source": "UNIDO 2023",
+        "trade_balance_usd": 823000000000,
+        "trade_source": "China Customs 2023",
+        "industrial_role": "世界工厂+基建输出+新能源产业链核心+稀土加工垄断",
+        "verified": true
+      },
+      "energy": {
+        "oil_production_crude_bpd": 4200000,
+        "total_petroleum_liquids_bpd": 5260000,
+        "oil_consumption_bpd": 16400000,
+        "oil_consumption_source": "EIA 2023 data",
+        "oil_import_dependency_pct": 72,
+        "natural_gas_import_dependency_pct": 42,
+        "coal_production_mt": 4710,
+        "coal_share_energy_pct": 55,
+        "renewable_capacity_gw": 1550,
+        "renewable_note": "全球最大风电+光伏装机，但煤电仍是主力",
+        "source": "EIA International Energy Outlook 2024 / NBS",
+        "key_vulnerability": "石油72%依赖进口，主要经马六甲海峡(咽喉要道)，中俄管道仅覆盖部分需求",
+        "verified": true
+      },
+      "military": {
+        "budget_usd": 314000000000,
+        "budget_pct_gdp": 1.7,
+        "budget_note": "官方公布约2320亿美元，SIPRI估算实际约3140亿(含隐藏项)",
+        "budget_source": "SIPRI 2024 (estimated)",
+        "active_personnel": 2035000,
+        "personnel_source": "IISS Military Balance 2024",
+        "carrier_groups": 3,
+        "carrier_note": "Liaoning, Shandong, Fujian (IISS Military Balance 2024)",
+        "nuclear_warheads_total": 600,
+        "nuclear_stockpile": 600,
+        "nuclear_deployed": 24,
+        "nuclear_trend": "快速扩充中(Pentagon估计2035年达1500枚)",
+        "nuclear_source": "FAS Nuclear Notebook 2025 update",
+        "force_projection": "regional_expanding_to_blue_water",
+        "force_note": "近海防御→远洋转型中，南海人工岛军事化，吉布提海外基地",
+        "readiness_data": [
+          {
+            "issue": "实战经验",
+            "last_major_conflict": "1979年中越战争",
+            "years_since_combat": 47,
+            "source": "公开历史记录",
+            "credibility": 0.95
+          },
+          {
+            "issue": "反介入/区域拒止(A2/AD)能力",
+            "df21d_range_km": 1500,
+            "df26_range_km": 4000,
+            "note": "DF-21D/DF-26反舰弹道导弹覆盖第一岛链+关岛",
+            "source": "CSIS Missile Threat Project 2024",
+            "credibility": 0.7
+          }
+        ],
+        "verified": true
+      },
+      "financial_position": {
+        "national_debt_to_gdp_pct": 83,
+        "total_debt_incl_local_govt_pct": 288,
+        "total_debt_note": "含地方政府隐性债务(LGFV)，IMF估算约GDP的288%",
+        "foreign_reserves_usd": 3288000000000,
+        "foreign_reserves_source": "SAFE Aug 2024",
+        "us_treasury_holdings_usd": 770000000000,
+        "us_treasury_trend": "持续减持(2013年峰值1.32万亿)",
+        "rmb_reserve_share_pct": 2.17,
+        "rmb_reserve_source": "IMF COFER Q4 2024",
+        "rmb_swift_share_pct": 3.5,
+        "rmb_swift_source": "SWIFT RMB Tracker April 2025",
+        "rmb_note": "2.17%是IMF COFER储备占比，3.5%是SWIFT支付份额，两者不可混淆",
+        "source": "IMF WEO 2024 / SAFE / SWIFT RMB Tracker / IMF COFER",
+        "key_vulnerability": "房地产债务危机(恒大/碧桂园)→地方政府土地财政塌方→银行坏账风险",
+        "verified": true
+      },
+      "geopolitical": {
+        "alliances": ["SCO(上合)", "BRICS", "中俄战略伙伴", "一带一路(BRI, 150+国)"],
+        "un_security_council": "permanent_veto",
+        "chokepoints_vulnerability": ["马六甲海峡(80%石油进口经此)", "台湾海峡(全球芯片咽喉)"],
+        "strategic_assets": ["稀土加工(全球60%开采,90%加工)", "光伏产业链(全球80%)", "5G基建(华为)"],
+        "sphere_of_influence": "东亚+东南亚+中亚+非洲(BRI)",
+        "influence_trend": "扩张中但面临反弹(债务陷阱叙事+安全担忧)",
+        "verified": false
+      }
+    },
+
+    "XM": {
+      "name_zh": "欧元区",
+      "name_en": "Euro Area",
+      "iso3": "EMU",
+      "tier": "core",
+      "stats_credibility": 0.9,
+      "economic_base": {
+        "gdp_usd": 16406000000000,
+        "gdp_rank": 3,
+        "gdp_source": "World Bank 2024",
+        "member_states": 20,
+        "member_states_note": "as of 2024 (Croatia joined 2023)",
+        "primary_industries": ["汽车(德国)", "奢侈品(法国/意大利)", "化工/制药(德国/瑞士)", "金融(荷兰/卢森堡)", "农业(法国)"],
+        "manufacturing_value_added_global_pct": 14.8,
+        "manufacturing_source": "UNIDO 2023",
+        "trade_balance_usd": 36000000000,
+        "trade_source": "Eurostat 2023",
+        "trade_note": "2022年因能源进口转为逆差，2023年恢复顺差",
+        "industrial_role": "高端制造+品牌溢价+规则制定者(GDPR/碳关税)",
+        "verified": true
+      },
+      "energy": {
+        "oil_production_bpd": 550000,
+        "oil_consumption_bpd": 9800000,
+        "oil_import_dependency_pct": 94,
+        "gas_import_dependency_pct": 83,
+        "russian_gas_share_pre_2022_pct": 45,
+        "russian_gas_share_2024_pct": 15,
+        "energy_mix_pct": { "petroleum": 35, "natural_gas": 22, "renewables": 23, "nuclear": 11, "coal": 9 },
+        "source": "Eurostat Energy Statistics 2024 / IEA",
+        "key_vulnerability": "能源极度依赖进口；俄气脱钩后转向美国LNG(更贵)→工业竞争力受损(尤其德国化工)",
+        "verified": false
+      },
+      "military": {
+        "combined_budget_usd": 310000000000,
+        "budget_note": "20国总和，但缺乏统一指挥和重复建设严重",
+        "budget_breakdown_major": {
+          "germany_usd": 88500000000,
+          "france_usd": 64700000000,
+          "germany_source": "SIPRI 2024",
+          "france_source": "SIPRI 2024"
+        },
+        "budget_source": "SIPRI 2024 (EU members sum)",
+        "active_personnel_combined": 1340000,
+        "personnel_source": "IISS Military Balance 2024 (EU members aggregate)",
+        "nuclear_powers": {
+          "france_total": 370,
+          "france_stockpile": 290,
+          "france_deployed": 280,
+          "france_source": "FAS Nuclear Notebook 2025"
+        },
+        "force_projection": "limited_regional",
+        "readiness_data": [
+          {
+            "issue": "德国军备状况",
+            "bundeswehr_readiness_pct": 50,
+            "note": "2024年德国议会报告:仅50%主要装备可用",
+            "source": "Wehrbeauftragter Annual Report 2024",
+            "credibility": 0.85
+          }
+        ],
+        "verified": true
+      },
+      "financial_position": {
+        "ecb_key_rate_pct": 4.0,
+        "ecb_rate_date": "2024-06",
+        "euro_reserve_share_pct": 20.02,
+        "reserve_source": "IMF COFER Q4 2024",
+        "high_debt_members": ["Italy(137% GDP)", "Greece(162%)", "France(112%)"],
+        "source": "ECB / Eurostat 2024",
+        "key_vulnerability": "南北分化(德国顺差vs意大利债务)；无统一财政→危机时协调困难",
+        "verified": true
+      },
+      "geopolitical": {
+        "alliances": ["NATO(多数成员)", "EU单一市场", "G7"],
+        "un_security_council": "France permanent_veto",
+        "strategic_role": "规则制定者(碳关税CBAM/数字税/GDPR)+NATO欧洲支柱",
+        "sphere_of_influence": "东欧+地中海+前殖民地(法语非洲)",
+        "influence_trend": "对美依赖加深(安全)但自主意识觉醒(战略自主辩论)",
+        "verified": false
+      }
+    },
+
+    "JP": {
+      "name_zh": "日本",
+      "name_en": "Japan",
+      "iso3": "JPN",
+      "tier": "core",
+      "stats_credibility": 0.9,
+      "economic_base": {
+        "gdp_usd": 4286000000000,
+        "gdp_rank": 4,
+        "gdp_source": "IMF WEO 2024 estimate",
+        "primary_industries": ["汽车(丰田/本田)", "电子元器件", "机械/机器人", "精密仪器", "钢铁"],
+        "manufacturing_value_added_global_pct": 5.8,
+        "manufacturing_source": "UNIDO 2023",
+        "trade_balance_usd": -45000000000,
+        "trade_note": "2011年核灾后从顺差转逆差(能源进口激增)",
+        "industrial_role": "精密制造+关键零部件+专利授权+海外投资收益",
+        "verified": true
+      },
+      "energy": {
+        "oil_production_bpd": 3000,
+        "oil_consumption_bpd": 3380000,
+        "oil_import_dependency_pct": 99.7,
+        "lng_import_rank": 2,
+        "nuclear_status": "部分重启(12/54座)",
+        "energy_mix_pct": { "petroleum": 37, "natural_gas": 22, "coal": 26, "renewables": 10, "nuclear": 5 },
+        "source": "METI Japan Energy White Paper 2024",
+        "key_vulnerability": "近100%油气依赖进口，主要经霍尔木兹海峡+马六甲海峡，能源安全极脆弱",
+        "verified": true
+      },
+      "military": {
+        "budget_usd": 55300000000,
+        "budget_pct_gdp": 1.3,
+        "budget_yoy_change_pct": 21,
+        "budget_yoy_source": "Japan MoD budget request FY2024",
+        "budget_target": "2027年达GDP 2%(NATO标准)",
+        "budget_source": "SIPRI 2024",
+        "active_personnel": 247000,
+        "force_projection": "defensive_regional",
+        "us_bases_in_japan": 23,
+        "us_bases_source": "DoD Base Structure Report FY2024",
+        "us_personnel_in_japan": 54000,
+        "us_personnel_source": "DoD East Asia force posture 2024",
+        "key_capability": "反潜战全球顶尖；准航母(出云级改装搭载F-35B)",
+        "source": "IISS Military Balance 2024",
+        "verified": true
+      },
+      "financial_position": {
+        "national_debt_to_gdp_pct": 255,
+        "debt_note": "全球最高债务率，但95%内债(国内持有)",
+        "boj_rate_pct": 0.25,
+        "boj_note": "2024年结束负利率，但仍极低",
+        "foreign_reserves_usd": 1231000000000,
+        "foreign_reserves_note": "Pure FX reserves ~$1,231B; some sources report $1,827B including gold — needs verification",
+        "foreign_reserves_verified": false,
+        "yen_status": "避险货币(risk-off时升值)",
+        "us_treasury_holdings_usd": 1100000000000,
+        "us_treasury_rank": 1,
+        "source": "MoF Japan / IMF 2024",
+        "key_vulnerability": "YCC政策退出→日债利率上升→利息支出爆炸风险；老龄化→储蓄率下降→内债消化能力减弱",
+        "verified": false
+      },
+      "geopolitical": {
+        "alliances": ["美日安保条约", "QUAD", "G7", "CPTPP"],
+        "un_security_council": "non_permanent",
+        "strategic_concern": "台海(距台湾110km)、尖阁/钓鱼岛、朝鲜导弹",
+        "sphere_of_influence": "东南亚(ODA最大供应国之一)+太平洋岛国",
+        "influence_trend": "安全角色扩大(修改和平宪法解释)，经济影响力被中国超越",
+        "verified": false
+      }
+    },
+
+    "GB": {
+      "name_zh": "英国",
+      "name_en": "United Kingdom",
+      "iso3": "GBR",
+      "tier": "important",
+      "stats_credibility": 0.9,
+      "economic_base": {
+        "gdp_usd": 3495000000000,
+        "gdp_rank": 6,
+        "gdp_source": "IMF WEO 2024 estimate",
+        "primary_industries": ["金融服务(伦敦城)", "保险/再保险(劳合社)", "制药(阿斯利康/GSK)", "军工(BAE)", "高等教育"],
+        "services_share_pct": 81,
+        "services_share_source": "ONS UK National Accounts 2024",
+        "industrial_role": "金融中枢(全球外汇交易38%经伦敦)+法律/仲裁+军工出口",
+        "verified": true
+      },
+      "energy": {
+        "oil_production_bpd": 770000,
+        "oil_consumption_bpd": 1400000,
+        "north_sea_status": "产量持续下降(峰值1999年280万桶/日)",
+        "offshore_wind_capacity_gw": 15,
+        "offshore_wind_rank": 2,
+        "source": "UK DESNZ Energy Statistics 2024",
+        "key_vulnerability": "北海油气衰竭中；冬季天然气价格敏感",
+        "verified": false
+      },
+      "military": {
+        "budget_usd": 81800000000,
+        "budget_pct_gdp": 2.3,
+        "budget_source": "SIPRI 2024",
+        "active_personnel": 148000,
+        "personnel_source": "IISS Military Balance 2024",
+        "nuclear_warheads_total": 225,
+        "nuclear_stockpile": 225,
+        "nuclear_deployed": 120,
+        "nuclear_source": "FAS Nuclear Notebook 2025",
+        "carrier_groups": 2,
+        "carrier_note": "HMS Queen Elizabeth, HMS Prince of Wales (Royal Navy)",
+        "force_projection": "global_limited",
+        "key_capability": "核潜艇(Trident)+特种部队+情报(GCHQ/MI6)",
+        "readiness_note": "兵力规模持续缩减，陆军降至1800年以来最低水平",
+        "verified": true
+      },
+      "financial_position": {
+        "national_debt_to_gdp_pct": 100,
+        "gbp_reserve_share_pct": 4.8,
+        "london_fx_turnover_daily_usd": 3700000000000,
+        "fx_share_global_pct": 38,
+        "source": "BIS Triennial Survey 2022 / ONS 2024",
+        "key_vulnerability": "Brexit后贸易摩擦；经常账户持续逆差；房地产泡沫",
+        "verified": false
+      },
+      "geopolitical": {
+        "alliances": ["NATO", "AUKUS", "Five Eyes", "G7", "英联邦(56国)"],
+        "un_security_council": "permanent_veto",
+        "chokepoints_influence": ["直布罗陀", "苏伊士(历史)", "福克兰"],
+        "sphere_of_influence": "英联邦国家+金融/法律全球影响力",
+        "influence_trend": "脱欧后寻求'全球英国'定位，但实力与野心不匹配",
+        "verified": false
+      }
+    },
+
+    "CA": {
+      "name_zh": "加拿大",
+      "name_en": "Canada",
+      "iso3": "CAN",
+      "tier": "important",
+      "stats_credibility": 0.9,
+      "economic_base": {
+        "gdp_usd": 2242000000000,
+        "gdp_rank": 9,
+        "gdp_source": "IMF WEO 2024 estimate",
+        "primary_industries": ["能源(油砂/天然气)", "矿业(钾肥/铀/镍)", "金融", "农业(小麦/菜籽)", "林业"],
+        "trade_with_us_pct": 75,
+        "trade_with_us_source": "US Census Bureau / Statistics Canada 2023",
+        "industrial_role": "资源出口国+美国经济附庸(75%贸易依赖美国)",
+        "verified": true
+      },
+      "energy": {
+        "oil_production_bpd": 5760000,
+        "oil_production_rank": 4,
+        "proven_reserves_barrels": 168000000000,
+        "reserves_rank": 3,
+        "reserves_note": "全球第三(仅次于委内瑞拉和沙特)，主要为油砂(开采成本高)",
+        "source": "NEB Canada / EIA 2024",
+        "key_vulnerability": "油砂开采成本高($40-60/桶)；管道建设政治困难；对美出口依赖",
+        "verified": true
+      },
+      "military": {
+        "budget_usd": 30000000000,
+        "budget_pct_gdp": 1.3,
+        "budget_pct_source": "SIPRI 2024 (derived from budget/GDP)",
+        "budget_source": "SIPRI 2024 (estimated)",
+        "active_personnel": 72000,
+        "personnel_source": "IISS Military Balance 2024",
+        "force_projection": "limited",
+        "key_note": "NATO义务常年未达2%目标；北极主权争议(西北航道)",
+        "verified": true
+      },
+      "financial_position": {
+        "national_debt_to_gdp_pct": 107,
+        "housing_bubble_risk": "high",
+        "housing_note": "家庭债务/GDP比175%，全球最高之一",
+        "source": "Statistics Canada / Bank of Canada 2024",
+        "verified": false
+      },
+      "geopolitical": {
+        "alliances": ["NATO", "Five Eyes", "G7", "USMCA(美墨加贸易)"],
+        "un_security_council": "non_permanent",
+        "strategic_assets": ["北极航道(气候变化开通中)", "钾肥(全球30%)", "铀(全球22%)"],
+        "sphere_of_influence": "美国紧密盟友，有限独立外交空间",
+        "verified": false
+      }
+    },
+
+    "AU": {
+      "name_zh": "澳大利亚",
+      "name_en": "Australia",
+      "iso3": "AUS",
+      "tier": "important",
+      "stats_credibility": 0.9,
+      "economic_base": {
+        "gdp_usd": 1802000000000,
+        "gdp_rank": 13,
+        "gdp_source": "IMF WEO 2024 estimate",
+        "primary_industries": ["铁矿石(全球54%出口)", "煤炭", "LNG", "黄金", "农牧业(牛肉/小麦/羊毛)"],
+        "china_export_dependency_pct": 33,
+        "china_export_dependency_source": "Australian Bureau of Statistics 2024",
+        "industrial_role": "资源出口国(大宗商品超级周期受益者)+中国经济代理指标",
+        "verified": true
+      },
+      "energy": {
+        "coal_export_rank": 2,
+        "lng_export_rank": 3,
+        "renewable_potential": "极高(日照+风力+面积)",
+        "source": "Australian Dept of Industry 2024",
+        "key_vulnerability": "对中国出口依赖高；2020年中澳贸易战暴露脆弱性(煤炭/葡萄酒/大麦)",
+        "verified": false
+      },
+      "military": {
+        "budget_usd": 34000000000,
+        "budget_pct_gdp": 1.9,
+        "budget_pct_source": "SIPRI 2024 (derived)",
+        "budget_source": "SIPRI 2024 (estimated)",
+        "active_personnel": 59000,
+        "personnel_source": "IISS Military Balance 2024",
+        "aukus_submarine_deal": "8艘核动力潜艇(2030s交付)，成本$368B AUD",
+        "force_projection": "regional_maritime",
+        "verified": true
+      },
+      "financial_position": {
+        "national_debt_to_gdp_pct": 52,
+        "household_debt_to_income_pct": 187,
+        "housing_note": "悉尼/墨尔本房价全球最高之列",
+        "source": "RBA / ABS 2024",
+        "verified": false
+      },
+      "geopolitical": {
+        "alliances": ["AUKUS", "QUAD", "Five Eyes", "ANZUS"],
+        "strategic_concern": "南海自由航行+台海+所罗门群岛(中国渗透)",
+        "sphere_of_influence": "太平洋岛国+东南亚(与中国竞争)",
+        "influence_trend": "安全上加速倒向美国(AUKUS核潜艇)；经济上仍深度绑定中国",
+        "verified": false
+      }
+    },
+
+    "KR": {
+      "name_zh": "韩国",
+      "name_en": "South Korea",
+      "iso3": "KOR",
+      "tier": "important",
+      "stats_credibility": 0.9,
+      "economic_base": {
+        "gdp_usd": 1760000000000,
+        "gdp_rank": 12,
+        "gdp_source": "IMF WEO 2024 estimate",
+        "primary_industries": ["半导体(三星/SK海力士, 全球存储芯片60%)", "汽车(现代/起亚)", "造船(全球40%)", "电子/显示", "石化"],
+        "industrial_role": "半导体+造船+汽车制造枢纽+文化输出(K-pop/影视)",
+        "verified": true
+      },
+      "energy": {
+        "oil_import_dependency_pct": 97,
+        "oil_consumption_bpd": 2550000,
+        "energy_import_dependency_pct": 92,
+        "nuclear_share_pct": 28,
+        "nuclear_reactors": 26,
+        "source": "KEEI Korea Energy Statistics 2024",
+        "key_vulnerability": "能源几乎100%依赖进口；中东局势直接影响能源安全",
+        "verified": true
+      },
+      "military": {
+        "budget_usd": 47600000000,
+        "budget_source": "SIPRI 2024",
+        "active_personnel": 500000,
+        "personnel_source": "IISS Military Balance 2024",
+        "conscription": true,
+        "us_troops_stationed": 28500,
+        "us_troops_source": "USFK (US Forces Korea) 2024",
+        "artillery_within_range_of_seoul": "朝鲜~13000门火炮，首尔在射程内",
+        "key_concern": "朝鲜核武(估计50-60枚)",
+        "verified": true
+      },
+      "financial_position": {
+        "national_debt_to_gdp_pct": 54,
+        "foreign_reserves_usd": 419000000000,
+        "source": "Bank of Korea 2024",
+        "key_vulnerability": "人口危机(生育率0.72，全球最低)→长期经济收缩压力",
+        "verified": true
+      },
+      "geopolitical": {
+        "alliances": ["美韩同盟", "美日韩三边(Camp David 2023)"],
+        "un_security_council": "non_permanent",
+        "strategic_assets": ["半导体产能(全球存储芯片60%)", "造船能力(军舰+商船)"],
+        "sphere_of_influence": "有限，夹在美中之间",
+        "influence_trend": "军工出口崛起(K9自行榴弹炮/FA-50/潜艇)，成为新军火出口大国",
+        "verified": false
+      }
+    },
+
+    "IN": {
+      "name_zh": "印度",
+      "name_en": "India",
+      "iso3": "IND",
+      "tier": "important",
+      "stats_credibility": 0.7,
+      "stats_credibility_note": "GDP计算方法2015年修改后引发争议；非正规经济庞大(GDP的50%+)难以统计",
+      "economic_base": {
+        "gdp_usd": 3937000000000,
+        "gdp_rank": 5,
+        "gdp_source": "IMF WEO 2024 estimate",
+        "gdp_growth_pct": 7.8,
+        "gdp_growth_source": "IMF WEO 2024 estimate",
+        "primary_industries": ["IT服务(全球外包55%)", "制药(仿制药全球20%)", "纺织", "农业(人口50%就业)", "炼油"],
+        "industrial_role": "IT外包+仿制药+劳动密集型制造(中国替代叙事)+人口红利",
+        "verified": true
+      },
+      "energy": {
+        "oil_import_dependency_pct": 85,
+        "oil_consumption_bpd": 5050000,
+        "coal_production_rank": 2,
+        "coal_share_energy_pct": 55,
+        "russian_oil_imports_increase": "2022年后从俄罗斯折价购油激增(从<1%→40%+)",
+        "source": "India MoPNG / EIA 2024",
+        "key_vulnerability": "石油85%进口；卢比贬值→能源进口成本上升→通胀",
+        "verified": true
+      },
+      "military": {
+        "budget_usd": 86100000000,
+        "budget_source": "SIPRI 2024",
+        "active_personnel": 1455000,
+        "personnel_source": "IISS Military Balance 2024",
+        "nuclear_warheads": 180,
+        "nuclear_source": "FAS Nuclear Notebook 2025",
+        "force_projection": "regional_land_dominant",
+        "readiness_data": [
+          {
+            "issue": "武器进口依赖",
+            "import_share_pct": 55,
+            "top_supplier": "Russia(declining), France(Rafale), US(growing)",
+            "source": "SIPRI Arms Transfers 2024",
+            "credibility": 0.85
+          }
+        ],
+        "verified": true
+      },
+      "financial_position": {
+        "national_debt_to_gdp_pct": 83,
+        "foreign_reserves_usd": 643000000000,
+        "foreign_reserves_note": "RBI record high April 2024",
+        "fiscal_deficit_pct_gdp": 5.6,
+        "source": "RBI / IMF 2024",
+        "key_vulnerability": "高财政赤字；各邦债务不透明；卢比持续贬值压力",
+        "verified": true
+      },
+      "geopolitical": {
+        "alliances": ["QUAD(非正式)", "BRICS", "SCO", "不结盟(传统)"],
+        "un_security_council": "non_permanent(争取permanent)",
+        "strategic_position": "美中之间摇摆(multi-alignment策略)：买俄罗斯折价油+参加美国QUAD+加入BRICS",
+        "border_disputes": ["中印边境(LAC, 2020年加勒万冲突)", "印巴克什米尔"],
+        "sphere_of_influence": "南亚(与中国竞争)+印度洋",
+        "influence_trend": "经济崛起+人口红利，但制造业替代中国进展慢于叙事",
+        "verified": false
+      }
+    },
+
+    "BR": {
+      "name_zh": "巴西",
+      "name_en": "Brazil",
+      "iso3": "BRA",
+      "tier": "important",
+      "stats_credibility": 0.8,
+      "economic_base": {
+        "gdp_usd": 2190000000000,
+        "gdp_rank": 8,
+        "gdp_source": "IMF WEO 2024 estimate",
+        "primary_industries": ["农业(大豆全球最大出口/咖啡/糖/牛肉)", "矿业(铁矿石/铝土)", "石油(深海盐下层)", "航空(Embraer)"],
+        "industrial_role": "农业超级大国+矿产出口+南美最大经济体",
+        "verified": true
+      },
+      "energy": {
+        "oil_production_crude_bpd": 3400000,
+        "total_petroleum_liquids_bpd": 4280000,
+        "oil_production_trend": "快速增长(深海盐下层)",
+        "oil_consumption_bpd": 3030000,
+        "renewable_electricity_pct": 83,
+        "renewable_note": "水电为主(63%)+风电+生物燃料(乙醇)，电力结构全球最绿之一",
+        "source": "ANP Brazil / EIA 2024",
+        "key_strength": "能源自给+农业自给+可再生能源比例极高，资源安全性强",
+        "verified": true
+      },
+      "military": {
+        "budget_usd": 23600000000,
+        "budget_source": "SIPRI 2024 (estimated, +3% YoY)",
+        "active_personnel": 366000,
+        "personnel_source": "IISS Military Balance 2024",
+        "force_projection": "limited_regional",
+        "key_note": "南美军事最强但全球投射能力弱",
+        "verified": true
+      },
+      "financial_position": {
+        "national_debt_to_gdp_pct": 74,
+        "selic_rate_pct": 10.5,
+        "foreign_reserves_usd": 330000000000,
+        "source": "BCB / IMF 2024",
+        "key_vulnerability": "高利率抑制增长；政治不稳定→资本外流周期；雷亚尔波动大",
+        "verified": true
+      },
+      "geopolitical": {
+        "alliances": ["BRICS", "Mercosur", "G20"],
+        "un_security_council": "non_permanent(争取permanent)",
+        "strategic_assets": ["亚马逊雨林(全球碳汇/生物多样性)", "淡水(全球12%)", "耕地(可扩张)"],
+        "sphere_of_influence": "南美领导者地位(但削弱中)",
+        "influence_trend": "BRICS活跃成员+全球南方代言，但国内政治极化限制外交一致性",
+        "verified": false
+      }
+    },
+
+    "TR": {
+      "name_zh": "土耳其",
+      "name_en": "Turkey",
+      "iso3": "TUR",
+      "tier": "monitor",
+      "stats_credibility": 0.6,
+      "stats_credibility_note": "2016年后通胀数据与独立机构ENAG差异巨大(官方50% vs ENAG 130%)；GDP数据存疑",
+      "economic_base": {
+        "gdp_usd": 1323000000000,
+        "gdp_rank": 17,
+        "gdp_source": "World Bank 2024",
+        "primary_industries": ["汽车制造(欧洲代工)", "纺织", "钢铁", "旅游", "建筑/基建", "国防工业(无人机)"],
+        "industrial_role": "欧亚桥梁制造基地+无人机出口新星(Bayraktar TB2)+建筑业全球输出",
+        "verified": true
+      },
+      "energy": {
+        "oil_import_dependency_pct": 93,
+        "gas_import_dependency_pct": 98,
+        "gas_suppliers": "Russia(25%), Azerbaijan(30%), Iran(15%), LNG(30%)",
+        "source": "EPDK Turkey 2024",
+        "key_vulnerability": "能源几乎100%进口→经常账户逆差→里拉贬值→通胀螺旋",
+        "verified": false
+      },
+      "military": {
+        "budget_usd": 16800000000,
+        "budget_yoy_change_pct": 12,
+        "budget_yoy_source": "SIPRI 2024",
+        "budget_source": "SIPRI 2024 (estimated)",
+        "active_personnel": 425000,
+        "personnel_source": "IISS Military Balance 2024",
+        "nato_army_rank": 2,
+        "nato_army_rank_source": "NATO force comparison (by active personnel)",
+        "nato_note": "NATO第二大常规军力(仅次美国)",
+        "force_projection": "regional_significant",
+        "overseas_presence": ["叙利亚北部", "伊拉克北部", "利比亚", "索马里", "阿塞拜疆(顾问)"],
+        "key_capability": "Bayraktar TB2/Akinci无人机改变了战争模式(纳卡/乌克兰/利比亚)",
+        "verified": true
+      },
+      "financial_position": {
+        "inflation_official_pct": 65,
+        "inflation_independent_pct": 130,
+        "inflation_note": "ENAG独立机构数据约为官方2倍",
+        "lira_depreciation_5yr_pct": 85,
+        "foreign_reserves_usd": 98000000000,
+        "source": "TCMB / TUIK / ENAG 2024",
+        "key_vulnerability": "非正统货币政策(2021-2023降息抗通胀)→资本外流→里拉崩溃→2023年回归正统但损害已成",
+        "verified": false
+      },
+      "geopolitical": {
+        "alliances": ["NATO成员(1952)", "但购买俄罗斯S-400被踢出F-35项目"],
+        "chokepoints_controlled": ["博斯普鲁斯海峡+达达尼尔海峡(黑海唯一出口，Montreux公约)"],
+        "strategic_position": "欧亚十字路口：同时与俄/美/欧/中东打交道，左右逢源但也四面楚歌",
+        "sphere_of_influence": "突厥语国家(中亚)+北塞浦路斯+利比亚+索马里",
+        "influence_trend": "无人机外交崛起；但经济危机削弱硬实力投射",
+        "verified": false
+      }
+    },
+
+    "AR": {
+      "name_zh": "阿根廷",
+      "name_en": "Argentina",
+      "iso3": "ARG",
+      "tier": "monitor",
+      "stats_credibility": 0.5,
+      "stats_credibility_note": "2007-2015年INDEC通胀数据被IMF认定不可靠；Milei政府后改善但仍波动",
+      "economic_base": {
+        "gdp_usd": 633000000000,
+        "gdp_rank": 22,
+        "gdp_source": "World Bank 2024",
+        "primary_industries": ["农业(大豆/玉米/牛肉/葡萄酒)", "锂矿(全球第四储量)", "页岩油气(Vaca Muerta)"],
+        "industrial_role": "农产品出口+锂矿潜力+页岩能源(Vaca Muerta全球第二大页岩气储量)",
+        "verified": true
+      },
+      "energy": {
+        "vaca_muerta_shale_gas_rank": 2,
+        "vaca_muerta_shale_oil_rank": 4,
+        "vaca_muerta_note": "全球第二大页岩气+第四大页岩油储量，但基础设施不足限制产出",
+        "lithium_reserves_rank": 4,
+        "source": "EIA / Argentine Ministry of Energy 2024",
+        "key_opportunity": "Vaca Muerta+锂三角(阿根廷/智利/玻利维亚)使阿根廷可能成为能源+电池材料出口国",
+        "verified": false
+      },
+      "military": {
+        "budget_usd": 5000000000,
+        "budget_source": "SIPRI 2024",
+        "force_projection": "minimal",
+        "key_note": "1982年马岛战争后军队大幅削弱",
+        "verified": true
+      },
+      "financial_position": {
+        "inflation_annual_pct": 211,
+        "inflation_date": "2023",
+        "imf_debt_usd": 44000000000,
+        "sovereign_defaults": 9,
+        "default_note": "历史上9次主权违约，最近2020年",
+        "source": "INDEC / IMF 2024",
+        "key_vulnerability": "慢性通胀+反复违约+资本管制→国际信用极低；Milei美元化政策不确定性",
+        "verified": false
+      },
+      "geopolitical": {
+        "alliances": ["Mercosur(淡化中)", "BRICS(Milei暂停加入)"],
+        "strategic_assets": ["Vaca Muerta页岩", "锂三角", "南极领土主张", "马岛/福克兰争议"],
+        "influence_trend": "Milei政府亲美转向，退出BRICS；国内经济休克疗法结果未定",
+        "verified": false
+      }
+    },
+
+    "ZA": {
+      "name_zh": "南非",
+      "name_en": "South Africa",
+      "iso3": "ZAF",
+      "tier": "monitor",
+      "stats_credibility": 0.75,
+      "economic_base": {
+        "gdp_usd": 400000000000,
+        "gdp_rank": 33,
+        "gdp_source": "World Bank 2024",
+        "primary_industries": ["矿业(铂族金属全球70%/黄金/锰/铬)", "金融服务(非洲最大)", "汽车组装"],
+        "unemployment_pct": 32,
+        "unemployment_source": "Stats SA Quarterly Labour Force Survey Q2 2024",
+        "industrial_role": "非洲经济门户+铂族金属全球垄断(催化转化器/氢能源关键材料)",
+        "verified": true
+      },
+      "energy": {
+        "coal_share_electricity_pct": 80,
+        "load_shedding_status": "chronic",
+        "load_shedding_note": "Eskom电力危机：2023年创纪录停电335天(分级轮停)，严重拖累GDP",
+        "source": "Eskom / Stats SA 2024",
+        "key_vulnerability": "电力基础设施崩溃是最大经济威胁，超过任何外部因素",
+        "verified": false
+      },
+      "military": {
+        "budget_usd": 3500000000,
+        "budget_source": "SIPRI 2024",
+        "force_projection": "african_peacekeeping",
+        "key_note": "非洲最强军力之一但经费不足、装备老化",
+        "verified": true
+      },
+      "financial_position": {
+        "national_debt_to_gdp_pct": 74,
+        "sovereign_rating": "BB-(Fitch), junk since 2017",
+        "source": "SARB / National Treasury 2024",
+        "key_vulnerability": "高失业+不平等→社会不稳定；电力危机→GDP损失2-3%/年",
+        "verified": false
+      },
+      "geopolitical": {
+        "alliances": ["BRICS", "AU(非盟)", "G20", "SADC"],
+        "un_security_council": "non_permanent",
+        "strategic_assets": ["铂族金属(PGM)全球70%", "锰(电池材料)", "好望角航线(苏伊士替代)"],
+        "influence_trend": "BRICS活跃但国内危机削弱国际角色；与俄罗斯走近引起西方不满",
+        "verified": false
+      }
+    },
+
+    "SA": {
+      "name_zh": "沙特阿拉伯",
+      "name_en": "Saudi Arabia",
+      "iso3": "SAU",
+      "tier": "monitor",
+      "stats_credibility": 0.65,
+      "stats_credibility_note": "沙特阿美IPO后财务数据改善，但政府预算和社会数据透明度低",
+      "economic_base": {
+        "gdp_usd": 1238000000000,
+        "gdp_rank": 18,
+        "gdp_source": "World Bank 2024",
+        "oil_revenue_share_pct": 62,
+        "oil_revenue_share_source": "SAMA Annual Report 2024",
+        "primary_industries": ["石油(全球最大出口国)", "石化", "建筑/基建(NEOM/$500B)", "朝觐旅游"],
+        "vision_2030": "经济多元化计划：旅游+娱乐+科技+体育，但石油仍是命脉",
+        "industrial_role": "全球石油定价权核心(OPEC+实际领导者)+主权财富投资(PIF $930B)",
+        "verified": true
+      },
+      "energy": {
+        "oil_production_crude_bpd": 9000000,
+        "total_petroleum_liquids_bpd": 11130000,
+        "oil_production_capacity_bpd": 12500000,
+        "spare_capacity_bpd": 3500000,
+        "spare_capacity_note": "全球唯一有大规模剩余产能的国家，赋予价格调控权",
+        "oil_consumption_bpd": 3650000,
+        "proven_reserves_barrels": 267000000000,
+        "reserves_rank": 2,
+        "breakeven_oil_price_fiscal": 81,
+        "breakeven_note": "财政平衡油价$81/桶(IMF 2024估算)，低于此则赤字",
+        "source": "OPEC Annual Report 2024 / Saudi Aramco / IMF / EIA",
+        "key_strength": "剩余产能=全球油价稳定器；低开采成本($3-5/桶)",
+        "key_vulnerability": "油价<$80→财政赤字；Vision 2030巨额投入($1T+)依赖高油价",
+        "verified": true
+      },
+      "military": {
+        "budget_usd": 80300000000,
+        "budget_pct_gdp": 7.1,
+        "budget_pct_source": "SIPRI 2024 (derived)",
+        "budget_note": "GDP占比全球最高之一",
+        "budget_source": "SIPRI 2024",
+        "active_personnel": 227000,
+        "personnel_source": "IISS Military Balance 2024",
+        "equipment_source": "主要从美国/英国/法国采购",
+        "combat_record": "也门战争(2015至今)暴露实战能力不足：投入巨大但未能击败胡塞武装",
+        "verified": true
+      },
+      "financial_position": {
+        "national_debt_to_gdp_pct": 26,
+        "sovereign_wealth_fund_usd": 930000000000,
+        "swf_name": "PIF (Public Investment Fund)",
+        "foreign_reserves_usd": 450000000000,
+        "foreign_reserves_source": "SAMA (estimated)",
+        "source": "SAMA / PIF 2024",
+        "key_strength": "低债务+巨额主权基金+外储",
+        "key_vulnerability": "经济多元化能否在石油时代结束前完成是存亡问题",
+        "verified": true
+      },
+      "geopolitical": {
+        "alliances": ["OPEC+(实际领导者)", "BRICS(2024加入)", "GCC", "美沙关系(松动中)"],
+        "chokepoints_proximity": ["霍尔木兹海峡(邻近)", "曼德海峡/红海(也门战争)"],
+        "petrodollar_status": "动摇中：2023年考虑接受人民币结算+加入BRICS+与伊朗复交(中国斡旋)",
+        "sphere_of_influence": "海湾国家+伊斯兰世界(两圣地守护者)+全球石油定价",
+        "influence_trend": "主动多元化外交(不再单一绑定美国)；中国斡旋沙伊复交是标志性事件",
+        "verified": false
+      }
+    },
+
+    "AE": {
+      "name_zh": "阿联酋",
+      "name_en": "United Arab Emirates",
+      "iso3": "ARE",
+      "tier": "monitor",
+      "stats_credibility": 0.7,
+      "economic_base": {
+        "gdp_usd": 537000000000,
+        "gdp_rank": 29,
+        "gdp_source": "World Bank 2024",
+        "oil_revenue_share_pct": 30,
+        "oil_revenue_share_source": "UAE Central Bank Annual Report 2024",
+        "oil_note": "已比沙特更成功地多元化：迪拜石油仅占GDP 1%",
+        "primary_industries": ["石油/天然气(阿布扎比)", "金融/贸易中枢(迪拜)", "旅游", "航空(阿联酋航空)", "物流(杰贝阿里港)"],
+        "industrial_role": "中东贸易+金融+物流枢纽+制裁规避通道(争议)",
+        "verified": true
+      },
+      "energy": {
+        "oil_production_crude_bpd": 3200000,
+        "total_petroleum_liquids_bpd": 4160000,
+        "oil_reserves_barrels": 98000000000,
+        "nuclear_status": "Barakah核电站(4座反应堆，阿拉伯首个)",
+        "source": "ADNOC / EIA 2024",
+        "key_strength": "石油+核电+太阳能多元能源组合；低开采成本",
+        "verified": true
+      },
+      "military": {
+        "budget_usd": 25000000000,
+        "budget_source": "SIPRI 2024 (estimated)",
+        "active_personnel": 63000,
+        "personnel_source": "IISS Military Balance 2024",
+        "key_capability": "中东最先进空军之一(F-35已签约)；无人机+网络战投资",
+        "combat_experience": "也门(2015-2019参战后撤出)+利比亚(代理人)",
+        "verified": true
+      },
+      "financial_position": {
+        "national_debt_to_gdp_pct": 30,
+        "adia_assets_usd": 990000000000,
+        "adia_note": "ADIA(阿布扎比投资局)为全球最大主权基金之一",
+        "source": "UAE Central Bank / SWF Institute 2024",
+        "key_strength": "极低债务+巨额主权基金+无个人所得税吸引全球资本",
+        "verified": false
+      },
+      "geopolitical": {
+        "alliances": ["GCC", "BRICS(2024加入)", "Abraham Accords(以色列建交2020)", "I2U2(印度-以色列-阿联酋-美国)"],
+        "strategic_assets": ["杰贝阿里港(中东最大)", "迪拜金融中心(DIFC)", "航空枢纽(DXB全球最繁忙国际机场)"],
+        "sphere_of_influence": "中东金融+物流枢纽+非洲之角投资",
+        "influence_trend": "最成功的后石油转型案例；多边下注(美+中+以+印)不选边",
+        "verified": false
+      }
+    }
+  }
+}

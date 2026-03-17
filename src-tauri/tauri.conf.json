@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nicedoc/schemas/main/tauri-v2.json",
+  "productName": "ZhiKu",
+  "version": "0.1.0",
+  "identifier": "com.zhiku.app",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1422",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "智库",
+        "width": 1440,
+        "height": 900,
+        "minWidth": 1024,
+        "minHeight": 640,
+        "center": true,
+        "resizable": true,
+        "decorations": false,
+        "transparent": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; connect-src 'self' http://localhost:11434 http://localhost:9601 ws://localhost:9600 https://*.basemaps.cartocdn.com https://basemaps.cartocdn.com https://*.openstreetmap.org; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:"
+    }
+  }
+}

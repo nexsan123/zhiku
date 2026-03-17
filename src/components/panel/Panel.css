@@ -1,0 +1,99 @@
+/* Panel — collapsible glassmorphism card (Tier 2 Card Glass) */
+
+.panel {
+  background: var(--glass-bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  flex-shrink: 0;
+  transition:
+    border-color var(--duration-fast) var(--easing-default),
+    box-shadow var(--duration-fast) var(--easing-default);
+}
+
+.panel:hover {
+  border-color: var(--glass-border-strong);
+  box-shadow: var(--shadow-md), 0 0 20px var(--glass-glow-accent);
+}
+
+/* Header — click to toggle */
+.panel__header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  width: 100%;
+  padding: var(--spacing-2) var(--spacing-3);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  text-align: left;
+  transition: background-color var(--duration-fast) var(--easing-default),
+              color var(--duration-fast) var(--easing-default);
+}
+
+.panel__header:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+.panel__icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--color-accent-primary);
+}
+
+.panel__title {
+  flex: 1;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: inherit;
+}
+
+.panel__chevron {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+/* Body — collapsible via CSS Grid rows animation (GPU-accelerated, no JS height measurement) */
+.panel__body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--duration-normal) var(--easing-default);
+}
+
+.panel__body--expanded {
+  grid-template-rows: 1fr;
+}
+
+/* Inner wrapper: overflow:hidden is required for grid-rows 0fr clipping to work */
+.panel__body-inner {
+  overflow: hidden;
+  padding: 0 var(--spacing-3) var(--spacing-3);
+}
+
+/* CmdK navigation highlight flash */
+@keyframes panel-highlight-flash {
+  0%   { border-color: var(--color-accent-primary); box-shadow: 0 0 12px var(--glass-glow-accent); }
+  100% { border-color: var(--glass-border-default); box-shadow: none; }
+}
+
+.panel--highlight {
+  animation: panel-highlight-flash 1.5s ease-out;
+}
+
+/* Placeholder text for unimplemented panels */
+.panel-placeholder {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-disabled);
+  font-family: var(--font-mono);
+  padding: var(--spacing-3) 0;
+  text-align: center;
+}

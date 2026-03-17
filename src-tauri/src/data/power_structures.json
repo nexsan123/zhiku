@@ -1,0 +1,608 @@
+{
+  "_comment": "Structural causal chains for AI reasoning injection. Each chain models a power/economic structure with transmission paths, historical precedents, and quantifiable indicators. All data points must cite verifiable sources. Updated quarterly.",
+  "_updated": "2026-03-13",
+  "_sources": [
+    "IMF COFER (Currency Composition of Official Foreign Exchange Reserves)",
+    "BIS Triennial Survey 2022",
+    "SWIFT RMB Tracker",
+    "SIPRI Military Expenditure Database",
+    "World Gold Council",
+    "FAO Food Price Index",
+    "IIF Global Debt Monitor",
+    "CBO Budget and Economic Outlook",
+    "TSMC/ASML Annual Reports",
+    "EIA International Energy Statistics"
+  ],
+
+  "chains": [
+    {
+      "id": "dollar_hegemony",
+      "name": "美元霸权循环",
+      "name_en": "Dollar Hegemony Cycle",
+      "description": "美元作为全球储备货币的自强化循环：石油美元→贸易结算→储备需求→低融资成本→军事投射→能源控制→石油美元",
+      "nodes": [
+        {
+          "id": "petrodollar",
+          "label": "石油美元体系",
+          "detail": "1974年沙特-美国协议：石油以美元计价，沙特用石油收入购买美债",
+          "status": "weakening",
+          "evidence": "沙特2023年表示愿以非美元结算石油；中国-沙特人民币结算协议推进"
+        },
+        {
+          "id": "trade_invoicing",
+          "label": "贸易结算主导",
+          "detail": "全球约40%贸易以美元计价（远超美国GDP占比25%）",
+          "metrics": {
+            "usd_trade_invoicing_pct": 40,
+            "us_gdp_global_share_pct": 25,
+            "source": "BIS Working Paper No. 900 (Gopinath 2020); ECB 'The International Role of the Euro' June 2023"
+          }
+        },
+        {
+          "id": "reserve_currency",
+          "label": "储备货币地位",
+          "detail": "全球央行外汇储备中美元占比",
+          "metrics": {
+            "usd_reserve_share_pct": 57.4,
+            "eur_reserve_share_pct": 19.8,
+            "jpy_reserve_share_pct": 5.6,
+            "gbp_reserve_share_pct": 4.7,
+            "rmb_reserve_share_pct": 2.17,
+            "source": "IMF COFER Q3 2024",
+            "trend": "USD从2000年71%降至2024年57.4%，渐进下降"
+          }
+        },
+        {
+          "id": "low_funding_cost",
+          "label": "低融资成本特权",
+          "detail": "全球美元需求压低美债收益率，支撑美国财政赤字融资",
+          "status": "stressed",
+          "evidence": "2024年美国净利息支出$882B (CBO Monthly Budget Review FY2024)，占联邦收入约18%。1990年代也曾达15%+，当前为数十年新高"
+        },
+        {
+          "id": "military_projection",
+          "label": "军事投射能力",
+          "detail": "全球约750军事设施(DoD Base Structure Report FY2024)，11艘航母战斗群(US Navy)",
+          "status": "strained",
+          "evidence": "155mm炮弹月产量约3.6万发(Army testimony to Congress 2024，目标2025年底10万发)，乌克兰日消耗约3000-7000发(RUSI/defense analysts estimates)，暴露产能缺口；红海拦截成本不对称：SM-2 $2.1M / SM-6 $4.3M vs 胡塞无人机$2K-$20K (CSIS Missile Defense Project 2024)"
+        },
+        {
+          "id": "energy_control",
+          "label": "能源控制力",
+          "detail": "中东军事存在→石油供应安全→美元定价权",
+          "status": "eroding",
+          "evidence": "红海航运危机暴露美军单独维护航道的高成本(Operation Prosperity Guardian 2024)；中国-伊朗25年全面合作协议(2021年3月签署)，具体金融条款未公开"
+        }
+      ],
+      "transmission_path": "petrodollar → trade_invoicing → reserve_currency → low_funding_cost → military_projection → energy_control → petrodollar",
+      "breaking_points": [
+        "沙特/OPEC+接受非美元结算 → 石油美元基础松动",
+        "美债利息占财政收入>25% → 军事开支挤压 → 投射能力下降",
+        "替代结算系统(CIPS/mBridge)成熟 → 储备需求下降"
+      ],
+      "historical_precedents": [
+        {
+          "event": "英镑霸权终结 (1944-1971)",
+          "lesson": "储备货币地位丧失是渐进过程(~30年)，由债务不可持续+军事过度扩张触发"
+        },
+        {
+          "event": "尼克松冲击 (1971)",
+          "lesson": "美元与黄金脱钩，转型为纯信用货币，依赖军事+石油维持"
+        }
+      ],
+      "affected_countries": ["US", "SA", "AE", "CN", "XM", "JP"],
+      "current_phase": "erosion",
+      "risk_level": "medium-high"
+    },
+
+    {
+      "id": "energy_food_nexus",
+      "name": "能源-粮食联动链",
+      "name_en": "Energy-Food Nexus",
+      "description": "能源价格通过化肥→运输→灌溉三条路径传导至粮食价格，影响全球社会稳定",
+      "nodes": [
+        {
+          "id": "energy_price",
+          "label": "能源价格",
+          "detail": "原油+天然气价格为链条起点",
+          "metrics": {
+            "natural_gas_to_fertilizer_pct": 80,
+            "detail": "全球氮肥生产约80%以天然气为原料(Haber-Bosch工艺)",
+            "source": "IFA (International Fertilizer Association)"
+          }
+        },
+        {
+          "id": "fertilizer_cost",
+          "label": "化肥成本",
+          "detail": "天然气→氨→尿素/硝酸铵 生产链",
+          "status": "normalized",
+          "evidence": "2022年俄乌冲突导致化肥价格翻倍(World Bank Commodity Markets Outlook 2022)。俄罗斯+白俄罗斯合占全球钾肥出口约40%(IFA 2022)，2024年价格回落但仍高于2020水平"
+        },
+        {
+          "id": "transport_cost",
+          "label": "运输成本",
+          "detail": "柴油价格→卡车/船运→粮食物流",
+          "evidence": "红海危机导致亚欧航线绕行好望角，运输时间+10天，成本+约30%(Drewry World Container Index / Freightos Baltic Index 2024，具体涨幅随航线波动)"
+        },
+        {
+          "id": "food_price",
+          "label": "粮食价格",
+          "detail": "FAO食品价格指数反映全球粮价趋势",
+          "metrics": {
+            "fao_index_2022_peak": 159.7,
+            "fao_index_2024": 120,
+            "fao_index_baseline_2015": 100,
+            "source": "FAO Food Price Index (2014-2016=100)"
+          }
+        },
+        {
+          "id": "social_stability",
+          "label": "社会稳定",
+          "detail": "粮价上涨→通胀→社会不满→政治动荡",
+          "evidence": "2010-2011阿拉伯之春触发因素之一是粮价飙升(FAO FFPI 2011年2月达131.9，FAO官网)"
+        }
+      ],
+      "transmission_path": "energy_price → fertilizer_cost + transport_cost → food_price → social_stability",
+      "breaking_points": [
+        "天然气价格持续>$10/MMBtu → 化肥减产 → 粮食产量下降",
+        "FAO指数>140 → 脆弱国家爆发粮食危机",
+        "主要粮食出口国(俄/乌/美/巴)同时遭遇极端天气 → 全球粮食危机"
+      ],
+      "historical_precedents": [
+        {
+          "event": "2007-2008全球粮食危机",
+          "lesson": "油价$147(NYMEX WTI July 2008)+生物燃料政策→粮价暴涨→多国粮食骚乱(World Bank '37 countries' estimate, 2008 Food Price Crisis report)"
+        },
+        {
+          "event": "2022俄乌冲突粮食冲击",
+          "lesson": "黑海粮食走廊中断→小麦期货价格+约55%(CBOT March 2022)→非洲/中东粮食安全恶化(WFP)"
+        }
+      ],
+      "affected_countries": ["TR", "IN", "BR", "AR", "ZA", "SA", "AE"],
+      "current_phase": "stable-elevated",
+      "risk_level": "medium"
+    },
+
+    {
+      "id": "semiconductor_chokepoint",
+      "name": "芯片卡脖子链",
+      "name_en": "Semiconductor Chokepoint Chain",
+      "description": "先进半导体制造高度集中于台湾(TSMC)+荷兰(ASML)，形成全球最关键的技术瓶颈",
+      "nodes": [
+        {
+          "id": "euv_lithography",
+          "label": "EUV光刻机垄断",
+          "detail": "ASML是全球唯一EUV光刻机供应商，一台售价$200M+",
+          "metrics": {
+            "asml_euv_market_share_pct": 100,
+            "euv_price_usd_million": 200,
+            "source": "ASML Annual Report 2024"
+          }
+        },
+        {
+          "id": "foundry_concentration",
+          "label": "代工集中度",
+          "detail": "TSMC占全球先进制程(≤7nm)代工约90%",
+          "metrics": {
+            "tsmc_advanced_node_share_pct": 90,
+            "tsmc_total_foundry_share_pct": 62,
+            "samsung_foundry_share_pct": 11,
+            "source": "TrendForce 2024 Q4"
+          }
+        },
+        {
+          "id": "china_self_sufficiency",
+          "label": "中国芯片自给率",
+          "detail": "中国半导体自给率vs目标",
+          "metrics": {
+            "current_self_sufficiency_pct": 23,
+            "target_2025_pct": 70,
+            "gap": "巨大差距，且先进制程（≤14nm）自给率<5%",
+            "smic_most_advanced_node_nm": 7,
+            "smic_7nm_note": "SMIC为华为Mate 60 Pro生产Kirin 9000s芯片(2023年8月)，使用DUV多重曝光实现7nm级，良率和产能受限",
+            "source": "TechInsights (formerly IC Insights) 2024; CSIA (China Semiconductor Industry Association)"
+          }
+        },
+        {
+          "id": "ai_compute",
+          "label": "AI算力竞争",
+          "detail": "先进GPU(H100/B200)训练大模型→AI军备竞赛",
+          "status": "intensifying",
+          "evidence": "美国对华AI芯片出口管制(2022.10→2023.10升级→2024持续收紧)；华为昇腾910B替代但性能差距仍大"
+        },
+        {
+          "id": "military_electronics",
+          "label": "军事电子依赖",
+          "detail": "精确制导武器→先进芯片→台海风险=全球军事供应链风险",
+          "evidence": "现代武器系统高度依赖先进芯片(GAO Report on Defense Supply Chain 2023)；俄罗斯制裁后被迫从家电中拆解西方芯片(RUSI Silicon Lifeline report, Aug 2022)"
+        }
+      ],
+      "transmission_path": "euv_lithography → foundry_concentration → ai_compute + military_electronics → china_self_sufficiency (反馈循环：管制越严→自研越急)",
+      "breaking_points": [
+        "台海军事冲突 → TSMC停产 → 全球电子产业瘫痪(Rhodium Group 2024 estimate: GDP影响$0.6-2.5T/年，具体取决于冲突规模和持续时间)",
+        "ASML断供 → 中国先进制程追赶停滞",
+        "中国突破EUV → 打破垄断，地缘格局重塑"
+      ],
+      "historical_precedents": [
+        {
+          "event": "2020-2021全球芯片荒",
+          "lesson": "供应集中+需求激增→汽车/电子产能暴跌，暴露供应链脆弱性"
+        },
+        {
+          "event": "日美半导体战(1980s)",
+          "lesson": "美国通过《广场协议》+关税打压日本半导体，结果产能转移至台韩"
+        }
+      ],
+      "affected_countries": ["US", "CN", "JP", "KR", "XM"],
+      "current_phase": "confrontation",
+      "risk_level": "high"
+    },
+
+    {
+      "id": "credit_cycle",
+      "name": "信用扩张-崩塌链",
+      "name_en": "Credit Expansion-Collapse Cycle",
+      "description": "中央银行货币政策→信用扩张→资产泡沫→收紧→去杠杆→出清的周期性循环",
+      "nodes": [
+        {
+          "id": "monetary_easing",
+          "label": "货币宽松",
+          "detail": "央行降息+QE→信用创造成本降低",
+          "metrics": {
+            "fed_balance_sheet_peak_trillion": 8.9,
+            "fed_balance_sheet_current_trillion": 6.8,
+            "source": "Federal Reserve H.4.1 (2024)"
+          }
+        },
+        {
+          "id": "credit_expansion",
+          "label": "信用扩张",
+          "detail": "低利率→企业+家庭+政府加杠杆",
+          "metrics": {
+            "global_debt_to_gdp_pct": 330,
+            "global_debt_total_trillion": 313,
+            "source": "IIF Global Debt Monitor Q3 2024"
+          }
+        },
+        {
+          "id": "asset_bubble",
+          "label": "资产泡沫",
+          "detail": "过度信用→资产价格偏离基本面",
+          "evidence": "2021年美股总市值/GDP(巴菲特指标)达约200%(Federal Reserve Z.1 Financial Accounts / Wilshire 5000)，历史最高"
+        },
+        {
+          "id": "tightening",
+          "label": "货币收紧",
+          "detail": "通胀→央行加息→信用成本上升",
+          "metrics": {
+            "fed_rate_peak_2023_pct": 5.50,
+            "ecb_rate_peak_pct": 4.50,
+            "source": "Fed/ECB"
+          }
+        },
+        {
+          "id": "deleveraging",
+          "label": "去杠杆",
+          "detail": "高利率→债务压力→资产出售→价格下跌→进一步去杠杆(Fisher债务通缩)",
+          "status": "selective",
+          "evidence": "2023-2024: 商业地产(CRE)承压、区域银行危机(SVB/Signature/First Republic)，但整体去杠杆尚未全面展开"
+        },
+        {
+          "id": "clearing",
+          "label": "出清",
+          "detail": "不良资产清理、僵尸企业出清、信用体系重置",
+          "evidence": "历史周期长度不等：1990日本~15年+、2008美国~5年、1997亚洲~3年。参考Reinhart & Rogoff 'This Time Is Different' (2009) 和 Kindleberger 'Manias, Panics, and Crashes'"
+        }
+      ],
+      "transmission_path": "monetary_easing → credit_expansion → asset_bubble → tightening → deleveraging → clearing → monetary_easing (循环)",
+      "breaking_points": [
+        "日本模式：去杠杆不彻底→僵尸经济→失去的30年",
+        "雷曼模式：关键节点突然断裂→系统性传染→政府被迫接盘",
+        "新兴市场模式：美元加息→资本外逃→货币危机→主权债务违约"
+      ],
+      "key_metrics": {
+        "japan_debt_to_gdp_pct": 255,
+        "china_total_debt_to_gdp_pct": 295,
+        "us_debt_to_gdp_pct": 123,
+        "source": "BIS; IMF WEO; CBO"
+      },
+      "historical_precedents": [
+        {
+          "event": "2008全球金融危机",
+          "lesson": "次贷→MBS→CDS→雷曼→全球传染，暴露影子银行和衍生品杠杆风险"
+        },
+        {
+          "event": "1997亚洲金融危机",
+          "lesson": "美元加息+固定汇率+短期外债→泰铢崩溃→传染东南亚→IMF介入"
+        },
+        {
+          "event": "日本泡沫破裂(1990)",
+          "lesson": "广场协议→日元升值→宽松→地产股市泡沫→紧缩→30年通缩"
+        }
+      ],
+      "affected_countries": ["US", "CN", "JP", "XM", "GB", "KR", "TR", "AR", "BR"],
+      "current_phase": "late-tightening-to-selective-easing",
+      "risk_level": "high"
+    },
+
+    {
+      "id": "dedollarization",
+      "name": "去美元化链",
+      "name_en": "De-dollarization Chain",
+      "description": "美元武器化→制裁恐惧→替代结算系统→储备多元化→黄金回归的因果链",
+      "nodes": [
+        {
+          "id": "sanctions_weaponization",
+          "label": "制裁武器化",
+          "detail": "美国利用SWIFT/美元清算体系实施金融制裁",
+          "evidence": "2022年冻结俄罗斯$300B央行储备，为全球央行敲响警钟",
+          "status": "accelerating"
+        },
+        {
+          "id": "alternative_systems",
+          "label": "替代结算系统",
+          "detail": "CIPS(中国)、SPFS(俄罗斯)、mBridge(CBDC跨境)等替代SWIFT",
+          "metrics": {
+            "cips_participants": 1400,
+            "cips_participants_note": "含直接参与者~80+间接参与者~1300+(CIPS官网2024，精确数字有限公开)",
+            "cips_daily_volume_billion_rmb": "not_publicly_disclosed",
+            "cips_volume_note": "CIPS不定期公开交易量数据，此前报道的500B RMB/日为媒体估算，不可独立验证",
+            "swift_daily_volume_trillion_usd": 5,
+            "mbridge_status": "MVP launched June 2024; BIS stepped back to observer Oct 2024; continues under PBoC/BoT/CBUAE/HKMA/Saudi CB",
+            "source": "CIPS 2024; SWIFT; BIS Innovation Hub 2024"
+          }
+        },
+        {
+          "id": "bilateral_settlement",
+          "label": "双边本币结算",
+          "detail": "中国与40+国家签署货币互换协议，推动本币贸易结算",
+          "metrics": {
+            "china_swap_agreements_count": 40,
+            "china_swap_total_ceiling_billion_rmb": 4000,
+            "swap_note": "此为互换协议上限总额，非实际使用金额",
+            "source": "PBOC 2024"
+          }
+        },
+        {
+          "id": "gold_accumulation",
+          "label": "央行黄金增持",
+          "detail": "全球央行连续3年净购黄金超1000吨",
+          "metrics": {
+            "cb_gold_purchases_2022_tonnes": 1082,
+            "cb_gold_purchases_2023_tonnes": 1037,
+            "cb_gold_purchases_2024_tonnes": 1045,
+            "top_buyers": "中国、波兰、土耳其、印度、捷克",
+            "source": "World Gold Council"
+          }
+        },
+        {
+          "id": "reserve_diversification",
+          "label": "储备多元化",
+          "detail": "各国央行减持美债、增持黄金和非美元资产",
+          "metrics": {
+            "china_us_treasury_holdings_peak_billion": 1300,
+            "china_us_treasury_holdings_2024_billion": 760,
+            "japan_us_treasury_holdings_2024_billion": 1060,
+            "source": "US Treasury TIC Data 2024"
+          }
+        }
+      ],
+      "transmission_path": "sanctions_weaponization → alternative_systems + bilateral_settlement + gold_accumulation → reserve_diversification → USD share decline (slow)",
+      "breaking_points": [
+        "BRICS统一结算货币/机制实际落地 → 加速去美元化",
+        "美国制裁扩大到更多国家 → 更多国家转向替代系统",
+        "美国财政危机(债务/利息不可持续) → 美元信用动摇"
+      ],
+      "key_metrics": {
+        "brics_gdp_ppp_global_share_pct": 36,
+        "g7_gdp_ppp_global_share_pct": 30,
+        "rmb_swift_payment_share_pct": 4.7,
+        "usd_swift_payment_share_pct": 47,
+        "source": "IMF WEO PPP 2024; SWIFT RMB Tracker Jan 2025"
+      },
+      "assessment": "去美元化是真实趋势但进展缓慢。美元仍具网络效应优势（深度、流动性、法治）。10-20年维度内美元仍是主导储备货币，但份额将继续下降。",
+      "historical_precedents": [
+        {
+          "event": "英镑→美元转换(1920s-1950s)",
+          "lesson": "储备货币更替需要约30年，需要替代者具备深度资本市场+法治+军事安全保障"
+        }
+      ],
+      "affected_countries": ["US", "CN", "SA", "AE", "IN", "BR", "TR", "AR", "ZA"],
+      "current_phase": "early-acceleration",
+      "risk_level": "medium"
+    },
+
+    {
+      "id": "supply_chain_restructuring",
+      "name": "供应链重构链",
+      "name_en": "Supply Chain Restructuring",
+      "description": "中美脱钩→友岸外包→近岸外包→供应链冗余→全球化碎片化→结构性通胀",
+      "nodes": [
+        {
+          "id": "decoupling_trigger",
+          "label": "中美脱钩触发",
+          "detail": "2018贸易战→2020疫情→2022芯片法案→持续升级",
+          "evidence": "美国对华关税仍维持(大部分商品25%，USTR tariff schedule)；CHIPS and Science Act授权$280B(含$39B半导体制造直接补贴+$13.2B研发，Congress.gov H.R.4346)"
+        },
+        {
+          "id": "friendshoring",
+          "label": "友岸外包",
+          "detail": "供应链转移至地缘盟友：越南、印度、墨西哥",
+          "metrics": {
+            "vietnam_exports_to_us_growth_2019_2024_pct": 80,
+            "mexico_us_top_trade_partner_since": 2023,
+            "india_manufacturing_pmi_2024_avg": 56,
+            "source": "UN Comtrade; US Census Bureau"
+          }
+        },
+        {
+          "id": "cost_increase",
+          "label": "成本上升",
+          "detail": "供应链冗余+非最优产地→生产成本上升",
+          "evidence": "供应链重构可能使制造成本增加5-15%(McKinsey Global Institute 'Risk, resilience, and rebalancing in global value chains' 2020 — 咨询公司估算，非官方统计，范围较宽)"
+        },
+        {
+          "id": "structural_inflation",
+          "label": "结构性通胀",
+          "detail": "成本推动+劳动力短缺+能源转型→通胀中枢上移",
+          "assessment": "部分经济学家(Blanchard 2022, Summers)提出2%通胀目标在去全球化时代可能需要上调至3%。此为学术争论，非共识观点。"
+        }
+      ],
+      "transmission_path": "decoupling_trigger → friendshoring → cost_increase → structural_inflation",
+      "breaking_points": [
+        "台海冲突 → 全球供应链断裂(不仅芯片：台湾也是航运要道)",
+        "墨西哥/越南产能瓶颈 → 友岸外包放缓",
+        "中美达成新贸易协议 → 部分脱钩逆转"
+      ],
+      "historical_precedents": [
+        {
+          "event": "全球化黄金时代终结 (2016-)",
+          "lesson": "Brexit+Trump代表了民粹主义对全球化红利分配不均的反弹"
+        }
+      ],
+      "affected_countries": ["US", "CN", "XM", "JP", "KR", "IN", "BR"],
+      "current_phase": "active-restructuring",
+      "risk_level": "medium"
+    },
+
+    {
+      "id": "demographic_cliff",
+      "name": "人口悬崖链",
+      "name_en": "Demographic Cliff",
+      "description": "老龄化→劳动力短缺→养老金压力→财政不可持续→移民/自动化二选一",
+      "nodes": [
+        {
+          "id": "aging_population",
+          "label": "人口老龄化",
+          "detail": "主要经济体生育率低于更替水平(2.1)",
+          "metrics": {
+            "japan_fertility_rate": 1.20,
+            "south_korea_fertility_rate": 0.72,
+            "china_fertility_rate": 1.09,
+            "germany_fertility_rate": 1.36,
+            "us_fertility_rate": 1.62,
+            "source": "UN World Population Prospects 2024; national statistics"
+          }
+        },
+        {
+          "id": "labor_shortage",
+          "label": "劳动力短缺",
+          "detail": "劳动年龄人口(15-64)下降→企业招工难",
+          "evidence": "中国劳动年龄人口(15-59)约2013年达峰(NBS第六次人口普查+年度统计公报)，2023年约8.64亿(NBS统计年鉴2024)，近年每年减少约400-500万"
+        },
+        {
+          "id": "pension_crisis",
+          "label": "养老金危机",
+          "detail": "赡养比恶化(工作人口/退休人口)→养老金缺口扩大",
+          "metrics": {
+            "japan_dependency_ratio": 0.51,
+            "china_pension_fund_depletion_year": 2035,
+            "us_social_security_depletion_year": 2033,
+            "source": "OECD; 中国社保基金精算报告; US SSA Trustees Report"
+          }
+        },
+        {
+          "id": "fiscal_pressure",
+          "label": "财政压力",
+          "detail": "养老+医疗支出增长→挤压其他政府支出（含军事/基建）",
+          "evidence": "日本社会保障支出占一般会计预算约33%(日本財務省 FY2024予算概要)，且持续上升"
+        },
+        {
+          "id": "automation_or_immigration",
+          "label": "自动化vs移民",
+          "detail": "两种应对路径：(1)AI/机器人替代劳动力 (2)开放移民补充",
+          "assessment": "日韩倾向自动化，美加澳倾向移民+自动化双轨"
+        }
+      ],
+      "transmission_path": "aging_population → labor_shortage → pension_crisis → fiscal_pressure → automation_or_immigration",
+      "breaking_points": [
+        "韩国生育率<0.7 → 人口半世纪内减半 → 经济规模萎缩",
+        "中国养老金2035年耗尽 → 财政被迫兜底 → 债务加速",
+        "美国社保信托基金2033年耗尽 → 福利削减或加税"
+      ],
+      "historical_precedents": [
+        {
+          "event": "日本失去的30年(1990-2020)",
+          "lesson": "老龄化+通缩+零利率→经济停滞。人口不是唯一原因但是核心因素"
+        }
+      ],
+      "affected_countries": ["JP", "KR", "CN", "XM", "US", "CA", "AU"],
+      "current_phase": "accelerating",
+      "risk_level": "high"
+    },
+
+    {
+      "id": "debt_spiral",
+      "name": "债务螺旋链",
+      "name_en": "Sovereign Debt Spiral",
+      "description": "高债务→高利息→更多借债→信用评级下调→融资成本上升→资本外逃的自强化循环",
+      "nodes": [
+        {
+          "id": "debt_accumulation",
+          "label": "债务累积",
+          "detail": "财政赤字持续→公共债务/GDP攀升",
+          "metrics": {
+            "us_debt_to_gdp_pct": 123,
+            "us_total_debt_trillion": 36,
+            "japan_debt_to_gdp_pct": 255,
+            "china_augmented_debt_to_gdp_pct": 295,
+            "source": "CBO 2024; IMF WEO; BIS"
+          }
+        },
+        {
+          "id": "interest_burden",
+          "label": "利息负担",
+          "detail": "利率上升+存量债务→利息支出挤压财政空间",
+          "metrics": {
+            "us_net_interest_2024_billion": 882,
+            "us_interest_to_revenue_pct": 18,
+            "us_interest_exceeds_defense": true,
+            "source": "CRFB; CBO"
+          }
+        },
+        {
+          "id": "more_borrowing",
+          "label": "借更多债",
+          "detail": "利息要靠借新债支付→债务滚雪球",
+          "evidence": "CBO 2024 Long-Term Budget Outlook：2034年公共持有债务/GDP约122%，2054年约166%。30年内债务翻倍趋势不可持续"
+        },
+        {
+          "id": "credit_downgrade",
+          "label": "信用评级下调",
+          "detail": "债务不可持续→评级机构下调主权评级",
+          "evidence": "惠誉2023年8月将美国从AAA降至AA+；穆迪2025年11月将美国从Aaa降至Aa1(失去最后一家AAA评级)"
+        },
+        {
+          "id": "capital_flight",
+          "label": "资本外逃",
+          "detail": "信用下调→投资者撤离→货币贬值→外债负担加重(新兴市场)",
+          "evidence": "阿根廷2001年、土耳其2018年、斯里兰卡2022年"
+        }
+      ],
+      "transmission_path": "debt_accumulation → interest_burden → more_borrowing → credit_downgrade → capital_flight → (新兴市场)货币危机 或 (发达国家)财政紧缩",
+      "breaking_points": [
+        "美国利息支出超过社保 → 政治不可接受 → 被迫财政改革或货币化债务",
+        "新兴市场美元债务+美元升值 → 双杀(EM debt crises)",
+        "日本YCC退出→日债利率正常化→利息爆炸(255%GDP×利率)"
+      ],
+      "key_thresholds": {
+        "reinhart_rogoff_threshold_debt_to_gdp_pct": 90,
+        "interest_to_revenue_alarm_pct": 25,
+        "note": "90%阈值来自Reinhart-Rogoff 2010年论文'Growth in a Time of Debt'(有争议，Herndon 2013指出计算错误)。25%利息/收入线为市场经验共识，非任何机构官方阈值。两者均为参考值，非硬性红线。"
+      },
+      "historical_precedents": [
+        {
+          "event": "欧债危机(2010-2012)",
+          "lesson": "希腊/意大利/西班牙：债务→利差飙升→紧缩→经济收缩→债务更高(紧缩悖论)"
+        },
+        {
+          "event": "阿根廷主权违约(2001, 2014, 2020)",
+          "lesson": "周期性违约国：外债+固定汇率+资本管制→反复危机"
+        }
+      ],
+      "affected_countries": ["US", "JP", "CN", "XM", "TR", "AR", "BR", "ZA"],
+      "current_phase": "accumulation",
+      "risk_level": "high"
+    }
+  ]
+}

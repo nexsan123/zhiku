@@ -1,0 +1,113 @@
+/* OilEnergyPanel — crude oil and energy prices */
+
+/* ---- Three-state UI ---- */
+.oil-panel__state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) 0;
+  color: var(--color-text-disabled);
+}
+
+.oil-panel__state--error {
+  color: var(--color-semantic-error);
+}
+
+.oil-panel__state-text {
+  font-size: var(--font-size-xs);
+  text-align: center;
+}
+
+.oil-panel__retry-btn {
+  padding: var(--spacing-1) var(--spacing-3);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  color: var(--color-semantic-error);
+  background: var(--color-semantic-error-subtle);
+  border: 1px solid var(--color-semantic-error);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: opacity var(--duration-fast) var(--easing-default);
+}
+
+.oil-panel__retry-btn:hover {
+  opacity: 0.8;
+}
+
+@keyframes oil-panel-spin {
+  to { transform: rotate(360deg); }
+}
+
+.oil-panel__spinner {
+  animation: oil-panel-spin 1.2s linear infinite;
+  color: var(--color-accent-primary);
+}
+
+/* ---- Price list ---- */
+.oil-panel {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.oil-panel__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-2) 0;
+}
+
+.oil-panel__row--divider {
+  border-bottom: 1px solid var(--glass-border-subtle);
+}
+
+.oil-panel__row:hover {
+  background: var(--color-bg-hover);
+  transition: background-color var(--duration-fast) var(--easing-default);
+  border-radius: var(--radius-sm);
+}
+
+.oil-panel__left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.oil-panel__name {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.oil-panel__symbol {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--color-text-disabled);
+}
+
+.oil-panel__right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.oil-panel__price {
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.oil-panel__trend {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.oil-panel__trend--up {
+  color: var(--color-semantic-success);
+}
+
+.oil-panel__trend--down {
+  color: var(--color-semantic-error);
+}

@@ -1,0 +1,138 @@
+/* FredPanel — FRED macroeconomic indicators */
+
+/* ---- Three-state UI ---- */
+.fred__state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) 0;
+  color: var(--color-text-disabled);
+}
+
+.fred__state--error {
+  color: var(--color-semantic-error);
+}
+
+.fred__state-text {
+  font-size: var(--font-size-xs);
+  text-align: center;
+}
+
+.fred__retry-btn {
+  padding: var(--spacing-1) var(--spacing-3);
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  color: var(--color-semantic-error);
+  background: var(--color-semantic-error-subtle);
+  border: 1px solid var(--color-semantic-error);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: opacity var(--duration-fast) var(--easing-default);
+}
+
+.fred__retry-btn:hover {
+  opacity: 0.8;
+}
+
+@keyframes fred-spin {
+  to { transform: rotate(360deg); }
+}
+
+.fred__spinner {
+  animation: fred-spin 1.2s linear infinite;
+  color: var(--color-accent-primary);
+}
+
+/* ---- Main container ---- */
+.fred {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+/* ---- Indicator list ---- */
+.fred__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.fred__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-1) 0;
+  border-bottom: 1px solid var(--glass-border-subtle);
+}
+
+.fred__row:last-child {
+  border-bottom: none;
+}
+
+.fred__row:hover {
+  background: var(--color-bg-hover);
+  transition: background-color var(--duration-fast) var(--easing-default);
+  border-radius: var(--radius-sm);
+}
+
+/* ---- Left: name + period ---- */
+.fred__left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fred__name {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.fred__period {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--color-text-disabled);
+}
+
+/* ---- Right: value ---- */
+.fred__right {
+  display: flex;
+  align-items: center;
+}
+
+.fred__value {
+  font-size: var(--font-size-sm);
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-semibold);
+}
+
+.fred__value--normal {
+  color: var(--color-semantic-success);
+}
+
+.fred__value--warning {
+  color: var(--color-semantic-warning);
+}
+
+.fred__value--danger {
+  color: var(--color-semantic-error);
+}
+
+.fred__value--na {
+  color: var(--color-text-disabled);
+}
+
+/* ---- Footer ---- */
+.fred__footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--spacing-1);
+  border-top: 1px solid var(--glass-border-subtle);
+}
+
+.fred__footer-note {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--color-text-disabled);
+}

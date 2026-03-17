@@ -1,0 +1,175 @@
+/* StatusBar — bottom API status light bar */
+
+.status-bar {
+  height: var(--status-bar-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--spacing-3);
+  background: var(--glass-bg-structural);
+  backdrop-filter: blur(var(--blur-status-bar));
+  -webkit-backdrop-filter: blur(var(--blur-status-bar));
+  border-top: 1px solid var(--glass-border-subtle);
+  z-index: var(--z-status-bar);
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+/* Left: API service indicators */
+.status-bar__indicators {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  overflow: visible;
+}
+
+/* Status dot item (dot + label) — position:relative for tooltip anchor */
+.status-dot-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  position: relative;
+  cursor: default;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+/* Status colors */
+.status-dot--online {
+  background: var(--color-semantic-success);
+  box-shadow: 0 0 6px var(--glass-glow-success);
+}
+
+.status-dot--checking {
+  background: var(--color-semantic-warning);
+  animation: status-pulse 1.5s ease-in-out infinite;
+}
+
+.status-dot--offline {
+  background: var(--color-semantic-error);
+  box-shadow: 0 0 6px var(--glass-glow-error);
+}
+
+.status-dot--idle {
+  background: var(--color-text-disabled);
+}
+
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.status-dot-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+/* Tooltip — appears above the dot on hover */
+.status-dot-tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--glass-bg-elevated);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-2) var(--spacing-3);
+  min-width: 160px;
+  z-index: var(--z-tooltip);
+  box-shadow: var(--shadow-lg);
+  pointer-events: none;
+}
+
+.status-dot-tooltip__service {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-1);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+}
+
+.status-dot-tooltip__status,
+.status-dot-tooltip__row {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+}
+
+.status-dot-tooltip__error {
+  font-size: var(--font-size-xs);
+  color: var(--color-semantic-error);
+  font-family: var(--font-mono);
+  margin-top: var(--spacing-1);
+}
+
+/* Per-status text color in tooltip */
+.tooltip-status--online { color: var(--color-semantic-success); }
+.tooltip-status--checking { color: var(--color-semantic-warning); }
+.tooltip-status--offline { color: var(--color-semantic-error); }
+.tooltip-status--idle { color: var(--color-text-disabled); }
+
+/* Per-freshness text color in tooltip */
+.tooltip-freshness--live { color: var(--color-semantic-success); }
+.tooltip-freshness--recent { color: var(--color-semantic-success); }
+.tooltip-freshness--aging { color: var(--color-semantic-warning); }
+.tooltip-freshness--stale { color: var(--color-semantic-warning); }
+.tooltip-freshness--expired { color: var(--color-semantic-error); }
+.tooltip-freshness--unknown { color: var(--color-text-disabled); }
+
+/* AI models indicator group */
+.status-bar__ai-models {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding-left: var(--spacing-3);
+  border-left: 1px solid var(--glass-border-subtle);
+}
+
+.status-bar__ai-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-accent-primary, #00C2A8);
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.05em;
+}
+
+/* Right: ready status + separator + clock */
+.status-bar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  flex-shrink: 0;
+}
+
+.status-bar__ready {
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-medium);
+}
+
+.status-bar__ready--ok {
+  color: var(--color-semantic-success);
+}
+
+.status-bar__ready--error {
+  color: var(--color-semantic-error);
+}
+
+.status-bar__separator {
+  color: var(--color-text-disabled);
+  font-size: var(--font-size-xs);
+}
+
+.status-bar__time {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+}

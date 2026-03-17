@@ -5,7 +5,12 @@
 
 ## 项目核心
 
-**全球情报中枢**：AI 驱动的国际金融信息采集、分析与推演桌面平台，为 QuantTerminal 量化项目提供高质量情报输入。
+**全球金融情报中枢**：借鉴 World Monitor (koala73/worldmonitor) 的 UI 设计与产品模式，用 Tauri v2 + React 19 + Rust 重写金融板块。定位为情报辅助层，内置金融周期推理引擎，供应 QuantTerminal 量化策略调节因子。
+
+## 当前圣旨
+
+**edict-005-fiscal-balance-source-reform** (2026-03-11)，详见 `.team-logs/edict-005-fiscal-balance-source-reform.md`
+> 父级：edict-002 (仍有效) → edict-003 (AI引擎) → edict-004 (世界局势推理) → edict-005 (国家资产负债表+源改革)
 
 ## 环境声明
 
@@ -18,13 +23,55 @@ ai_tool: Claude Code (Agent Teams)
 package_manager: npm
 framework: Tauri v2
 project_type: desktop-app
-map_library: TBD (Leaflet / MapBox / D3 — 待设计阶段决定)
-ai_engine: Claude API + Local Model (Ollama)
-data_sources: NewsAPI + GDELT + Official RSS + AI Scraping
-quant_integration: REST API / WebSocket → F:\QuantTerminal
+map_library: deck.gl + MapLibre GL
+ai_engine: Groq (批量) → Ollama (兜底) + DeepSeek (深度推理) → Claude (交叉验证)
+data_sources: RSS (55+中文) + FRED + Yahoo Finance + EIA + BIS + WTO + CoinGecko + mempool + alternative.me
+quant_integration: REST localhost:9601 + WebSocket ws://localhost:9600 → F:\QuantTerminal
 ```
 
 **AI 必须遵守此环境声明。** 生成的代码、路径、命令必须兼容上述环境。
+
+## UI 架构（仿 World Monitor）
+
+```
+TitleBar:   智库 | FINANCE | Cmd+K | SOURCES | INTEL | 通知 | 窗口控制
+Body:       左栏(320px,可收起) + 中心地图(flex,deck.gl) + 右栏(320px,可收起)
+StatusBar:  API状态灯(Ollama/Groq/Claude/FRED/Yahoo/EIA...) | Ready | 时间
+```
+
+- 左右栏独立滚动，地图固定
+- 面板毛玻璃背景 (glassmorphism-spec.md)，可折叠展开
+- 暗色主题（已有 design/theme.ts + variables.css）
+
+### 面板清单 (16个)
+
+左栏: News Feed / AI Brief / FRED Indicators / BIS Rates / WTO Trade / Supply Chain
+右栏: Market Radar / Indices / Forex / Oil & Energy / Crypto / BTC ETF / Fear & Greed / Gulf FDI
+浮层: AI Deduction / Cmd+K Search
+
+## 数据源分层
+
+| 层级 | 数据源 | API Key |
+|------|--------|---------|
+| L1 必须 | FRED, RSS (55+中文), Yahoo Finance | FRED 需要 |
+| L2 重要 | EIA, BIS, alternative.me (F&G) | EIA 需要 |
+| L3 增强 | WTO, CoinGecko, mempool.space, 静态策划数据 | 不需要 |
+
+## AI 引擎（丙方案 → 丁方案）
+
+```
+批量（高频）: Groq (Llama 3.1 8B, 14400 req/day 免费) → Ollama 14B 兜底
+深度（低频）: DeepSeek (128K上下文, 低成本, 中文强) → Claude 兜底/交叉验证
+```
+
+> **DeepSeek 为主的理由**：128K 上下文可注入知识库，推理能力强，成本低，
+> 中文训练数据与西方 RSS 源形成天然偏见对冲。Claude 保留为交叉验证角色。
+
+### 金融周期推理引擎
+
+Layer 1 原始数据 → Layer 2 Rust指标计算(6类) → Layer 3 DeepSeek推理 → Layer 4 结构化JSON → QuantTerminal
+
+推理频率: 周期定位日频 / 转折预警6h / 情绪快照1h / P0事件即时
 
 ## 项目专属铁律
 
@@ -32,19 +79,11 @@ quant_integration: REST API / WebSocket → F:\QuantTerminal
 |---|------|------|
 | ZK-01 | AI 分析必须可追溯 | 每条 AI 分析/总结必须关联原始新闻源 URL |
 | ZK-02 | 数据质量优先 | 向 QuantTerminal 推送的数据必须经过验证，禁止推送垃圾数据 |
-| ZK-03 | 双引擎可切换 | Claude API 和本地模型必须可切换，不锁死单一供应商 |
-| ZK-04 | 纵切优先 | 一国打通全链路后再扩展，禁止铺太宽做半成品 |
+| ZK-03 | 三引擎可切换 | Ollama / Groq / Claude 必须可切换，不锁死单一供应商 |
+| ZK-04 | 纵切优先 | 金融板块打通全链路后再扩展，禁止铺太宽做半成品 |
 | ZK-05 | 数据去重 | 新闻采集必须有去重和时效性校验机制 |
-
-## MVP 范围（甲案：纵切法）
-
-```
-第一刀：美国金融数据全链路
-  采集（Fed RSS + NewsAPI）→ SQLite 存储 → AI 总结/推演 → 地图上点亮美国 → API 推送 QuantTerminal
-
-第二刀：扩展到 G7（待第一刀完成后规划）
-第三刀：扩展到全球（待第二刀完成后规划）
-```
+| ZK-06 | API 状态可视 | 所有外部 API/AI 引擎状态必须实时显示状态灯 |
+| ZK-07 | 推理必有链 | AI 推理输出必须包含 confidence + reasoning_chain + source_urls |
 
 ## 团队成员
 
@@ -60,7 +99,29 @@ quant_integration: REST API / WebSocket → F:\QuantTerminal
 
 ## 外部依赖
 
-- **QuantTerminal**：`F:\QuantTerminal`，通过本地 API 对接
-- **Claude API**：需要 API Key（人工干预点 H-4）
-- **NewsAPI**：需要 API Key（人工干预点 H-4）
-- **本地模型**：Ollama（需用户本地安装）
+- **QuantTerminal**：`F:\QuantTerminal`，REST :9601 + WS :9600
+- **Claude API**：需要 API Key（加密存储本地）
+- **FRED API**：需要 API Key（免费注册）
+- **EIA API**：需要 API Key（免费注册）
+- **Groq API**：需要 API Key（免费注册，14400 req/day）
+- **Ollama**：需用户本地安装（免费）
+- **Yahoo Finance / BIS / WTO / CoinGecko / mempool / alternative.me**：免费，无需 Key
+
+## 阶段路线
+
+| 阶段 | 内容 | 状态 | 实况（2026-03-13 审计） |
+|------|------|------|------------------------|
+| Phase 1 | 项目骨架 | ✅ 完成 | Tauri v2 + React 19 + SQLite 6 表 |
+| Phase 2 | 数据引擎（RSS+FRED+Yahoo+SQLite+SmartPollLoop） | ✅ 完成 | 16 源全通：RSS(55+)/Yahoo/FRED/EIA/BIS/IMF/CoinGecko/F&G/mempool；WTO idle(需 Key) |
+| Phase 3 | AI 引擎（统一路由+周期推理+情景推演） | ✅ 完成 | ai_router 统一调度 → openai_compat(Groq/Ollama/Deepseek) + claude_client；summarizer/cycle_reasoner/deep_analyzer/scenario_engine 全链路验证 |
+| Phase 4 | 前端面板（三栏布局+16面板+状态灯） | ✅ 完成 | 16 面板全部接真数据 + 实时事件刷新；StatusBar 14 服务状态灯 |
+| Phase 5 | 地图+集成（deck.gl+图层+QuantTerminal API） | ✅ 完成 | deck.gl 3 层(信贷周期/标签/双边弧线)；QT REST :9601(9端点) + WS :9600(3事件) + market_context.db(WAL共享) 实跑验证通过 |
+
+### 剩余运维项
+
+| 项目 | 状态 | 说明 |
+|------|------|------|
+| Claude API Key | 未配置 | 深度推理链路不可用，仅 Groq 批量在跑 |
+| 中文 RSS 源 (21个) | 待自建 RSSHub | 需云 VPS 或本地 Docker，皇上暂缓 |
+| WTO API | idle | 需注册 API Key |
+| policy_calendar.json | 静态 | 2026 年 12 事件，日后需更新机制 |
