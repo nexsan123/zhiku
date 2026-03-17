@@ -195,6 +195,44 @@ pub struct ReasoningStep {
     pub confidence: f64,
 }
 
+/// Per-layer brief summary (5 items, one per layer).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LayerSummary {
+    pub layer: String,
+    pub summary: String,
+    /// improving | stable | deteriorating
+    pub trend: String,
+    pub key_change: String,
+}
+
+/// Forward-looking predictions (30d + 90d).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ForwardLook {
+    pub outlook_30d: String,
+    pub outlook_90d: String,
+    pub key_catalysts: Vec<String>,
+    pub baseline_probability: f64,
+    pub baseline_scenario: String,
+    pub upside_scenario: String,
+    pub downside_scenario: String,
+}
+
+impl Default for ForwardLook {
+    fn default() -> Self {
+        Self {
+            outlook_30d: String::new(),
+            outlook_90d: String::new(),
+            key_catalysts: Vec::new(),
+            baseline_probability: 0.5,
+            baseline_scenario: String::new(),
+            upside_scenario: String::new(),
+            downside_scenario: String::new(),
+        }
+    }
+}
+
 /// Five-layer reasoning output — the enhanced replacement for CycleReasoning.
 /// Persisted in `ai_analysis` with analysis_type = "five_layer_reasoning".
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -227,5 +265,11 @@ pub struct FiveLayerReasoning {
     pub confidence_grade: String,
     /// Narrative summary (2-3 paragraphs for human consumption).
     pub narrative: String,
+    /// Per-layer brief summaries.
+    #[serde(default)]
+    pub layer_summaries: Vec<LayerSummary>,
+    /// Forward-looking predictions.
+    #[serde(default)]
+    pub forward_look: ForwardLook,
     pub timestamp: String,
 }

@@ -316,7 +316,7 @@ fn parse_ai_json(response: &str) -> Result<NewsSummary, AppError> {
 
     Err(AppError::Parse(format!(
         "Failed to parse AI response as NewsSummary: {}",
-        &trimmed[..trimmed.len().min(200)]
+        &trimmed.chars().take(200).collect::<String>()
     )))
 }
 

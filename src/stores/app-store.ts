@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { ApiServiceStatus, PanelId, PanelState } from '@contracts/app-types';
 import { MOCK_API_STATUS } from '@utils/mocks/api-status';
 
-export type SituationTab = 'cycle' | 'credit' | 'intel' | 'gameMap';
+export type SituationTab = 'cycle' | 'credit' | 'intel' | 'gameMap' | 'forward';
 
 // 所有面板 ID（左栏 7 + 右栏 8）
 const ALL_PANEL_IDS: PanelId[] = [

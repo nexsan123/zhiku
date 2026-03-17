@@ -44,7 +44,8 @@
     "cycleTab": "Cycle",
     "creditTab": "Credit",
     "intelTab": "Intel",
-    "gameMapTab": "GameMap"
+    "gameMapTab": "GameMap",
+    "forwardTab": "Forward"
   },
   "newsFeed": {
     "aiOverview": "AI Overview",
@@ -468,6 +469,42 @@
     "unemployment": "Unemp",
     "eventsUnit": "events",
     "articlesUnit": "articles",
-    "confidenceLabel": "Confidence"
+    "confidenceLabel": "Confidence",
+    "globalPhase": "Global Phase",
+    "dollarTide": "Dollar Tide",
+    "grade": "Grade",
+    "reasoningSteps": "Five-Layer Reasoning",
+    "narrative": "Intelligence Brief",
+    "riskAlerts": "Risk Alerts",
+    "step": "Layer {{n}}",
+    "evidence": "Evidence",
+    "physical": "Physical",
+    "creditLayer": "Credit",
+    "dollarLayer": "Dollar Tide",
+    "geopoliticalLayer": "Geopolitical",
+    "sentimentLayer": "Sentiment"
+  },
+  "forward": {
+    "layerOverview": "Five-Layer Overview",
+    "forwardLook": "Forward Look",
+    "outlook30d": "30D Outlook",
+    "outlook90d": "90D Outlook",
+    "catalysts": "Key Catalysts",
+    "baseline": "Baseline",
+    "upside": "Upside",
+    "downside": "Downside",
+    "probability": "Probability",
+    "physical": "Physical",
+    "credit": "Credit",
+    "dollar": "Dollar Tide",
+    "geopolitical": "Geopolitical",
+    "sentiment": "Sentiment",
+    "improving": "Improving",
+    "stable": "Stable",
+    "deteriorating": "Deteriorating",
+    "noData": "No forward data available",
+    "loading": "Loading...",
+    "failed": "Failed to load forward data",
+    "lastUpdate": "Last Update"
   }
 }

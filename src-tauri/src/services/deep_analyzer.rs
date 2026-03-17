@@ -279,7 +279,7 @@ fn parse_deep_analysis(
         } else {
             return Err(AppError::Parse(format!(
                 "Failed to extract JSON from deep analysis response: {}",
-                &trimmed[..trimmed.len().min(200)]
+                &trimmed.chars().take(200).collect::<String>()
             )));
         }
     };

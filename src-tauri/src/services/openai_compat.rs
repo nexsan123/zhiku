@@ -158,7 +158,7 @@ pub async fn chat_completion(
             "{} API returned status {}: {}",
             provider,
             status,
-            &body[..body.len().min(200)]
+            &body.chars().take(200).collect::<String>()
         )));
     }
 

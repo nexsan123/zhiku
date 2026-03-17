@@ -4,7 +4,8 @@ use uuid::Uuid;
 
 use crate::errors::AppError;
 use crate::models::ai::{
-    CycleIndicators, CycleReasoning, FiveLayerReasoning, ReasoningStep, TurningSignal,
+    CycleIndicators, CycleReasoning, FiveLayerReasoning, ForwardLook, LayerSummary,
+    ReasoningStep, TurningSignal,
 };
 use crate::models::credit::{confidence_grade, GlobalCycleOverview};
 use crate::services::ai_config::ResolvedAiConfig;
@@ -191,7 +192,7 @@ fn parse_reasoning_response(response: &str) -> Result<CycleReasoning, AppError> 
 
     Err(AppError::Parse(format!(
         "Failed to parse cycle reasoning: {}",
-        &trimmed[..trimmed.len().min(200)]
+        &trimmed.chars().take(200).collect::<String>()
     )))
 }
 
@@ -241,6 +242,22 @@ const FIVE_LAYER_SYSTEM_PROMPT: &str = r#"你是一位独立的全球金融情�
   "sectorRecommendations": ["defensive", "cyclical", "tech"],
   "tailRisks": ["具体风险描述：触发条件 → 传导路径 → 影响量级"],
   "narrative": "2-3 段专业情报简报风格的叙述，将五层数据串联成完整逻辑链。重点分析各层之间的传导关系和矛盾信号。",
+  "layerSummaries": [
+    {"layer": "physical", "summary": "能源价格走势分析...", "trend": "stable", "keyChange": "与上期相比的关键变化"},
+    {"layer": "credit", "summary": "...", "trend": "...", "keyChange": "..."},
+    {"layer": "dollar", "summary": "...", "trend": "...", "keyChange": "..."},
+    {"layer": "geopolitical", "summary": "...", "trend": "...", "keyChange": "..."},
+    {"layer": "sentiment", "summary": "...", "trend": "...", "keyChange": "..."}
+  ],
+  "forwardLook": {
+    "outlook30d": "未来30天展望...",
+    "outlook90d": "未来90天展望...",
+    "keyCatalysts": ["即将到来的关键事件1", "关键事件2"],
+    "baselineProbability": 0.6,
+    "baselineScenario": "基线情景描述",
+    "upsideScenario": "乐观情景描述",
+    "downsideScenario": "悲观情景描述"
+  },
   "confidence": 0.0 到 1.0,
   "timestamp": "ISO 8601 timestamp"
 }
@@ -254,6 +271,8 @@ const FIVE_LAYER_SYSTEM_PROMPT: &str = r#"你是一位独立的全球金融情�
 - turningSignals: 0-5 个转折信号
 - sectorRecommendations: 2-5 个行业
 - tailRisks: 1-3 个，必须包含触发条件和传导路径
+- layerSummaries: 必须恰好 5 项，与 reasoningSteps 一一对应。summary 1-2 句话概括该层当前状态，trend 必须是 improving/stable/deteriorating 之一，keyChange 简述与上期的关键变化
+- forwardLook: outlook30d 和 outlook90d 各 2-3 句话，keyCatalysts 列出未来 30 天内最重要的 2-5 个催化事件（数据发布、政策会议、地缘节点），baselineProbability 0.3-0.7，三情景必须互斥且覆盖主要可能性
 - 只输出 JSON，不输出任何其他内容"#;
 
 /// Input data for five-layer reasoning.
@@ -559,7 +578,7 @@ fn parse_five_layer_response(
         } else {
             return Err(AppError::Parse(format!(
                 "Failed to extract JSON from five-layer response: {}",
-                &trimmed[..trimmed.len().min(200)]
+                &trimmed.chars().take(200).collect::<String>()
             )));
         }
     };
@@ -611,6 +630,71 @@ fn parse_five_layer_response(
         .map(|a| a.iter().filter_map(|s| s.as_str().map(|s| s.to_string())).collect())
         .unwrap_or_default();
 
+    // Parse layer summaries
+    let layer_summaries: Vec<LayerSummary> = parsed
+        .get("layerSummaries")
+        .or_else(|| parsed.get("layer_summaries"))
+        .and_then(|v| v.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|s| {
+                    Some(LayerSummary {
+                        layer: s.get("layer").and_then(|v| v.as_str()).unwrap_or("unknown").to_string(),
+                        summary: s.get("summary").and_then(|v| v.as_str()).unwrap_or("").to_string(),
+                        trend: s.get("trend").and_then(|v| v.as_str()).unwrap_or("stable").to_string(),
+                        key_change: s.get("keyChange")
+                            .or_else(|| s.get("key_change"))
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("")
+                            .to_string(),
+                    })
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+
+    // Parse forward look
+    let forward_look = parsed
+        .get("forwardLook")
+        .or_else(|| parsed.get("forward_look"))
+        .map(|fl| ForwardLook {
+            outlook_30d: fl.get("outlook30d")
+                .or_else(|| fl.get("outlook_30d"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string(),
+            outlook_90d: fl.get("outlook90d")
+                .or_else(|| fl.get("outlook_90d"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string(),
+            key_catalysts: fl.get("keyCatalysts")
+                .or_else(|| fl.get("key_catalysts"))
+                .and_then(|v| v.as_array())
+                .map(|a| a.iter().filter_map(|s| s.as_str().map(|s| s.to_string())).collect())
+                .unwrap_or_default(),
+            baseline_probability: fl.get("baselineProbability")
+                .or_else(|| fl.get("baseline_probability"))
+                .and_then(|v| v.as_f64())
+                .unwrap_or(0.5),
+            baseline_scenario: fl.get("baselineScenario")
+                .or_else(|| fl.get("baseline_scenario"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string(),
+            upside_scenario: fl.get("upsideScenario")
+                .or_else(|| fl.get("upside_scenario"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string(),
+            downside_scenario: fl.get("downsideScenario")
+                .or_else(|| fl.get("downside_scenario"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string(),
+        })
+        .unwrap_or_default();
+
     let risk_alerts: Vec<String> = overview
         .risk_alerts
         .iter()
@@ -649,6 +733,8 @@ fn parse_five_layer_response(
             .and_then(|v| v.as_str())
             .unwrap_or("Narrative unavailable")
             .to_string(),
+        layer_summaries,
+        forward_look,
         timestamp: Utc::now().to_rfc3339(),
     })
 }
@@ -675,6 +761,16 @@ fn default_five_layer(overview: &GlobalCycleOverview, reason: &str) -> FiveLayer
         confidence: 0.0,
         confidence_grade: "speculative".to_string(),
         narrative: reason.to_string(),
+        layer_summaries: Vec::new(),
+        forward_look: ForwardLook {
+            outlook_30d: String::new(),
+            outlook_90d: String::new(),
+            key_catalysts: Vec::new(),
+            baseline_probability: 0.5,
+            baseline_scenario: String::new(),
+            upside_scenario: String::new(),
+            downside_scenario: String::new(),
+        },
         timestamp: Utc::now().to_rfc3339(),
     }
 }

@@ -1002,6 +1002,23 @@ export interface ReasoningStep {
   confidence: number;
 }
 
+export interface LayerSummary {
+  layer: string;
+  summary: string;
+  trend: string;  // improving | stable | deteriorating
+  keyChange: string;
+}
+
+export interface ForwardLook {
+  outlook30d: string;
+  outlook90d: string;
+  keyCatalysts: string[];
+  baselineProbability: number;
+  baselineScenario: string;
+  upsideScenario: string;
+  downsideScenario: string;
+}
+
 export interface FiveLayerReasoning {
   globalCyclePhase: string;
   globalCyclePhaseZh: string;
@@ -1019,6 +1036,8 @@ export interface FiveLayerReasoning {
   confidenceGrade: string;
   narrative: string;
   timestamp: string;
+  layerSummaries: LayerSummary[];
+  forwardLook: ForwardLook;
 }
 
 export async function getFiveLayerReasoning(): Promise<FiveLayerReasoning | null> {

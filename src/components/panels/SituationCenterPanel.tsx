@@ -5,6 +5,7 @@ import { CycleReasoningPanel } from './CycleReasoningPanel';
 import { CreditCyclePanel } from './CreditCyclePanel';
 import { IntelBriefPanel } from './IntelBriefPanel';
 import { GameMapPanel } from './GameMapPanel';
+import { ForwardLookPanel } from './ForwardLookPanel';
 import './SituationCenterPanel.css';
 
 export function SituationCenterPanel() {
@@ -17,6 +18,7 @@ export function SituationCenterPanel() {
     { id: 'credit', label: t('situation.creditTab') },
     { id: 'intel', label: t('situation.intelTab') },
     { id: 'gameMap', label: t('situation.gameMapTab') },
+    { id: 'forward', label: t('situation.forwardTab') },
   ];
 
   return (
@@ -45,6 +47,7 @@ export function SituationCenterPanel() {
         {activeTab === 'credit' && <CreditCyclePanel />}
         {activeTab === 'intel' && <IntelBriefPanel />}
         {activeTab === 'gameMap' && <GameMapPanel />}
+        {activeTab === 'forward' && <ForwardLookPanel />}
       </div>
     </div>
   );

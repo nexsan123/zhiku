@@ -114,14 +114,14 @@ async fn fetch_single_series(
         AppError::Network(format!("EIA response read failed for {}: {}", series_facet, e))
     })?;
 
-    log::debug!("EIA [{}] raw response: {}", series_facet, &body[..body.len().min(500)]);
+    log::debug!("EIA [{}] raw response: {}", series_facet, &body.chars().take(500).collect::<String>());
 
     let eia_data: EiaResponse = serde_json::from_str(&body).map_err(|e| {
         AppError::Parse(format!(
             "EIA parse error for {}: {} | body preview: {}",
             series_facet,
             e,
-            &body[..body.len().min(300)]
+            &body.chars().take(300).collect::<String>()
         ))
     })?;
 

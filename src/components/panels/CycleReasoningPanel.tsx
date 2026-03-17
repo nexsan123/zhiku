@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw } from 'lucide-react';
-import { getCycleIndicators, getCycleReasoning, listenCycleUpdated } from '@services/tauri-bridge';
-import type { CycleIndicators, CycleReasoning } from '@services/tauri-bridge';
+import { getCycleIndicators, getFiveLayerReasoning, listenFiveLayerUpdated } from '@services/tauri-bridge';
+import type { CycleIndicators, FiveLayerReasoning } from '@services/tauri-bridge';
 import './CycleReasoningPanel.css';
 
 type LoadState = 'loading' | 'loaded' | 'error';
@@ -77,16 +77,28 @@ function confidenceClass(confidence: number): string {
   return 'cycle-confidence--low';
 }
 
+/** Map reasoning step layer string to i18n key. */
+function layerI18nKey(layer: string): string {
+  const map: Record<string, string> = {
+    physical:     'cycle.physical',
+    credit:       'cycle.creditLayer',
+    dollar:       'cycle.dollarLayer',
+    geopolitical: 'cycle.geopoliticalLayer',
+    sentiment:    'cycle.sentimentLayer',
+  };
+  return map[layer] ?? '';
+}
+
 export function CycleReasoningPanel() {
   const { t } = useTranslation();
   const [indicators, setIndicators] = useState<CycleIndicators | null>(null);
-  const [reasoning, setReasoning] = useState<CycleReasoning | null>(null);
+  const [reasoning, setReasoning] = useState<FiveLayerReasoning | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
 
   const load = useCallback(async () => {
     setLoadState('loading');
     try {
-      const [ind, rea] = await Promise.all([getCycleIndicators(), getCycleReasoning()]);
+      const [ind, rea] = await Promise.all([getCycleIndicators(), getFiveLayerReasoning()]);
       setIndicators(ind);
       setReasoning(rea);
       setLoadState('loaded');
@@ -98,7 +110,7 @@ export function CycleReasoningPanel() {
   useEffect(() => {
     void load();
     let cleanup: (() => void) | null = null;
-    const unlistenPromise = listenCycleUpdated(() => void load());
+    const unlistenPromise = listenFiveLayerUpdated((r) => { setReasoning(r); });
     void unlistenPromise.then((fn) => { cleanup = fn; });
     return () => {
       if (cleanup) { cleanup(); }
@@ -158,6 +170,22 @@ export function CycleReasoningPanel() {
             {confidencePct}%
           </span>
         </div>
+      </div>
+
+      {/* ---- Context subheader: global phase + dollar tide + grade ---- */}
+      <div className="cycle-context">
+        <span className="cycle-context__item">
+          <span className="cycle-context__label">{t('cycle.globalPhase')}</span>
+          <span className="cycle-context__value">{reasoning.globalCyclePhaseZh}</span>
+        </span>
+        <span className="cycle-context__item">
+          <span className="cycle-context__label">{t('cycle.dollarTide')}</span>
+          <span className="cycle-context__value">{reasoning.dollarTideLabel}</span>
+        </span>
+        <span className="cycle-context__item">
+          <span className="cycle-context__label">{t('cycle.grade')}</span>
+          <span className="cycle-context__value">{reasoning.confidenceGrade}</span>
+        </span>
       </div>
 
       {/* ---- Confidence bar ---- */}
@@ -253,7 +281,7 @@ export function CycleReasoningPanel() {
       </div>
 
       {/* ---- Turning Signals ---- */}
-      {reasoning.turningSignals.length > 0 && (
+      {(reasoning.turningSignals ?? []).length > 0 && (
         <div className="cycle-section">
           <h4 className="cycle-section__title">{t('cycle.turningSignals')}</h4>
           <ul className="cycle-signals" aria-label={t('cycle.turningSignals')}>
@@ -276,7 +304,7 @@ export function CycleReasoningPanel() {
       )}
 
       {/* ---- Sector Recommendations ---- */}
-      {reasoning.sectorRecommendations.length > 0 && (
+      {(reasoning.sectorRecommendations ?? []).length > 0 && (
         <div className="cycle-section">
           <h4 className="cycle-section__title">{t('cycle.sectorRec')}</h4>
           <div className="cycle-sectors">
@@ -288,7 +316,7 @@ export function CycleReasoningPanel() {
       )}
 
       {/* ---- Tail Risks ---- */}
-      {reasoning.tailRisks.length > 0 && (
+      {(reasoning.tailRisks ?? []).length > 0 && (
         <div className="cycle-section">
           <h4 className="cycle-section__title">{t('cycle.tailRisks')}</h4>
           <ul className="cycle-risks">
@@ -299,11 +327,60 @@ export function CycleReasoningPanel() {
         </div>
       )}
 
-      {/* ---- Reasoning Chain ---- */}
-      <div className="cycle-section">
-        <h4 className="cycle-section__title">{t('cycle.reasoning')}</h4>
-        <p className="cycle-reasoning">{reasoning.reasoningChain}</p>
-      </div>
+      {/* ---- Risk Alerts ---- */}
+      {(reasoning.riskAlerts ?? []).length > 0 && (
+        <div className="cycle-section">
+          <h4 className="cycle-section__title">{t('cycle.riskAlerts')}</h4>
+          <ul className="cycle-alerts">
+            {reasoning.riskAlerts.map((alert, i) => (
+              <li key={i} className="cycle-alert-item">{alert}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* ---- Five-Layer Reasoning Steps ---- */}
+      {(reasoning.reasoningSteps ?? []).length > 0 && (
+        <div className="cycle-section">
+          <h4 className="cycle-section__title">{t('cycle.reasoningSteps')}</h4>
+          <div className="cycle-steps">
+            {reasoning.reasoningSteps.map((step) => {
+              const layerKey = layerI18nKey(step.layer);
+              const layerName = layerKey ? t(layerKey) : step.layer;
+              const stepConfPct = Math.round(step.confidence * 100);
+              return (
+                <div key={step.step} className="cycle-step">
+                  <div className="cycle-step__header">
+                    <span className="cycle-step__num">{t('cycle.step', { n: step.step })}</span>
+                    <span className="cycle-step__layer">{layerName}</span>
+                  </div>
+                  <p className="cycle-step__finding">{step.finding}</p>
+                  {step.evidence.length > 0 && (
+                    <div className="cycle-step__evidence">
+                      {step.evidence.map((e, i) => (
+                        <span key={i} className="cycle-step__evidence-tag">{e}</span>
+                      ))}
+                    </div>
+                  )}
+                  <div
+                    className={`cycle-step__confidence ${confidenceClass(step.confidence)}`}
+                    style={{ width: `${stepConfPct}%` }}
+                    aria-label={`${t('cycle.confidence')} ${stepConfPct}%`}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ---- Narrative / Intelligence Brief ---- */}
+      {reasoning.narrative && (
+        <div className="cycle-section">
+          <h4 className="cycle-section__title">{t('cycle.narrative')}</h4>
+          <p className="cycle-narrative">{reasoning.narrative}</p>
+        </div>
+      )}
 
       {/* ---- Timestamp ---- */}
       <div className="cycle-timestamp">

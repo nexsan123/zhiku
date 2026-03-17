@@ -44,7 +44,8 @@
     "cycleTab": "周期",
     "creditTab": "信用",
     "intelTab": "情报",
-    "gameMapTab": "博弈"
+    "gameMapTab": "博弈",
+    "forwardTab": "前瞻"
   },
   "newsFeed": {
     "aiOverview": "AI 概览",
@@ -468,6 +469,42 @@
     "unemployment": "失业率",
     "eventsUnit": "事件",
     "articlesUnit": "篇",
-    "confidenceLabel": "置信度"
+    "confidenceLabel": "置信度",
+    "globalPhase": "全局周期",
+    "dollarTide": "美元潮汐",
+    "grade": "评级",
+    "reasoningSteps": "五层推理",
+    "narrative": "情报简报",
+    "riskAlerts": "风险警报",
+    "step": "第{{n}}层",
+    "evidence": "证据",
+    "physical": "物理层",
+    "creditLayer": "信用层",
+    "dollarLayer": "美元潮汐",
+    "geopoliticalLayer": "地缘博弈",
+    "sentimentLayer": "市场情绪"
+  },
+  "forward": {
+    "layerOverview": "五层概览",
+    "forwardLook": "前瞻研判",
+    "outlook30d": "30天展望",
+    "outlook90d": "90天展望",
+    "catalysts": "关键催化事件",
+    "baseline": "基线情景",
+    "upside": "乐观情景",
+    "downside": "悲观情景",
+    "probability": "概率",
+    "physical": "物理层",
+    "credit": "信用层",
+    "dollar": "美元潮汐",
+    "geopolitical": "地缘博弈",
+    "sentiment": "市场情绪",
+    "improving": "趋好",
+    "stable": "稳定",
+    "deteriorating": "恶化",
+    "noData": "暂无前瞻数据",
+    "loading": "加载中...",
+    "failed": "前瞻数据加载失败",
+    "lastUpdate": "最后更新"
   }
 }

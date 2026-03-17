@@ -316,7 +316,7 @@
   font-size: 10px;
 }
 
-/* ---- Reasoning chain ---- */
+/* ---- Reasoning chain (legacy class kept for any external reference) ---- */
 .cycle-reasoning {
   font-size: var(--font-size-xs);
   line-height: var(--line-height-relaxed);
@@ -337,4 +337,156 @@
   font-size: 10px;
   font-family: var(--font-mono);
   color: var(--color-text-disabled);
+}
+
+/* ---- Context subheader: global phase + dollar tide + grade ---- */
+.cycle-context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-1);
+}
+
+.cycle-context__item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: var(--spacing-1) var(--spacing-2);
+  background: var(--glass-bg-card);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.cycle-context__label {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--color-text-disabled);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cycle-context__value {
+  font-size: var(--font-size-xs);
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+/* ---- Five-layer reasoning steps ---- */
+.cycle-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.cycle-step {
+  background: var(--glass-bg-card);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.cycle-step__header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
+.cycle-step__num {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-accent-primary);
+  flex-shrink: 0;
+}
+
+.cycle-step__layer {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--color-text-disabled);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cycle-step__finding {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-relaxed);
+  margin: 0;
+}
+
+.cycle-step__evidence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-0-5);
+}
+
+.cycle-step__evidence-tag {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--color-text-tertiary);
+  background: var(--color-bg-overlay);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 1px var(--spacing-1);
+}
+
+/* Mini confidence bar for each reasoning step */
+.cycle-step__confidence {
+  height: 2px;
+  border-radius: 1px;
+  transition: width 0.3s ease;
+}
+
+.cycle-step__confidence.cycle-confidence--high {
+  background: var(--color-semantic-success);
+}
+
+.cycle-step__confidence.cycle-confidence--medium {
+  background: var(--color-semantic-warning);
+}
+
+.cycle-step__confidence.cycle-confidence--low {
+  background: var(--color-semantic-error);
+}
+
+/* ---- Narrative / Intelligence Brief ---- */
+.cycle-narrative {
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-text-secondary);
+  background: var(--glass-bg-card);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-2);
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* ---- Risk alerts ---- */
+.cycle-alerts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-0-5);
+}
+
+.cycle-alert-item {
+  font-size: var(--font-size-xs);
+  color: var(--color-semantic-warning);
+  padding-left: var(--spacing-2);
+  position: relative;
+  line-height: var(--line-height-relaxed);
+}
+
+.cycle-alert-item::before {
+  content: '⚠';
+  position: absolute;
+  left: 0;
+  font-size: 10px;
+  color: var(--color-semantic-warning);
 }
