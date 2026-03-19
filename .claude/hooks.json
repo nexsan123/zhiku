@@ -61,7 +61,11 @@
           },
           {
             "type": "prompt",
-            "prompt": "VERIFICATION COMPLETENESS CHECK (Q-02 + S-03):\n\nBefore ending session, verify:\n1. If ANY implementation tasks exist (coder-be/coder-fe/ui-designer completed work), do verification agent tasks also exist and are completed?\n2. Implementation done + verification NOT done = DO NOT end. Flag: 'INCOMPLETE: Verification stages pending. S-03 prohibits skipping.'\n3. No verification agents created at all = Flag: 'CRITICAL: Q-02 violated. No verification agents exist.'\n\nOnly end if: (a) no implementation done, OR (b) all verification also completed."
+            "prompt": "VERIFICATION COMPLETENESS CHECK (v7.0):\n\nBefore ending session, verify:\n1. If ANY implementation tasks exist (coder-be/coder-fe/ui-designer completed work), do verification agent tasks also exist and are completed?\n2. Implementation done + verification NOT done = DO NOT end. Flag: 'INCOMPLETE: Verification stages pending.'\n3. No verification agents created at all = Flag: 'CRITICAL: No verification agents exist.'\n\nOnly end if: (a) no implementation done, OR (b) all verification also completed."
+          },
+          {
+            "type": "prompt",
+            "prompt": "TRANSPARENCY REMINDER:\n\nBefore stopping, provide user a brief status update:\n- What was accomplished this session\n- What remains to be done\n- Any blockers or decisions needed"
           }
         ]
       }
@@ -72,13 +76,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NoProfile -Command \"$td=Join-Path $env:USERPROFILE '.claude/teams';if(Test-Path $td){$c=@();$c+=Get-ChildItem (Join-Path $td '*/config.json') -EA SilentlyContinue;$c+=Get-ChildItem (Join-Path $td '*.json') -EA SilentlyContinue;$lc=$c|Sort LastWriteTime -Desc|Select -First 1;if($lc){$j=Get-Content $lc -Raw|ConvertFrom-Json;if($j.members){$n=$j.members|ForEach-Object{$_.name};$hi=$n|Where-Object{$_ -match 'coder|ui-designer'};$hv=$n|Where-Object{$_ -match 'reviewer|e2e-verifier'};if($hi -and -not $hv){Write-Host ('BLOCKED(Q-02): Team has impl agents ['+($hi-join',')+'] but NO verification agents. Add reviewer/e2e-verifier before proceeding.');exit 2}}}}\"",
+            "command": "powershell -NoProfile -Command \"$td=Join-Path $env:USERPROFILE '.claude/teams';if(Test-Path $td){$c=@();$c+=Get-ChildItem (Join-Path $td '*/config.json') -EA SilentlyContinue;$c+=Get-ChildItem (Join-Path $td '*.json') -EA SilentlyContinue;$lc=$c|Sort LastWriteTime -Desc|Select -First 1;if($lc){$j=Get-Content $lc -Raw|ConvertFrom-Json;if($j.members){$n=$j.members|ForEach-Object{$_.name};$hi=$n|Where-Object{$_ -match 'coder|ui-designer'};$hv=$n|Where-Object{$_ -match 'reviewer|e2e-verifier|debugger'};if($hi -and -not $hv){Write-Host ('BLOCKED(TG-01): Team has impl agents ['+($hi-join',')+'] but NO verification agents. Add per task level.');exit 2}}}}\"",
             "timeout": 10,
             "statusMessage": "Verification agent check..."
           },
           {
             "type": "prompt",
-            "prompt": "MANDATORY QUALITY CHECK (Q-01~Q-04 + S-01~S-05 + PA-01):\n\nA teammate has stopped. Perform ALL checks below.\n\n== 1. EVIDENCE (Q-01) ==\nDid they provide actual execution evidence? 'Completed' without evidence = V-01 violation.\n\n== 2. EXIT CONDITIONS (S-02) ==\nWere ALL exit conditions addressed with evidence? Missing any = S-02 violation.\n\n== 3. COMPLETENESS (Q-02) ==\nDid they skip any steps? Check plan vs actual work.\n\n== 4. RUNTIME (Q-01) ==\nDid they RUN the code? 'cargo check' alone is insufficient.\n\n== 5. PLAN COMPLIANCE (PA-01) ==\nDid implementation match approved Plan invariants and risk mitigations?\n\n== 6. TASK STATUS (S-03) ==\nCall TaskList. For each verification agent task:\n- completed = OK\n- in_progress = OK\n- pending/no owner = CRITICAL: never started\n- missing = CRITICAL: never created\n\n== 7. DECISIONS (D3-01~D3-03) ==\nMajor decisions considered: (1) do it, (2) don't, (3) alternatives?\n\n== 8. GIT COMMIT (B-05) ==\nIf this was an implementation agent (coder-be/coder-fe/ui-designer) and quality check PASSED:\n- Run 'git status' to check for uncommitted changes\n- If changes exist: remind Lead to commit with appropriate scope (feat-be/feat-fe/design)\n- Format: 'GIT REMINDER: Implementation completed. Uncommitted changes detected. Recommend: git add + commit before next stage.'\n- If no changes: skip\n\n== OUTPUT ==\n```\nQUALITY CHECK:\n[1] Evidence:     PASS/FAIL\n[2] Exit Conds:   PASS/FAIL\n[3] Completeness: PASS/FAIL\n[4] Runtime:      PASS/FAIL\n[5] Plan Comply:  PASS/FAIL\n[6] Task Status:  PASS/FAIL\n[7] Decisions:    PASS/FAIL\n[8] Git Commit:   DONE/PENDING/N-A\nOVERALL: PASS/FAIL\n```\nAny FAIL = recommend corrective action."
+            "prompt": "QUALITY CHECK (v7.0 五条铁律, 6 checks):\n\nA teammate has stopped. Perform ALL checks below.\n\n== 1. EVIDENCE (V-01: 完成必须附证据) ==\nDid they provide actual execution evidence? 'Completed' without evidence = violation.\n\n== 2. EXIT CONDITIONS (S-02: 子阶段要有证据) ==\nWere ALL exit conditions addressed with evidence? Missing any = violation.\n\n== 3. RUNTIME (DB-01: 先看现场再动手) ==\nDid they RUN the code? 'cargo check' alone is insufficient. Runtime verification required.\n\n== 4. COMPLETENESS ==\nDid they skip any steps? Check task description vs actual work.\n\n== 5. TASK STATUS ==\nCall TaskList. Are all required verification agent tasks present per task level?\n- S: @reviewer\n- M: @reviewer + @e2e-verifier\n- L/XL: @debugger + @cross-checker + @reviewer + @e2e-verifier\nMissing = CRITICAL violation.\n\n== 6. GIT COMMIT ==\nIf this was an implementation agent (coder-be/coder-fe/ui-designer) and quality check PASSED:\n- Run 'git status' to check for uncommitted changes\n- If changes exist: remind Lead to commit with appropriate scope (feat-be/feat-fe/design)\n- If no changes: skip\n\n== OUTPUT ==\n```\nQUALITY CHECK:\n[1] Evidence:     PASS/FAIL\n[2] Exit Conds:   PASS/FAIL\n[3] Runtime:      PASS/FAIL\n[4] Completeness: PASS/FAIL\n[5] Task Status:  PASS/FAIL\n[6] Git Commit:   DONE/PENDING/N-A\nOVERALL: PASS/FAIL\n```\nAny FAIL = recommend corrective action."
+          },
+          {
+            "type": "prompt",
+            "prompt": "ERROR HISTORY CHECK:\n\nCheck .team-logs/bug-history.md for patterns related to the completed agent's work area. If similar bugs were previously recorded, flag them:\n'PATTERN ALERT: Similar issue found in bug-history. Verify it hasn't recurred.'"
           }
         ]
       }
