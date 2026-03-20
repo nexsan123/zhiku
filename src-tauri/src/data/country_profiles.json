@@ -985,6 +985,79 @@
         "influence_trend": "最成功的后石油转型案例；多边下注(美+中+以+印)不选边",
         "verified": false
       }
+    },
+
+    "RU": {
+      "name_zh": "俄罗斯",
+      "name_en": "Russia",
+      "iso3": "RUS",
+      "tier": "important",
+      "stats_credibility": 0.55,
+      "economic_base": {
+        "gdp_usd": 1900000000000,
+        "gdp_rank": 12,
+        "gdp_source": "IMF WEO 2024 estimate (nominal; PPP ~$6.5T ranks #5)",
+        "primary_industries": ["石油天然气", "军工/航天", "矿业(钯/铂/镍/铝)", "农业(小麦)", "核能"],
+        "manufacturing_value_added_global_pct": 1.8,
+        "manufacturing_source": "UNIDO 2023 estimate",
+        "trade_balance_usd": 120000000000,
+        "trade_source": "Bank of Russia 2024 estimate (sanctions distort data)",
+        "industrial_role": "能源出口国+军工+小麦出口#1；制裁后退化为对中国的资源供应方",
+        "verified": false
+      },
+      "energy": {
+        "oil_production_crude_bpd": 10500000,
+        "oil_production_note": "OPEC+ quota constrained; pre-war capacity ~11M bpd",
+        "oil_consumption_bpd": 3700000,
+        "net_oil_status": "major_net_exporter",
+        "natural_gas_reserves_tcm": 37.4,
+        "natural_gas_reserves_rank": 1,
+        "natural_gas_production_bcm": 640,
+        "natural_gas_exports_europe_pct_2021": 45,
+        "natural_gas_exports_europe_pct_2025": 13,
+        "energy_mix_pct": { "natural_gas": 52, "petroleum": 22, "coal": 16, "nuclear": 7, "hydro": 3 },
+        "source": "EIA Russia Country Analysis 2024 / BP Statistical Review",
+        "key_vulnerability": "联邦收入30-40%依赖油气；油价<$60即赤字失控；失去欧洲市场后客户集中于中国/印度",
+        "verified": false
+      },
+      "military": {
+        "budget_usd": 109000000000,
+        "budget_pct_gdp": 6.0,
+        "budget_source": "SIPRI Military Expenditure Database 2024 (wartime elevated)",
+        "active_personnel": 1150000,
+        "reserve_personnel": 2000000,
+        "personnel_source": "IISS Military Balance 2024 (pre-mobilization baseline)",
+        "nuclear_warheads_total": 5580,
+        "nuclear_stockpile": 4380,
+        "nuclear_deployed_strategic": 1710,
+        "nuclear_source": "FAS Nuclear Notebook, Jan 2026",
+        "force_projection": "regional_plus_nuclear_global",
+        "key_capability": "核三位一体(ICBM+SLBM+轰炸机)+大规模炮兵+防空(S-400/S-500)+高超音速(锆石/匕首)",
+        "readiness_note": "乌克兰战争暴露常规军后勤/通信/士气问题；装甲大量消耗；黑海舰队被无人艇重创；但弹药产能在恢复中",
+        "verified": false
+      },
+      "financial_position": {
+        "debt_to_gdp_pct": 20,
+        "debt_note": "低债务但制裁下融资渠道受限",
+        "foreign_reserves_usd": 600000000000,
+        "reserves_frozen_pct": 50,
+        "reserves_note": "~$3000亿被西方冻结；剩余以黄金+人民币为主",
+        "swift_status": "partially_excluded",
+        "ruble_status": "capital_controls_stabilized",
+        "source": "Bank of Russia / IMF 2024",
+        "key_vulnerability": "一半外储被冻结；卢布靠资本管制人为维稳；战时财政不可持续（军费占GDP 6%）",
+        "verified": false
+      },
+      "geopolitical": {
+        "alliances": ["BRICS(创始)", "SCO", "CSTO", "EAEU", "OPEC+(非正式共同领导)"],
+        "un_security_council": "permanent_veto",
+        "chokepoints_influence": ["黑海粮食通道", "北极航道(沿岸控制)", "中亚影响力(被中国BRI侵蚀)"],
+        "sanctions_exposure": ["SWIFT部分踢除", "油价上限$60", "技术出口管制", "外储冻结$3000亿", "资产/旅行禁令"],
+        "sphere_of_influence": "中亚+白俄罗斯+叙利亚/利比亚(军事)；但影响力在收缩",
+        "influence_trend": "从独立一极退化为中国的资源附庸；核武维持大国地位底线；乌克兰战争持续消耗",
+        "key_relationship": "对中国经济依附不可逆——失去欧洲市场后中国是唯一大客户+技术替代供应+金融通道",
+        "verified": false
+      }
     }
   }
 }
