@@ -132,10 +132,11 @@ pub async fn update_scenarios(
 
     // Enrich system prompt with causal chains and geopolitical graph
     let system_prompt = format!(
-        "{}\n\n=== 知识库 ===\n\n--- 结构性因果链 ---\n{}\n\n--- 地缘关系图谱 ---\n{}\n\n--- 政策日历 ---\n{}",
+        "{}\n\n=== 知识库 ===\n\n--- 结构性因果链 ---\n{}\n\n--- 地缘关系图谱 ---\n{}\n\n--- 事件触发模板 ---\n{}\n\n--- 政策日历 ---\n{}",
         SCENARIO_SYSTEM_PROMPT,
         knowledge_base::power_structures_slim(),
         knowledge_base::geopolitical_graph_slim(),
+        knowledge_base::event_triggers_slim(),
         knowledge_base::POLICY_CALENDAR,
     );
 

@@ -21,6 +21,9 @@ pub const DATA_RELIABILITY: &str = include_str!("../data/data_reliability.json")
 /// US policy decision calendar (FOMC, Treasury reports, trade reviews).
 pub const POLICY_CALENDAR: &str = include_str!("../data/policy_calendar.json");
 
+/// 15 geopolitical event trigger templates with probability, transmission paths, and market impacts.
+pub const EVENT_TRIGGERS: &str = include_str!("../data/event_triggers.json");
+
 // ---------------------------------------------------------------------------
 // Slim media-bias extract (for token-constrained providers like Groq 8K)
 // ---------------------------------------------------------------------------
@@ -235,4 +238,85 @@ static GEOPOLITICAL_GRAPH_SLIM_CACHE: LazyLock<String> = LazyLock::new(|| {
 /// Output is ~600 bytes vs the full 22 KB JSON -- suitable for token-constrained providers.
 pub fn geopolitical_graph_slim() -> &'static str {
     &GEOPOLITICAL_GRAPH_SLIM_CACHE
+}
+
+// ---------------------------------------------------------------------------
+// Slim event-triggers extract (~1 KB vs full JSON)
+// ---------------------------------------------------------------------------
+
+static EVENT_TRIGGERS_SLIM_CACHE: LazyLock<String> = LazyLock::new(|| {
+    let parsed: serde_json::Value =
+        serde_json::from_str(EVENT_TRIGGERS).unwrap_or_default();
+    let events = parsed.get("events").and_then(|e| e.as_array());
+    match events {
+        Some(arr) => {
+            let lines: Vec<String> = arr
+                .iter()
+                .filter_map(|evt| {
+                    let id = evt.get("id").and_then(|i| i.as_str()).unwrap_or("?");
+                    let name = evt.get("name").and_then(|n| n.as_str()).unwrap_or("?");
+                    let priority = evt.get("priority").and_then(|p| p.as_str()).unwrap_or("?");
+
+                    let prob_label = evt
+                        .get("probability")
+                        .and_then(|p| p.get("label"))
+                        .and_then(|l| l.as_str())
+                        .unwrap_or("?");
+                    let prob_window = evt
+                        .get("probability")
+                        .and_then(|p| p.get("window"))
+                        .and_then(|w| w.as_str())
+                        .unwrap_or("");
+
+                    let chains: String = evt
+                        .get("affected_chains")
+                        .and_then(|c| c.as_array())
+                        .map(|arr| {
+                            arr.iter()
+                                .filter_map(|v| v.as_str())
+                                .collect::<Vec<_>>()
+                                .join("+")
+                        })
+                        .unwrap_or_default();
+
+                    let transmission: String = evt
+                        .get("transmission_summary")
+                        .and_then(|t| t.as_str())
+                        .map(|s| s.chars().take(80).collect())
+                        .unwrap_or_default();
+
+                    let impacts: String = evt
+                        .get("market_impacts")
+                        .and_then(|m| m.as_array())
+                        .map(|arr| {
+                            arr.iter()
+                                .take(3)
+                                .filter_map(|imp| {
+                                    let asset = imp.get("asset").and_then(|a| a.as_str()).unwrap_or("?");
+                                    let dir = imp.get("direction").and_then(|d| d.as_str()).unwrap_or("?");
+                                    let mag = imp.get("magnitude").and_then(|m| m.as_str()).unwrap_or("?");
+                                    Some(format!("{}:{}{}", asset, if dir == "bullish" { "↑" } else { "↓" }, mag))
+                                })
+                                .collect::<Vec<_>>()
+                                .join(", ")
+                        })
+                        .unwrap_or_default();
+
+                    Some(format!(
+                        "{}({},{}) {}({}) | chains:{} | {} | {}",
+                        id, name, priority, prob_label, prob_window, chains, impacts, transmission
+                    ))
+                })
+                .collect();
+            lines.join("\n")
+        }
+        None => String::from("(event triggers data unavailable)"),
+    }
+});
+
+/// Return a compact one-line-per-event summary of geopolitical event triggers.
+///
+/// Output is ~1.5 KB vs the full JSON -- suitable for token-constrained providers.
+pub fn event_triggers_slim() -> &'static str {
+    &EVENT_TRIGGERS_SLIM_CACHE
 }
