@@ -5,57 +5,50 @@
 ## 当前状态
 
 - **分支**: master
-- **最近 commit**: `11d165a` docs: add 5-layer country analysis system
+- **最近 commit**: `9e00fc8` fix: address cross-checker findings KB-001~KB-005
 
-## 本次 Session 完成（2026-03-19~20）
+## 本次 Session 完成（2026-03-20）
 
-### 国家深度分析体系（5层）全部完成
+### 1. 国家分析体系丙方案自审 + 修复
 
-所有文件在 `docs/country-analysis/` 下：
-
-| 层级 | 文件 | 状态 |
-|------|------|------|
-| Layer 1: 底料 | `CN.md` `US.md` `XM.md` `JP.md`（深度版16维度） | ✅ |
-| Layer 1: 底料 | `GB.md` `CA.md` `AU.md` `KR.md` `IN.md` `BR.md` `TR.md` `AR.md` `ZA.md` `SA.md` `AE.md`（精简版6元变量） | ✅ |
-| Layer 2: 角色 | `ROLES.md` — 15国角色定位+转换趋势+行为模式+量化信号 | ✅ |
-| Layer 3: 关系 | `RELATIONSHIPS.md` — 15条核心关系线+10条暗线+翻转信号 | ✅ |
-| Layer 4: 控制链 | `CONTROL_CHAINS.md` — 5条链(能源/技术/金融/粮食/矿产)×15国位置 | ✅ |
-| Layer 5: 事件 | `EVENT_TRIGGERS.md` — 15个事件模板+概率+三阶传导+场景推演 | ✅ |
-
-### 分析框架演进
-
-- **6个元变量**：地理/财政/治理/凝聚/人口质量/角色位置
-- **财政是"元变量中的元变量"**——决定所有其他维度的上限（皇上指出的核心洞察）
-- **第一性原理方法**：每个维度都经过皇上的第一性原理挑战→修正→再验证
-- **中立自审**：识别了对中国过于乐观/对美国过于悲观的偏差并修正
-
-### 关键分析结论
-
-- 中国综合 B / 美国 B-~B+（财政修正后差距缩小至接近持平）
-- 台海冲突是唯一P0级4链同断事件
-- 沙特是美元体系最大的"开关"
-- 中国在矿产/供应链是全球"攻方"，美国在设计/金融/军事/软实力是"攻方"
-- "能源=算力"是理解中美AI竞争的隐藏变量
-
-## 下一步
-
-- ~~丙方案：对5层体系做整体中立自审~~ ✅ 完成（2026-03-20）
-- ~~RU.md 补写~~ ✅ 完成（2026-03-20），ROLES.md已同步更新为16国
-- 之后：将5层文件转化为JSON知识库注入AI推理引擎（技术集成）
-- 剩余11国如需深度版可后续补充
-
-## 本次 Session 补充（2026-03-20）
-
-### 丙方案自审完成
-- CN.md 3处评级矛盾已修复（技术B+→B / 债务B→B- / 人口B-→C+）
+- CN.md 3处评级矛盾修复（技术B+→B / 债务B→B- / 人口B-→C+）
 - CN.md 3.2控制表与正文对齐（马六甲/大豆/SWIFT）
 - CN.md 232:1数据加注来源局限性脚注
 - 新增 RU.md（俄罗斯战略画像，Important Tier）
-- ROLES.md 扩展为16国（新增俄罗斯角色条目+总览表）
+- ROLES.md + CONTROL_CHAINS.md 扩展为16国
 
-### 自审发现的系统性倾向（已记录、未大改）
+### 2. 知识库 JSON 集成（阶段 A/B/C 完成）
+
+| 阶段 | 内容 | commit |
+|------|------|--------|
+| A | RU 加入 country_profiles.json + data_reliability.json（15→16国） | `0fff182` |
+| B | 新建 event_triggers.json（15事件+6交叉组合）→ 注入 scenario_engine + deep_analyzer | `8af8ad9` |
+| C | 新建 country_roles.json（16国角色+5链位置+行为模式）→ 注入 cycle_reasoner + deep_analyzer | `b0453bc` |
+| fix | Cross-checker KB-001~005 全部修复（token截断/P2事件补字段/注释/文档同步） | `9e00fc8` |
+
+### 3. AI 推理引擎现有知识库总览
+
+| 知识库 | 文件 | 消费方 |
+|--------|------|--------|
+| country_profiles (16国) | country_profiles.json → slim | cycle_reasoner, deep_analyzer |
+| country_roles (16国角色+链) | country_roles.json → slim | cycle_reasoner, deep_analyzer |
+| event_triggers (15事件) | event_triggers.json → slim | scenario_engine, deep_analyzer |
+| geopolitical_graph (16关系) | geopolitical_graph.json → slim | deep_analyzer, scenario_engine |
+| power_structures (8因果链) | power_structures.json → slim | cycle_reasoner, deep_analyzer, scenario_engine |
+| media_bias (59+源) | media_bias_registry.json → slim | summarizer, deep_analyzer |
+| data_reliability (16国) | data_reliability.json (full) | cycle_reasoner |
+| policy_calendar (12事件) | policy_calendar.json (full) | scenario_engine |
+
+### 4. 自审发现的系统性倾向（已记录、未大改）
 - CN.md 论证结构="反驳西方叙事"式，US.md="解构优势"式 — 不对称但结论本身合理
 - 232:1造船数据被修辞化 — 已加脚注标注来源局限
+
+## 下一步
+
+- **阶段 D（可选）**：geopolitical_graph.json 增强翻转信号+暗线（增量优化，优先级低）
+- **KB-006（已知）**：geopolitical_graph 边覆盖不对称（GB/CA/AU/KR/ZA/AE无边），阶段D可解决
+- **Company-Level Intelligence for QT (XL)** — 详见 memory `project_next_phase.md`
+- **reasoning_scorer 回测** — 系统已写好，用它验证AI推理准确率
 
 ## 未解决问题
 
