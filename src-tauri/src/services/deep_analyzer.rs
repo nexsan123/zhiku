@@ -77,12 +77,14 @@ pub async fn analyze_cluster(
     let system_prompt = format!(
         "{}\n\n=== 知识库（结构化背景数据，辅助推理） ===\n\n\
          --- 16国结构画像 ---\n{}\n\n\
+         --- 16国角色+控制链 ---\n{}\n\n\
          --- 结构性因果链 ---\n{}\n\n\
          --- 地缘关系图谱 ---\n{}\n\n\
          --- 事件触发模板 ---\n{}\n\n\
          --- 媒体偏见注册表 ---\n{}",
         DEEP_ANALYSIS_SYSTEM_PROMPT,
         knowledge_base::country_profiles_slim(),
+        knowledge_base::country_roles_slim(),
         knowledge_base::power_structures_slim(),
         knowledge_base::geopolitical_graph_slim(),
         knowledge_base::event_triggers_slim(),

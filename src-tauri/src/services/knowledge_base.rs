@@ -24,6 +24,9 @@ pub const POLICY_CALENDAR: &str = include_str!("../data/policy_calendar.json");
 /// 15 geopolitical event trigger templates with probability, transmission paths, and market impacts.
 pub const EVENT_TRIGGERS: &str = include_str!("../data/event_triggers.json");
 
+/// 16-country role positioning + control chain positions + behavioral models + transition signals.
+pub const COUNTRY_ROLES: &str = include_str!("../data/country_roles.json");
+
 // ---------------------------------------------------------------------------
 // Slim media-bias extract (for token-constrained providers like Groq 8K)
 // ---------------------------------------------------------------------------
@@ -319,4 +322,69 @@ static EVENT_TRIGGERS_SLIM_CACHE: LazyLock<String> = LazyLock::new(|| {
 /// Output is ~1.5 KB vs the full JSON -- suitable for token-constrained providers.
 pub fn event_triggers_slim() -> &'static str {
     &EVENT_TRIGGERS_SLIM_CACHE
+}
+
+// ---------------------------------------------------------------------------
+// Slim country-roles extract (~1 KB vs full JSON)
+// ---------------------------------------------------------------------------
+
+static COUNTRY_ROLES_SLIM_CACHE: LazyLock<String> = LazyLock::new(|| {
+    let parsed: serde_json::Value =
+        serde_json::from_str(COUNTRY_ROLES).unwrap_or_default();
+    let countries = parsed.get("countries").and_then(|c| c.as_object());
+    match countries {
+        Some(map) => {
+            let mut lines: Vec<String> = map
+                .iter()
+                .map(|(code, v)| {
+                    let role_zh = v.get("role_zh").and_then(|r| r.as_str()).unwrap_or("?");
+                    let transition = v.get("transition").and_then(|t| t.as_str()).unwrap_or("?");
+                    let behavior: String = v
+                        .get("behavior")
+                        .and_then(|b| b.as_str())
+                        .map(|s| s.chars().take(50).collect())
+                        .unwrap_or_default();
+
+                    let chains = v.get("chains").and_then(|c| c.as_object());
+                    let chain_str = chains
+                        .map(|m| {
+                            m.iter()
+                                .map(|(k, v)| {
+                                    let pos = v.as_str().unwrap_or("?");
+                                    let short = match pos {
+                                        "controller" => "控",
+                                        "producer" => "产",
+                                        "gatekeeper" => "门",
+                                        "consumer" => "消",
+                                        "dependent" => "依",
+                                        "builder" => "建",
+                                        "follower" => "从",
+                                        "neutral" => "中",
+                                        _ => "?",
+                                    };
+                                    format!("{}:{}", k.chars().next().unwrap_or('?'), short)
+                                })
+                                .collect::<Vec<_>>()
+                                .join(",")
+                        })
+                        .unwrap_or_default();
+
+                    format!(
+                        "{}({}): {} | 行为:{} | 链:[{}]",
+                        code, role_zh, transition, behavior, chain_str
+                    )
+                })
+                .collect();
+            lines.sort();
+            lines.join("\n")
+        }
+        None => String::from("(country roles data unavailable)"),
+    }
+});
+
+/// Return a compact one-line-per-country summary of roles + chain positions.
+///
+/// Output is ~1.2 KB vs the full JSON -- suitable for token-constrained providers.
+pub fn country_roles_slim() -> &'static str {
+    &COUNTRY_ROLES_SLIM_CACHE
 }

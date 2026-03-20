@@ -79,9 +79,10 @@ pub async fn reason_cycle(
 
     // Enrich system prompt with country profiles and causal chains
     let mut system_prompt = format!(
-        "{}\n\n=== 知识库 ===\n\n--- 15国结构画像 ---\n{}\n\n--- 结构性因果链 ---\n{}\n\n--- 数据可信度评分 ---\n{}",
+        "{}\n\n=== 知识库 ===\n\n--- 16国结构画像 ---\n{}\n\n--- 16国角色+控制链 ---\n{}\n\n--- 结构性因果链 ---\n{}\n\n--- 数据可信度评分 ---\n{}",
         CYCLE_SYSTEM_PROMPT,
         knowledge_base::country_profiles_slim(),
+        knowledge_base::country_roles_slim(),
         knowledge_base::power_structures_slim(),
         knowledge_base::DATA_RELIABILITY,
     );
