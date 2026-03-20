@@ -169,11 +169,18 @@
       "name_en": "European Energy Crisis Redux",
       "priority": "P2",
       "probability": { "low": 0.10, "high": 0.15, "label": "P-低", "window": "未来3年" },
+      "probability_basis": "俄气已降至13%但LNG价格仍受极端天气/供应中断影响",
+      "trigger_conditions": ["俄罗斯完全切断剩余管道气", "极端寒冬+LNG供应不足", "中东冲突影响LNG航运"],
       "affected_chains": ["energy"],
       "transmission_summary": "TTF气价暴涨→欧洲工业成本↑→欧元↓→欧洲股↓→美国LNG股↑",
       "market_impacts": [
         { "asset": "TTF天然气", "direction": "bullish", "magnitude": "暴涨", "confidence": 0.80 },
         { "asset": "欧元", "direction": "bearish", "magnitude": "下跌", "confidence": 0.70 }
+      ],
+      "scenarios": [
+        { "name": "短期价格冲击后缓解", "probability": 0.50, "description": "LNG替代+需求响应→数月内回落" },
+        { "name": "持续高气价一个冬季", "probability": 0.35, "description": "欧洲工业竞争力进一步恶化" },
+        { "name": "触发新一轮去工业化", "probability": 0.15, "description": "德国化工/制造持续外迁" }
       ],
       "monitoring_signals": ["TTF期货价格", "欧洲天然气库存水平", "LNG船运费率"]
     },
@@ -182,12 +189,19 @@
       "name": "日本债务危机(BoJ失控)",
       "name_en": "Japan Debt Crisis (BoJ Loss of Control)",
       "priority": "P2",
-      "probability": { "low": 0.01, "high": 0.05, "label": "P-极低", "window": "但后果极大" },
+      "probability": { "low": 0.01, "high": 0.05, "label": "P-极低(但后果极大)", "window": "未来10年" },
+      "probability_basis": "260%债务/GDP但93%内持+BoJ控制→30年未崩；利率上升是唯一触发点",
+      "trigger_conditions": ["BoJ加息速度超预期", "日元暴跌引发资本外逃", "外国持有者(7%)集中抛售"],
       "affected_chains": ["finance"],
       "transmission_summary": "JGB崩盘→日元暴跌→全球carry trade平仓→全球流动性冲击→新兴市场↓↓",
       "market_impacts": [
         { "asset": "日元USDJPY", "direction": "bearish", "magnitude": "暴跌", "confidence": 0.80 },
         { "asset": "新兴市场", "direction": "bearish", "magnitude": "大幅下跌", "confidence": 0.70 }
+      ],
+      "scenarios": [
+        { "name": "BoJ成功管控加息节奏", "probability": 0.60, "description": "缓慢加息+市场适应→无危机" },
+        { "name": "日元快速贬值但不崩盘", "probability": 0.30, "description": "USDJPY破170但BoJ干预稳住" },
+        { "name": "JGB市场失控", "probability": 0.10, "description": "收益率飙升→利息吃掉财政→全球传染" }
       ],
       "monitoring_signals": ["JGB 10Y收益率", "BoJ资产负债表变化", "日元carry trade规模估算"]
     },
@@ -197,11 +211,18 @@
       "name_en": "India GDP Surpasses Japan (#4)",
       "priority": "P2",
       "probability": { "low": 0.85, "high": 0.95, "label": "P-极高", "window": "2025-2026年" },
+      "probability_basis": "印度GDP增速~7%+卢比稳定 vs 日本低增长+日元贬值→名义GDP差距快速收窄",
+      "trigger_conditions": ["自然趋势，无需特定触发"],
       "affected_chains": ["finance"],
       "transmission_summary": "FDI重定向→印度股↑→下一个中国叙事→制造业订单从中国部分转移",
       "market_impacts": [
         { "asset": "Nifty 50", "direction": "bullish", "magnitude": "持续上涨", "confidence": 0.70 },
         { "asset": "印度卢比", "direction": "bullish", "magnitude": "温和升值", "confidence": 0.55 }
+      ],
+      "scenarios": [
+        { "name": "印度制造业承接加速", "probability": 0.40, "description": "Apple/三星供应链转移→FDI激增" },
+        { "name": "象征意义大于实质", "probability": 0.45, "description": "排名上升但基建/制造仍远不如中国" },
+        { "name": "印度增长放缓推迟超越", "probability": 0.15, "description": "全球衰退拖累+国内改革停滞" }
       ],
       "monitoring_signals": ["印度季度GDP", "FDI流入数据", "制造业PMI"]
     },
@@ -210,11 +231,18 @@
       "name": "阿根廷dollarization成败",
       "name_en": "Argentina Dollarization Experiment",
       "priority": "P2",
-      "probability": { "low": 0.20, "high": 0.40, "label": "成功P-低~中/失败P-中", "window": "未来3年" },
+      "probability": { "low": 0.20, "high": 0.40, "label": "P-低~中(成功)/P-中(失败)", "window": "未来3年" },
+      "probability_basis": "Milei激进改革短期见效(通胀从300%降至100%+)但社会成本极高→持续性存疑",
+      "trigger_conditions": ["成功：通胀降至个位数+外资流入", "失败：社会抗议失控+IMF协议破裂"],
       "affected_chains": ["finance"],
       "transmission_summary": "成功→EM改革叙事↑→资金流入 / 失败→EM风险溢价↑→资本外逃",
       "market_impacts": [
         { "asset": "阿根廷国债", "direction": "mixed", "magnitude": "取决于成败", "confidence": 0.50 }
+      ],
+      "scenarios": [
+        { "name": "改革成功稳定化", "probability": 0.25, "description": "通胀控制+外资进入→EM改革模板" },
+        { "name": "半成功半停滞", "probability": 0.40, "description": "通胀降但经济不增长→社会疲劳" },
+        { "name": "社会反弹导致改革逆转", "probability": 0.35, "description": "民粹回归→又一次违约循环" }
       ],
       "monitoring_signals": ["阿根廷月通胀率", "比索官方/黑市汇率差", "IMF协议条款", "财政赤字"]
     },
@@ -224,11 +252,18 @@
       "name_en": "China Real Estate Bottom Rebound",
       "priority": "P2",
       "probability": { "low": 0.25, "high": 0.35, "label": "P-中", "window": "2026-2027年" },
+      "probability_basis": "Goldman预测2025年底价格企稳；CBRE预测2026年量价转正；但去库存周期可能更长",
+      "trigger_conditions": ["信贷脉冲转正", "一线城市成交量持续回升", "政策进一步放松(降首付/降利率)"],
       "affected_chains": ["finance", "mineral"],
       "transmission_summary": "消费信心恢复→内需↑→大宗商品需求↑→铁矿石/铜↑→澳元↑",
       "market_impacts": [
         { "asset": "铁矿石", "direction": "bullish", "magnitude": "上涨15-25%", "confidence": 0.65 },
         { "asset": "澳元", "direction": "bullish", "magnitude": "升值", "confidence": 0.60 }
+      ],
+      "scenarios": [
+        { "name": "U型底部缓慢回升", "probability": 0.45, "description": "量先于价恢复→2-3年回到正常水平" },
+        { "name": "L型长期低迷(日本模式)", "probability": 0.35, "description": "价格企稳但不反弹→5-10年消化" },
+        { "name": "政策刺激推动V型反弹", "probability": 0.20, "description": "大规模刺激→快速回升但加剧债务" }
       ],
       "monitoring_signals": ["中国新房销售面积月度", "房价指数(70城)", "房企融资数据", "社融/信贷脉冲"]
     },
@@ -238,11 +273,18 @@
       "name_en": "Korean Peninsula Crisis Escalation",
       "priority": "P2",
       "probability": { "low": 0.05, "high": 0.10, "label": "P-低", "window": "持续风险" },
+      "probability_basis": "朝鲜持续核/导弹发展但各方均不愿全面冲突；偶发擦枪走火是主要风险",
+      "trigger_conditions": ["朝鲜核试验升级", "边境军事冲突", "美韩大规模联合军演引发朝方过度反应"],
       "affected_chains": ["tech"],
       "transmission_summary": "韩国军事紧张→Samsung/SK Hynix供应链风险↑→存储芯片价↑→避险↑",
       "market_impacts": [
         { "asset": "DRAM/NAND价格", "direction": "bullish", "magnitude": "上涨", "confidence": 0.65 },
         { "asset": "KOSPI", "direction": "bearish", "magnitude": "下跌", "confidence": 0.70 }
+      ],
+      "scenarios": [
+        { "name": "紧张但不冲突(常态)", "probability": 0.60, "description": "导弹试射→制裁→对话→循环" },
+        { "name": "有限军事摩擦", "probability": 0.30, "description": "边境交火但快速降级→市场短期冲击" },
+        { "name": "全面危机", "probability": 0.10, "description": "核威胁升级→东亚安全格局重塑" }
       ],
       "monitoring_signals": ["朝鲜导弹试射频率", "韩国DEFCON等级", "Samsung股价波动"]
     },
@@ -252,11 +294,18 @@
       "name_en": "Simandou Full Production Iron Ore Shock",
       "priority": "P2",
       "probability": { "low": 0.50, "high": 0.60, "label": "P-高", "window": "2028-2030年" },
+      "probability_basis": "2025.12首批矿石已出港；满产1.2亿吨/年(可能全球最大)；75%中资控股；几内亚政治风险是主要延迟因素",
+      "trigger_conditions": ["Simandou Phase 1满产运行", "铁路+港口基建完工", "几内亚政治保持稳定"],
       "affected_chains": ["mineral"],
       "transmission_summary": "铁矿石供应↑→价格↓15-25%→澳矿企利润↓→澳元↓→中国钢铁成本↓",
       "market_impacts": [
         { "asset": "铁矿石", "direction": "bearish", "magnitude": "-15~25%", "confidence": 0.65 },
         { "asset": "澳元", "direction": "bearish", "magnitude": "下跌", "confidence": 0.60 }
+      ],
+      "scenarios": [
+        { "name": "按期满产", "probability": 0.40, "description": "2028-2030年1.2亿吨→铁矿石价大幅下跌→澳矿企重组" },
+        { "name": "延迟但最终投产", "probability": 0.40, "description": "几内亚政治/基建延迟2-3年→影响推迟但方向不变" },
+        { "name": "项目受阻/长期延迟", "probability": 0.20, "description": "政变/基建失败→澳大利亚维持定价权" }
       ],
       "monitoring_signals": ["Simandou建设/出矿进度", "几内亚政治稳定性", "铁矿石期货远期曲线"]
     },
@@ -266,11 +315,18 @@
       "name_en": "China EUV Lithography Breakthrough",
       "priority": "P2",
       "probability": { "low": 0.05, "high": 0.10, "label": "P-低(5yr)/P-中(10yr)", "window": "未来5-10年" },
+      "probability_basis": "深圳实验室已产EUV光；LDP路线非ASML的CO2路线；投资370亿欧元；但量产仍需解决光源稳定性/产出率",
+      "trigger_conditions": ["中国EUV原型机实现功能芯片制造", "SMEE浸没式DUV进入28nm量产", "国家加大投资推动"],
       "affected_chains": ["tech"],
       "transmission_summary": "ASML垄断打破→ASML股价重估→全球芯片供应格局重塑→芯片价格长期↓",
       "market_impacts": [
         { "asset": "ASML", "direction": "bearish", "magnitude": "长期估值重估", "confidence": 0.60 },
         { "asset": "中国半导体股", "direction": "bullish", "magnitude": "大幅上涨", "confidence": 0.55 }
+      ],
+      "scenarios": [
+        { "name": "实验室突破但量产10年+", "probability": 0.50, "description": "技术可行但工程化极难→ASML垄断维持" },
+        { "name": "DUV多重曝光路线先成熟", "probability": 0.35, "description": "EUV未到但7nm/5nm DUV产能爆发→实质绕过" },
+        { "name": "EUV量产成功", "probability": 0.15, "description": "5-10年内量产→全球芯片格局根本改变" }
       ],
       "monitoring_signals": ["中国EUV原型机进展", "SMEE浸没式DUV量产进度", "中国半导体设备进口变化"]
     }

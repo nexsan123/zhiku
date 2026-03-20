@@ -3,16 +3,16 @@
 //! Static JSON data compiled into the binary via `include_str!()`.
 //! Each AI service module picks only the subset it needs.
 
-/// 15-country structural profiles (economy, energy, military, finance, geopolitics).
+/// 16-country structural profiles (economy, energy, military, finance, geopolitics).
 pub const COUNTRY_PROFILES: &str = include_str!("../data/country_profiles.json");
 
 /// 8 structural causal chains (dollar hegemony, credit cycle, etc.).
 pub const POWER_STRUCTURES: &str = include_str!("../data/power_structures.json");
 
-/// 15 bilateral geopolitical edges + 3 meta patterns.
+/// 16 bilateral geopolitical edges + 3 meta patterns.
 pub const GEOPOLITICAL_GRAPH: &str = include_str!("../data/geopolitical_graph.json");
 
-/// 59 RSS source bias annotations with lean/reliability ratings.
+/// 59+ RSS source bias annotations with lean/reliability ratings.
 pub const MEDIA_BIAS_REGISTRY: &str = include_str!("../data/media_bias_registry.json");
 
 /// Per-country per-indicator data reliability scores (0.0-1.0).

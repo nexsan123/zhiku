@@ -316,12 +316,14 @@ pub async fn reason_five_layer(
 
     // Enrich system prompt with country profiles, causal chains, and geopolitical graph
     let five_layer_enriched = format!(
-        "{}\n\n=== 知识库 ===\n\n--- 15国结构画像 ---\n{}\n\n--- 结构性因果链 ---\n{}\n\n--- 数据可信度评分 ---\n{}\n\n--- 地缘关系图 ---\n{}",
+        "{}\n\n=== 知识库 ===\n\n--- 16国结构画像 ---\n{}\n\n--- 16国角色+控制链 ---\n{}\n\n--- 结构性因果链 ---\n{}\n\n--- 数据可信度评分 ---\n{}\n\n--- 地缘关系图 ---\n{}\n\n--- 事件触发模板 ---\n{}",
         FIVE_LAYER_SYSTEM_PROMPT,
         knowledge_base::country_profiles_slim(),
+        knowledge_base::country_roles_slim(),
         knowledge_base::power_structures_slim(),
         knowledge_base::DATA_RELIABILITY,
         knowledge_base::geopolitical_graph_slim(),
+        knowledge_base::event_triggers_slim(),
     );
 
     let response =
@@ -522,7 +524,8 @@ fn build_five_layer_prompt(input: &FiveLayerInput, previous_reasoning: Option<&s
     if !input.intelligence_summaries.is_empty() {
         prompt.push_str("Recent intelligence:\n");
         for (i, s) in input.intelligence_summaries.iter().take(5).enumerate() {
-            prompt.push_str(&format!("  [{}] {}\n", i + 1, s));
+            let truncated: String = s.chars().take(200).collect();
+            prompt.push_str(&format!("  [{}] {}\n", i + 1, truncated));
         }
     }
     if !input.active_scenarios.is_empty() {
