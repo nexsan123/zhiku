@@ -497,6 +497,47 @@ export interface GeopoliticalRisk {
   riskLevel: string;
   keyEvents: string[];
   eventCount: number;
+  tradeEvents: string[];
+  tradeCount: number;
+  macroPolicyEvents: string[];
+  macroPolicyCount: number;
+  centralBankEvents: string[];
+  centralBankCount: number;
+  energyEvents: string[];
+  energyCount: number;
+}
+
+export interface CommodityCycle {
+  oilPrice: number;
+  oilTrend: number;
+  goldPrice: number;
+  goldTrend: number;
+  copperPrice: number;
+  copperTrend: number;
+  natgasPrice: number;
+  natgasTrend: number;
+  phase: string;
+}
+
+export interface CryptoSignal {
+  btcPrice: number;
+  btcTrend: number;
+  phase: string;
+}
+
+export interface FiscalSnapshot {
+  usDebtGdp: number;
+  cnDebtGdp: number;
+  usFiscalBalance: number;
+  cnFiscalBalance: number;
+  usGdpGrowth: number;
+  cnGdpGrowth: number;
+}
+
+export interface EnergyData {
+  wtiPrice: number;
+  brentPrice: number;
+  spread: number;
 }
 
 export interface CycleIndicators {
@@ -506,6 +547,10 @@ export interface CycleIndicators {
   market: MarketCycle;
   sentiment: SentimentCycle;
   geopolitical: GeopoliticalRisk;
+  commodities: CommodityCycle;
+  crypto: CryptoSignal;
+  fiscal: FiscalSnapshot;
+  energy: EnergyData;
   calculatedAt: string;
 }
 
@@ -534,7 +579,23 @@ const MOCK_CYCLE_INDICATORS: CycleIndicators = {
   economic: { gdpGrowth: 2.8, unemployment: 3.9, cpiInflation: 3.1, phase: 'mid_expansion' },
   market: { sp500Trend: 4.2, vixLevel: 16.5, dxyTrend: -1.3, phase: 'bull' },
   sentiment: { fearGreed: 72, newsSentimentAvg: 0.65, phase: 'optimism' },
-  geopolitical: { riskLevel: 'moderate', keyEvents: ['中东紧张局势', '美中贸易摩擦'], eventCount: 2 },
+  geopolitical: {
+    riskLevel: 'moderate',
+    keyEvents: ['中东紧张局势', '美中贸易摩擦'],
+    eventCount: 2,
+    tradeEvents: [],
+    tradeCount: 0,
+    macroPolicyEvents: [],
+    macroPolicyCount: 0,
+    centralBankEvents: [],
+    centralBankCount: 0,
+    energyEvents: [],
+    energyCount: 0,
+  },
+  commodities: { oilPrice: 78.5, oilTrend: -1.2, goldPrice: 2050.0, goldTrend: 0.8, copperPrice: 3.85, copperTrend: 0.3, natgasPrice: 2.1, natgasTrend: -0.5, phase: 'contraction' },
+  crypto: { btcPrice: 67000, btcTrend: 5.2, phase: 'bull' },
+  fiscal: { usDebtGdp: 122.3, cnDebtGdp: 51.2, usFiscalBalance: -6.2, cnFiscalBalance: -3.8, usGdpGrowth: 2.5, cnGdpGrowth: 4.9 },
+  energy: { wtiPrice: 78.5, brentPrice: 82.1, spread: 3.6 },
   calculatedAt: new Date().toISOString(),
 };
 

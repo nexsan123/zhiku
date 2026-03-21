@@ -47,6 +47,7 @@ const KNOWN_KEYS: &[&str] = &[
     "claude_api_key",
     "ollama_base_url",
     "disabled_rss_urls",
+    "rsshub_base_url",
 ];
 
 /// Mask an API key for display: show first 3 + last 4 chars.

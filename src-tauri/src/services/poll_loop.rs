@@ -714,8 +714,8 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
                         }
 
                         // Emit event for frontend
-                        app.emit("five-layer-updated", &reasoning)
-                            .unwrap_or_else(|e| log::warn!("Failed to emit five-layer-updated: {}", e));
+                        app.emit("five-layer-reasoning-updated", &reasoning)
+                            .unwrap_or_else(|e| log::warn!("Failed to emit five-layer-reasoning-updated: {}", e));
 
                         log::info!(
                             "PollLoop [FiveLayerReasoning]: completed, confidence={:.2}, took {}ms",
