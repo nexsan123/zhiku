@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshCw } from 'lucide-react';
 import { getMacroData, isTauri, MOCK_FEAR_GREED } from '@services/tauri-bridge';
+import { TrendIndicator } from '@components/common/TrendIndicator';
 import './FearGreedPanel.css';
 
 type LoadState = 'loading' | 'loaded' | 'error';
@@ -88,6 +89,9 @@ export function FearGreedPanel() {
         <span className={`fear-greed__label fear-greed__label--${modifier}`}>
           {t(labelKey)}
         </span>
+        <div className="fear-greed__sparkline">
+          <TrendIndicator indicator="fear_greed" days={30} width={100} height={28} />
+        </div>
       </div>
 
       {/* Gradient progress bar */}

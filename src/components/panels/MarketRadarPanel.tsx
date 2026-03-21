@@ -3,7 +3,17 @@ import { useTranslation } from 'react-i18next';
 import { RefreshCw } from 'lucide-react';
 import { getMarketRadar, listenMarketUpdated } from '@services/tauri-bridge';
 import type { MarketRadarData } from '@services/tauri-bridge';
+import { TrendIndicator } from '@components/common/TrendIndicator';
 import './MarketRadarPanel.css';
+
+/**
+ * Map signal names to backend indicator IDs for sparkline display.
+ * Only signals listed here will get a sparkline; others show nothing.
+ */
+const SIGNAL_TREND_MAP: Record<string, string> = {
+  'VIX Level': 'vix',
+  'S&P 500': 'sp500_price',
+};
 
 type LoadState = 'loading' | 'loaded' | 'error';
 
@@ -77,12 +87,20 @@ export function MarketRadarPanel() {
       <ul className="market-radar__signals" aria-label="Market signals">
         {data.signals.map((signal) => {
           const { modifier, labelKey } = signalKey(signal.bullish);
+          const trendKey = SIGNAL_TREND_MAP[signal.name];
           return (
             <li key={signal.name} className="market-radar__row">
               <div className="market-radar__signal-left">
                 <span className="market-radar__name">{signal.name}</span>
                 <span className="market-radar__detail">{signal.detail}</span>
               </div>
+              {trendKey ? (
+                <div className="market-radar__spark">
+                  <TrendIndicator indicator={trendKey} days={30} width={72} height={24} />
+                </div>
+              ) : (
+                <div className="market-radar__spark" aria-hidden="true" />
+              )}
               <span className={`market-radar__verdict market-radar__verdict--${modifier}`}>
                 {t(labelKey)}
               </span>

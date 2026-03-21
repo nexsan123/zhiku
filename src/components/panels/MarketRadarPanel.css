@@ -52,9 +52,10 @@
 }
 
 .market-radar__row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 80px auto;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--spacing-2);
   padding: var(--spacing-1) 0;
   border-bottom: 1px solid var(--glass-border-subtle);
 }
@@ -80,10 +81,19 @@
   font-family: var(--font-mono);
 }
 
+/* ---- Sparkline cell ---- */
+.market-radar__spark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+}
+
 .market-radar__verdict {
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   font-family: var(--font-mono);
+  text-align: right;
 }
 
 .market-radar__verdict--bullish {

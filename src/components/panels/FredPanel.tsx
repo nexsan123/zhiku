@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { RefreshCw } from 'lucide-react';
 import { getMacroData, listenMacroUpdated } from '@services/tauri-bridge';
 import type { MacroDataItem } from '@services/tauri-bridge';
+import { TrendIndicator } from '@components/common/TrendIndicator';
 import './FredPanel.css';
 
 type LoadState = 'loading' | 'loaded' | 'error';
@@ -17,14 +18,16 @@ interface FredIndicatorConfig {
   warnHigh: number | null;
   /** Value at or above this → error color. null = no threshold. */
   dangerHigh: number | null;
+  /** Backend indicator name for trend sparkline. null = no sparkline. */
+  trendIndicator: string | null;
 }
 
 const FRED_INDICATORS: FredIndicatorConfig[] = [
-  { seriesId: 'FEDFUNDS', nameKey: 'fred.fedfunds',    unit: '%',  warnHigh: 5.5, dangerHigh: 7.0 },
-  { seriesId: 'CPIAUCSL', nameKey: 'fred.cpi',         unit: '%',  warnHigh: 4.0, dangerHigh: 6.0 },
-  { seriesId: 'UNRATE',   nameKey: 'fred.unemployment', unit: '%',  warnHigh: 5.0, dangerHigh: 7.0 },
-  { seriesId: 'GDP',      nameKey: 'fred.gdp',         unit: 'T',  warnHigh: null, dangerHigh: null },
-  { seriesId: 'M2SL',     nameKey: 'fred.m2',         unit: 'B',  warnHigh: null, dangerHigh: null },
+  { seriesId: 'FEDFUNDS', nameKey: 'fred.fedfunds',     unit: '%', warnHigh: 5.5, dangerHigh: 7.0, trendIndicator: 'fed_rate' },
+  { seriesId: 'CPIAUCSL', nameKey: 'fred.cpi',          unit: '%', warnHigh: 4.0, dangerHigh: 6.0, trendIndicator: 'cpi_yoy' },
+  { seriesId: 'UNRATE',   nameKey: 'fred.unemployment',  unit: '%', warnHigh: 5.0, dangerHigh: 7.0, trendIndicator: null },
+  { seriesId: 'GDP',      nameKey: 'fred.gdp',          unit: 'T', warnHigh: null, dangerHigh: null, trendIndicator: 'gdp_growth' },
+  { seriesId: 'M2SL',     nameKey: 'fred.m2',           unit: 'B', warnHigh: null, dangerHigh: null, trendIndicator: null },
 ];
 
 type ValueStatus = 'normal' | 'warning' | 'danger' | 'na';
@@ -108,6 +111,16 @@ export function FredPanel() {
                 <span className="fred__period">
                   {row ? formatPeriod(row.period) : t('fred.noData')}
                 </span>
+              </div>
+              <div className="fred__spark">
+                {config.trendIndicator && (
+                  <TrendIndicator
+                    indicator={config.trendIndicator}
+                    days={30}
+                    width={80}
+                    height={28}
+                  />
+                )}
               </div>
               <div className="fred__right">
                 <span className={`fred__value fred__value--${status}`}>

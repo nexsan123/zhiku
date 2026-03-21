@@ -103,6 +103,13 @@
   color: var(--color-semantic-success);
 }
 
+/* ---- Sparkline (trend history) ---- */
+.fear-greed__sparkline {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
 /* ---- Progress bar ---- */
 .fear-greed__bar-track {
   position: relative;

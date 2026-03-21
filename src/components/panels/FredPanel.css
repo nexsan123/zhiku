@@ -59,9 +59,10 @@
 }
 
 .fred__row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 88px auto;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--spacing-2);
   padding: var(--spacing-1) 0;
   border-bottom: 1px solid var(--glass-border-subtle);
 }
@@ -95,10 +96,18 @@
   color: var(--color-text-disabled);
 }
 
+/* ---- Center: sparkline ---- */
+.fred__spark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* ---- Right: value ---- */
 .fred__right {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
 }
 
 .fred__value {
