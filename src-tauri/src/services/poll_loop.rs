@@ -935,12 +935,24 @@ pub fn start_poll_loop(app_handle: tauri::AppHandle, pool: SqlitePool, mc_pool: 
         tauri::async_runtime::spawn(async move {
             // Wait 4 minutes for indicator data sources to populate first
             tokio::time::sleep(Duration::from_secs(4 * 60)).await;
+            // Immediate first snapshot so sparklines have data on startup
+            match crate::services::trend_tracker::snapshot_indicators(&pool).await {
+                Ok(count) => log::info!("PollLoop [TrendTracker]: initial snapshot {} indicators", count),
+                Err(e) => log::warn!("PollLoop [TrendTracker]: initial snapshot failed: {}", e),
+            }
+            // Second snapshot after 2h to give sparklines ≥2 data points sooner
+            tokio::time::sleep(Duration::from_secs(2 * 60 * 60)).await;
+            match crate::services::trend_tracker::snapshot_indicators(&pool).await {
+                Ok(count) => log::info!("PollLoop [TrendTracker]: early snapshot {} indicators", count),
+                Err(e) => log::warn!("PollLoop [TrendTracker]: early snapshot failed: {}", e),
+            }
+            // Then regular 6h interval
             loop {
+                tokio::time::sleep(snapshot_interval).await;
                 match crate::services::trend_tracker::snapshot_indicators(&pool).await {
                     Ok(count) => log::info!("PollLoop [TrendTracker]: snapshot {} indicators", count),
                     Err(e) => log::warn!("PollLoop [TrendTracker]: {}", e),
                 }
-                tokio::time::sleep(snapshot_interval).await;
             }
         });
     }
