@@ -57,6 +57,7 @@ pub fn run() {
             commands::ai::get_indicator_trend,
             commands::ai::get_available_indicators,
             commands::ai::analyze_company,
+            commands::ai::reclassify_stale_news,
         ])
         .setup(|app| {
             let app_data_dir = app

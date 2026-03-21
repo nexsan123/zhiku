@@ -1,6 +1,7 @@
 use chrono::Utc;
 use serde::Deserialize;
 use sqlx::SqlitePool;
+use std::collections::HashMap;
 use uuid::Uuid;
 
 use crate::errors::AppError;
@@ -338,6 +339,232 @@ fn normalize_category(raw: &str) -> String {
         _ => "market", // fallback
     }
     .to_string()
+}
+
+/// Result of batch reclassification of stale "market" news.
+#[derive(Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReclassifyResult {
+    pub total_candidates: usize,
+    pub processed: usize,
+    pub changed: usize,
+    pub unchanged: usize,
+    pub failed: usize,
+    pub category_counts: HashMap<String, usize>,
+}
+
+/// Lightweight struct for parsing category-only AI responses.
+#[derive(Debug, Deserialize)]
+struct CategoryOnly {
+    category: String,
+}
+
+/// Prompt template for lightweight category-only reclassification.
+/// Only sends title (no content) to save tokens.
+const RECLASSIFY_PROMPT_TEMPLATE: &str = r#"只根据标题判断新闻类别，回复 JSON: {"category":"xxx"}
+
+标题: {title}
+
+category 必须是以下8个值之一:
+macro_policy | market | geopolitical | central_bank | trade | crypto | energy | supply_chain
+
+判断标准:
+- geopolitical: 国际关系、制裁、军事、领土争端、外交、战争、联盟
+- macro_policy: 货币政策、财政政策、利率、通胀、GDP、就业数据
+- central_bank: 央行声明、利率决议、QE/QT、央行官员讲话
+- trade: 关税、贸易协定、进出口、WTO
+- energy: 石油、天然气、OPEC、可再生能源、能源价格
+- crypto: 加密货币、区块链、DeFi、稳定币
+- supply_chain: 航运、芯片短缺、物流中断、制造业转移
+- market: 仅用于纯市场行情（股价、指数、IPO、财报）
+
+只输出 JSON:"#;
+
+/// Reclassify news articles that are stuck with default "market" category.
+///
+/// Only sends title to AI for lightweight category-only classification.
+/// Much cheaper than full summarization (no summary/sentiment/keywords regeneration).
+///
+/// Processes up to 50 articles per batch with 3s delay between requests.
+/// Handles 429 rate-limiting with a single 30s-delay retry.
+pub async fn reclassify_stale_batch(
+    pool: &SqlitePool,
+    config: &ResolvedAiConfig,
+    provider: &str,
+) -> Result<ReclassifyResult, AppError> {
+    // Fetch candidates: have AI summary but still tagged "market"
+    let candidates: Vec<(String, String)> = sqlx::query_as(
+        "SELECT id, title FROM news \
+         WHERE category = 'market' AND ai_summary IS NOT NULL \
+         ORDER BY published_at ASC LIMIT 50",
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| AppError::Database(format!("Query stale market news failed: {}", e)))?;
+
+    let total_candidates = candidates.len();
+    if total_candidates == 0 {
+        return Ok(ReclassifyResult {
+            total_candidates: 0,
+            processed: 0,
+            changed: 0,
+            unchanged: 0,
+            failed: 0,
+            category_counts: HashMap::new(),
+        });
+    }
+
+    log::info!(
+        "Reclassifier: {} candidate articles to reclassify",
+        total_candidates
+    );
+
+    let mut processed: usize = 0;
+    let mut changed: usize = 0;
+    let mut unchanged: usize = 0;
+    let mut failed: usize = 0;
+    let mut category_counts: HashMap<String, usize> = HashMap::new();
+
+    for (idx, (news_id, title)) in candidates.iter().enumerate() {
+        // Throttle: 3s delay between requests
+        if idx > 0 {
+            tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+        }
+
+        let prompt = RECLASSIFY_PROMPT_TEMPLATE.replace("{title}", title);
+
+        // Send lightweight classification request
+        let response = match ai_router::reason(&prompt, None, config, provider).await {
+            Ok(resp) => resp,
+            Err(e) => {
+                let err_msg = e.to_string().to_lowercase();
+                if err_msg.contains("429") || err_msg.contains("rate limit") {
+                    log::warn!(
+                        "Reclassifier: rate-limited on news {}, waiting 30s before retry",
+                        news_id
+                    );
+                    tokio::time::sleep(std::time::Duration::from_secs(30)).await;
+                    // Single retry
+                    match ai_router::reason(&prompt, None, config, provider).await {
+                        Ok(resp) => resp,
+                        Err(retry_err) => {
+                            log::warn!(
+                                "Reclassifier: retry also failed for {}: {}",
+                                news_id,
+                                retry_err
+                            );
+                            failed += 1;
+                            continue;
+                        }
+                    }
+                } else {
+                    log::warn!("Reclassifier: AI call failed for {}: {}", news_id, e);
+                    failed += 1;
+                    continue;
+                }
+            }
+        };
+
+        if response.is_empty() {
+            log::warn!("Reclassifier: empty response for news {}", news_id);
+            failed += 1;
+            continue;
+        }
+
+        // Parse category from AI response
+        let new_category = match parse_category_only(&response) {
+            Some(cat) => normalize_category(&cat),
+            None => {
+                log::warn!(
+                    "Reclassifier: unparseable response for {}: {}",
+                    news_id,
+                    &response.chars().take(200).collect::<String>()
+                );
+                failed += 1;
+                continue;
+            }
+        };
+
+        processed += 1;
+        *category_counts.entry(new_category.clone()).or_insert(0) += 1;
+
+        if new_category != "market" {
+            // Update category in news table
+            if let Err(e) = sqlx::query("UPDATE news SET category = ?1 WHERE id = ?2")
+                .bind(&new_category)
+                .bind(news_id)
+                .execute(pool)
+                .await
+            {
+                log::warn!(
+                    "Reclassifier: DB update failed for {}: {}",
+                    news_id,
+                    e
+                );
+                failed += 1;
+                continue;
+            }
+            changed += 1;
+            log::debug!(
+                "Reclassifier: {} reclassified market -> {}",
+                news_id,
+                new_category
+            );
+        } else {
+            unchanged += 1;
+        }
+    }
+
+    log::info!(
+        "Reclassifier: processed={}/{}, changed={}, unchanged={}, failed={}",
+        processed,
+        total_candidates,
+        changed,
+        unchanged,
+        failed
+    );
+
+    Ok(ReclassifyResult {
+        total_candidates,
+        processed,
+        changed,
+        unchanged,
+        failed,
+        category_counts,
+    })
+}
+
+/// Parse a category-only JSON response from AI.
+///
+/// Tries direct parse, markdown stripping, then JSON object extraction.
+/// Returns the raw category string (not yet normalized).
+fn parse_category_only(response: &str) -> Option<String> {
+    let trimmed = response.trim();
+
+    // Try direct parse
+    if let Ok(cat) = serde_json::from_str::<CategoryOnly>(trimmed) {
+        return Some(cat.category);
+    }
+
+    // Try stripping markdown code block markers
+    let stripped = trimmed
+        .trim_start_matches("```json")
+        .trim_start_matches("```")
+        .trim_end_matches("```")
+        .trim();
+
+    if let Ok(cat) = serde_json::from_str::<CategoryOnly>(stripped) {
+        return Some(cat.category);
+    }
+
+    // Try extracting first JSON object
+    if let Some(json_str) = extract_json_object(trimmed) {
+        if let Ok(cat) = serde_json::from_str::<CategoryOnly>(&json_str) {
+            return Some(cat.category);
+        }
+    }
+
+    None
 }
 
 /// Extract the first top-level JSON object from a string.

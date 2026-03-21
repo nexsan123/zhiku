@@ -324,6 +324,28 @@ pub async fn get_available_indicators(
         .map_err(|e| e.to_string())
 }
 
+/// Reclassify stale news articles stuck with default "market" category.
+///
+/// Finds news that have an AI summary but are still categorized as "market",
+/// sends only the title to AI for lightweight category-only reclassification.
+/// Much cheaper than full summarization (no summary/sentiment/keywords regeneration).
+///
+/// Frontend: invoke('reclassify_stale_news')
+///
+/// # Returns
+/// `ReclassifyResult` with counts of processed, changed, unchanged, failed articles
+/// and a category distribution map.
+#[tauri::command]
+pub async fn reclassify_stale_news(
+    pool: State<'_, SqlitePool>,
+    app: tauri::AppHandle,
+) -> Result<summarizer::ReclassifyResult, String> {
+    let (config, provider) = crate::services::ai_config::resolve_batch_config(&app);
+    summarizer::reclassify_stale_batch(pool.inner(), &config, &provider)
+        .await
+        .map_err(|e| e.to_string())
+}
+
 /// Analyze a company by searching news and generating AI investment analysis.
 ///
 /// Searches the news table for articles matching the query (company name or ticker),
