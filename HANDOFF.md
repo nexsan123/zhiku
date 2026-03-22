@@ -5,53 +5,70 @@
 ## 当前状态
 
 - **分支**: master
-- **最近 commit**: `9e00fc8` fix: address cross-checker findings KB-001~KB-005
+- **最近 commit**: `037c51f` docs: add PROJECT-MAP.md full project panorama
+- **GitHub**: https://github.com/nexsan123/zhiku (private)
+- **Mac 运行中**: app 在 MacBook 上持续运行积累数据（2026-03-22 启动）
 
-## 本次 Session 完成（2026-03-20）
+## 本次 Session 完成（2026-03-22）
 
-### 1. 国家分析体系丙方案自审 + 修复
+### 1. 连线扫描 + 3 个断裂修复
 
-- CN.md 3处评级矛盾修复（技术B+→B / 债务B→B- / 人口B-→C+）
-- CN.md 3.2控制表与正文对齐（马六甲/大豆/SWIFT）
-- CN.md 232:1数据加注来源局限性脚注
-- 新增 RU.md（俄罗斯战略画像，Important Tier）
-- ROLES.md + CONTROL_CHAINS.md 扩展为16国
+| ID | 优先级 | 问题 | 修复 | commit |
+|----|--------|------|------|--------|
+| WR-001 | P0 | poll_loop 事件名 `five-layer-updated` 与前端不匹配 | → `five-layer-reasoning-updated` | `c31b07d` |
+| WR-002 | P1 | tauri-bridge CycleIndicators 7→11 字段缺失 | 补 commodities/crypto/fiscal/energy | `c31b07d` |
+| WR-003 | P1 | settings.rs KNOWN_KEYS 缺 rsshub_base_url | 添加 | `c31b07d` |
 
-### 2. 知识库 JSON 集成（阶段 A/B/C 完成）
+### 2. 新闻分类数据质量修复
 
-| 阶段 | 内容 | commit |
-|------|------|--------|
-| A | RU 加入 country_profiles.json + data_reliability.json（15→16国） | `0fff182` |
-| B | 新建 event_triggers.json（15事件+6交叉组合）→ 注入 scenario_engine + deep_analyzer | `8af8ad9` |
-| C | 新建 country_roles.json（16国角色+5链位置+行为模式）→ 注入 cycle_reasoner + deep_analyzer | `b0453bc` |
-| fix | Cross-checker KB-001~005 全部修复（token截断/P2事件补字段/注释/文档同步） | `9e00fc8` |
+- 新建 `reclassify_stale_news` Tauri command（轻量级，只发标题问分类）
+- Python 脚本批量执行：1999 条处理，679 条从 market 修正到正确分类
+- 分布改善：macro_policy +265, geopolitical +204, energy +149, crypto +53
+- commit: `83ea4f8`
 
-### 3. AI 推理引擎现有知识库总览
+### 3. SVG Sparkline 趋势图
 
-| 知识库 | 文件 | 消费方 |
-|--------|------|--------|
-| country_profiles (16国) | country_profiles.json → slim | cycle_reasoner, deep_analyzer |
-| country_roles (16国角色+链) | country_roles.json → slim | cycle_reasoner, deep_analyzer |
-| event_triggers (15事件) | event_triggers.json → slim | scenario_engine, deep_analyzer |
-| geopolitical_graph (16关系) | geopolitical_graph.json → slim | deep_analyzer, scenario_engine |
-| power_structures (8因果链) | power_structures.json → slim | cycle_reasoner, deep_analyzer, scenario_engine |
-| media_bias (59+源) | media_bias_registry.json → slim | summarizer, deep_analyzer |
-| data_reliability (16国) | data_reliability.json (full) | cycle_reasoner |
-| policy_calendar (12事件) | policy_calendar.json (full) | scenario_engine |
+- 新建 Sparkline.tsx（纯 SVG，零依赖）+ TrendIndicator.tsx（封装数据获取）
+- 集成到 FredPanel（fed_rate/cpi_yoy/gdp_growth）、FearGreedPanel（fear_greed）、MarketRadarPanel（vix）
+- TrendTracker 启动即拍快照（4min warmup → immediate → 2h → 6h loop）
+- commits: `d6726b3`, `219553f`
 
-### 4. 自审发现的系统性倾向（已记录、未大改）
-- CN.md 论证结构="反驳西方叙事"式，US.md="解构优势"式 — 不对称但结论本身合理
-- 232:1造船数据被修辞化 — 已加脚注标注来源局限
+### 4. RSSHub 部署
 
-## 下一步
+- 阿里云轻量 VPS（美西硅谷，4核8GB）：`47.89.210.88:1200`
+- 智库 settings.json 已配置 rsshub_base_url
+- 验证通过：财新/一财/财联社/华尔街见闻 全部可抓
 
-- **阶段 D（可选）**：geopolitical_graph.json 增强翻转信号+暗线（增量优化，优先级低）
-- **KB-006（已知）**：geopolitical_graph 边覆盖不对称（GB/CA/AU/KR/ZA/AE无边），阶段D可解决
-- **Company-Level Intelligence for QT (XL)** — 详见 memory `project_next_phase.md`
-- **reasoning_scorer 回测** — 系统已写好，用它验证AI推理准确率
+### 5. 项目全景图
+
+- 新建 `PROJECT-MAP.md`（12章节 445行，@cross-checker 实扫产出）
+- 覆盖：架构总览/数据源/DB/AI引擎/面板/Command/QT对接/知识库/事件总线/状态/路线
+- GitHub 仓库创建并推送：`https://github.com/nexsan123/zhiku`
+
+### 6. Mac 部署
+
+- MacBook 克隆项目，安装依赖，编译通过
+- 配置 API Key（Groq/DeepSeek/FRED/EIA）+ RSSHub URL
+- app 持续运行中，积累数据
+
+## 当前阶段
+
+**Phase 6：实战运行**（2026-03-22 开始）
+- Mac 挂机运行 1-2 周积累数据
+- 目标：indicator_history 积累 120+ 数据点，消化 3259 条积压新闻，中文源入库
+- 1-2 周后回来做数据质量审计 + reasoning_scorecard 回测
+
+## 下一步（Phase 6 完成后）
+
+1. **数据质量审计** — 检查 AI 推理准确率（reasoning_scorecard 回测）
+2. **QT 实战验证** — QuantTerminal 消费 adjustment-factors，评估对策略的影响
+3. **Company-Level Intelligence (XL)** — 详见 memory `project_next_phase.md`
+4. **geopolitical_graph 增强** — KB-006 不对称边修复
 
 ## 未解决问题
 
-- Claude API Key 未配置（深度推理不可用）
-- 中文 RSS 源 21 个待自建 RSSHub
+- Claude API Key 未配置（深度推理交叉验证不可用）
+- Ollama 未安装（本地 AI 兜底不可用）
 - WTO API Key 未注册
+- 2 个面板为静态展示（SupplyChainPanel / GulfFdiPanel）
+- listenCycleUpdated 孤立定义待清理
