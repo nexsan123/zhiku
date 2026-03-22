@@ -29,3 +29,6 @@ npm-debug.log*
 src-tauri/gen/
 
 nul
+
+# Local settings (contains machine-specific paths)
+.claude/settings.local.json

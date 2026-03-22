@@ -1,13 +1,13 @@
 # 智库 — 连线总册 (Wiring Registry)
 
 > 由 @cross-checker 自动维护。Lead 审核，不手动编辑。
-> 最后更新：2026-03-20 by @cross-checker (reverse 全量扫描)
+> 最后更新：2026-03-22 by @cross-checker (reverse 增量扫描 commits 83ea4f8/d6726b3/219553f)
 
 ---
 
-**版本**：v3.0
+**版本**：v3.1
 **扫描范围**：`src-tauri/src/` + `src/` + `contracts/` + `src-tauri/capabilities/`
-**发现问题**：3 项需修复（P0×1, P1×2）+ 5 项待关注（P2）
+**发现问题**：0 项（本次增量扫描全部通过）+ WR-001~003 已于 2026-03-21 修复
 
 ---
 
@@ -38,9 +38,10 @@
 | 19 | `get_deep_analyses` | commands/ai.rs:259 | YES | YES | IntelBriefPanel |
 | 20 | `get_daily_brief` | commands/ai.rs:275 | YES | YES | DailyBriefPanel |
 | 21 | `get_alerts` | commands/ai.rs:290 | YES | YES | AlertToast |
-| 22 | `get_indicator_trend` | commands/ai.rs:305 | YES | YES | tauri-bridge 已定义，无面板消费 |
+| 22 | `get_indicator_trend` | commands/ai.rs:305 | YES | YES | TrendIndicator 组件消费（FredPanel/FearGreedPanel/MarketRadarPanel）|
 | 23 | `get_available_indicators` | commands/ai.rs:319 | YES | **NO** | 无前端 invoke（孤立，Wave 4 预留）|
 | 24 | `analyze_company` | commands/ai.rs:334 | YES | **NO** | 无前端 invoke（孤立，Wave 4 预留）|
+| 25 | `reclassify_stale_news` | commands/ai.rs:339 | YES | **NO** | 管理型批量修复 command，无常驻面板调用（孤立，正常）|
 | 25 | `open_url` | commands/shell.rs:2 | YES | YES | NewsDetailModal |
 | 26 | `get_settings` | commands/settings.rs:79 | YES | YES | SettingsPage 所有 Tab |
 | 27 | `set_setting` | commands/settings.rs:103 | YES | YES | ApiKeysTab / DataSourcesTab |
@@ -63,6 +64,7 @@
 **孤立后端 Command 汇总（无前端 invoke）**：
 - 内部专用（正常）：`fetch_fred`, `fetch_market`, `update_api_status`
 - 功能预留（Wave 4）：`get_available_indicators`, `analyze_company`, `get_country_credit_detail`
+- 管理型工具（正常）：`reclassify_stale_news`（一次性批量修复工具，不需常驻面板入口）
 
 ---
 
@@ -75,8 +77,7 @@
 | `macro-updated` | poll_loop.rs:335, 369, 768 | tauri-bridge.ts:397 → FredPanel/BisPanel | ✅ |
 | `ai-summary-completed` | poll_loop.rs:264 | tauri-bridge.ts:674 → AiBriefPanel/NewsFeedPanel | ✅ |
 | `cycle-reasoning-updated` | commands/ai.rs:176 | tauri-bridge.ts:573（已定义，无面板消费） | ⚠️ 部分连线 |
-| `five-layer-reasoning-updated` | commands/ai.rs:250 | tauri-bridge.ts:1055 → CycleReasoningPanel/ForwardLookPanel | ✅ |
-| **`five-layer-updated`** | **poll_loop.rs:717** | **无（前端监听 `five-layer-reasoning-updated`）** | 🔴 **WR-001 断裂** |
+| `five-layer-reasoning-updated` | commands/ai.rs:250 + poll_loop.rs:717 | tauri-bridge.ts:1055 → CycleReasoningPanel/ForwardLookPanel | ✅（WR-001 已修复 commit c31b07d）|
 | `deep-analysis-completed` | poll_loop.rs:614 | tauri-bridge.ts:1064 → IntelBriefPanel | ✅ |
 | `scenario-updated` | poll_loop.rs:646 | tauri-bridge.ts:1073 → GameMapPanel | ✅ |
 | `daily-brief-updated` | poll_loop.rs:869 | tauri-bridge.ts:1134 → DailyBriefPanel | ✅ |
@@ -84,10 +85,9 @@
 | `api-status-changed` | poll_loop.rs:1045 | tauri-bridge.ts:354 → App.tsx → store | ✅ |
 | `poll-loop-ready` | poll_loop.rs:216 | 无（信号丢弃，无功能影响） | ⚠️ 可接受 |
 
-**WR-001 详情**：
-- 后端 poll_loop.rs:717 emit `"five-layer-updated"`
-- 前端 tauri-bridge.ts:1055 listen `"five-layer-reasoning-updated"`
-- 后果：后台每6小时自动触发的五层推理更新无法推送到 CycleReasoningPanel / ForwardLookPanel。只有用户手动 trigger 时（走 commands/ai.rs:250）能触发更新。
+**WR-001 已修复（commit c31b07d，2026-03-21）**：
+poll_loop.rs:717 已改为 `app.emit("five-layer-reasoning-updated", &reasoning)`，与前端 listen 对齐。
+后台定时 6h + 手动 trigger 两条路径现在均能推送到 CycleReasoningPanel / ForwardLookPanel。
 
 ---
 
@@ -95,7 +95,7 @@
 
 | Capability 文件 | 权限列表 | 覆盖范围 |
 |----------------|---------|---------|
-| `capabilities/default.json` | `core:default`, `core:event:default`, `shell:default` | 全部 42 个自定义 commands + 事件系统 |
+| `capabilities/default.json` | `core:default`, `core:event:default`, `shell:default` | 全部 45 个自定义 commands + 事件系统（含 reclassify_stale_news / get_indicator_trend / get_available_indicators）|
 | `capabilities/data-engine.json` | `store:default`, `sql:default` | 持久化存储 + 数据库 |
 | `capabilities/window.json` | start-dragging, minimize, maximize, close, set-focus | 窗口管理 |
 
@@ -124,7 +124,7 @@
 | `MarketRadarSignal` | 3 | `RadarSignal` | 3 | ✅（CC-001 已修复）|
 | `MarketRadarData` | 4 | `MarketRadar` | 4 | ✅ |
 | `AiBriefCategory` | 5 | `AiBriefItem` | 5 | ✅ |
-| `CycleIndicators` | **7** | `CycleIndicators` | **11** | 🔴 **WR-002 缺 4 字段** |
+| `CycleIndicators` | 11 | `CycleIndicators` | 11 | ✅（WR-002 已修复 commit c31b07d）|
 | `CycleReasoning` | 9 | `CycleReasoning` | 9 | ✅ |
 | `TurningSignal` | 3 | `TurningSignal` | 3 | ✅ |
 | `FiveLayerReasoning` | 18 | `FiveLayerReasoning` | 18 | ✅ |
@@ -154,17 +154,10 @@
 | `Alert` | 8 | `Alert` | 8 | ✅ |
 | `TrendPoint` | 3 | `TrendPoint` | 3 | ✅ |
 
-**WR-002 CycleIndicators 缺失字段详情**：
+**WR-002 已修复（commit c31b07d，2026-03-21）**：
 
-TS `CycleIndicators`（tauri-bridge.ts:502）只有 7 字段：
-`monetary, credit, economic, market, sentiment, geopolitical, calculatedAt`
-
-Rust `CycleIndicators`（models/ai.rs:140）有 11 字段：
-`monetary, credit, economic, market, sentiment, geopolitical, commodities, crypto, fiscal, energy, calculated_at`
-
-缺失：`commodities: CommodityCycle`, `crypto: CryptoSignal`, `fiscal: FiscalSnapshot`, `energy: EnergyData`
-
-后果：Rust 会将这 4 个字段序列化发到前端，TypeScript 类型系统无法感知，面板无法通过类型安全访问这 4 个维度。
+tauri-bridge.ts `CycleIndicators` 接口已补充全部 11 字段，与 models/ai.rs:140 完全对齐：
+`monetary, credit, economic, market, sentiment, geopolitical, commodities, crypto, fiscal, energy, calculatedAt`
 
 ---
 
@@ -179,15 +172,11 @@ Rust `CycleIndicators`（models/ai.rs:140）有 11 字段：
 | `claude_api_key` | (AiModelsTab 间接) | YES | 正常返回 | ✅ |
 | `ollama_base_url` | — | YES | 正常返回 | ✅ |
 | `disabled_rss_urls` | — | YES | 正常返回 | ✅ |
-| **`rsshub_base_url`** | **DataSourcesTab:setSetting** | **NO** | **永远 undefined** | 🔴 **WR-003** |
+| `rsshub_base_url` | DataSourcesTab:setSetting | YES（settings.rs:50 已添加）| 正常返回 | ✅（WR-003 已修复 commit c31b07d）|
 | `ai_models` | save_ai_model 直接写 | 不在 KNOWN_KEYS | list_ai_models 命令读 | ✅ 专用命令，正常 |
 
-**WR-003 详情**：
-- `DataSourcesTab.tsx:36` 调用 `setSetting('rsshub_base_url', val)` 可写入成功
-- `set_setting` 命令无 key 验证（settings.rs:103-111），任何 key 均可写
-- `get_settings`（settings.rs:83-98）只枚举 `KNOWN_KEYS` 的 7 项，`rsshub_base_url` 不在其中
-- `DataSourcesTab.tsx:24` 调用 `getSettings()` 后读取 `settings['rsshub_base_url']` → 永远 undefined
-- 用户设置的 RSSHub URL 无法回显，每次打开 Settings 都显示空白
+**WR-003 已修复（commit c31b07d，2026-03-21）**：
+settings.rs `KNOWN_KEYS` 已添加 `"rsshub_base_url"`，getSettings() 现在可正常返回该值。
 
 ---
 
@@ -312,7 +301,7 @@ get_dollar_tide → dollar_tide.rs → DollarTide → CreditCyclePanel
 → 后端 ai_router / fred_client 读取 read_store_key()
 
 用户设置 RSSHub URL → DataSourcesTab → setSetting('rsshub_base_url', val) ✅ 写入成功
-→ getSettings() 读取 → 'rsshub_base_url' 不在 KNOWN_KEYS → undefined 🔴 (WR-003)
+→ getSettings() 读取 → 'rsshub_base_url' 在 KNOWN_KEYS → 正常返回 ✅（WR-003 已修复）
 ```
 
 ---
@@ -326,8 +315,8 @@ get_dollar_tide → dollar_tide.rs → DollarTide → CreditCyclePanel
 | Yahoo Finance 失败 | 市场数据面板旧数据 | 同上 | ✅ |
 | SQLite 连接失败 | 应用启动失败 | 无降级，直接 panic | ⚠️ |
 | QuantTerminal 离线 | QT 推送失败 | 不影响主 app | ✅ 隔离 |
-| `five-layer-updated` 事件断裂 | CycleReasoningPanel/ForwardLookPanel 不自动刷新 | 用户手动 trigger 仍可用 | 🔴 WR-001 |
-| `rsshub_base_url` 无法回显 | DataSourcesTab 每次打开为空 | 用户重新输入 | 🟡 WR-003 |
+| `five-layer-updated` 事件断裂 | CycleReasoningPanel/ForwardLookPanel 不自动刷新 | 用户手动 trigger 仍可用 | ✅ WR-001 已修复 |
+| `rsshub_base_url` 无法回显 | DataSourcesTab 每次打开为空 | 用户重新输入 | ✅ WR-003 已修复 |
 
 ---
 
@@ -335,16 +324,15 @@ get_dollar_tide → dollar_tide.rs → DollarTide → CreditCyclePanel
 
 ### P0 — 阻塞（立即修复）
 
-| ID | 问题 | 位置 | 证据 | 退回 |
-|----|------|------|------|------|
-| WR-001 | 事件名不匹配：poll_loop 的五层推理 emit 名错误 | poll_loop.rs:717 | `app.emit("five-layer-updated", &reasoning)` vs `listen('five-layer-reasoning-updated', ...)` @ tauri-bridge.ts:1055 | @coder-be：将 poll_loop.rs:717 改为 `app.emit("five-layer-reasoning-updated", &reasoning)` |
+无（本版本无 P0 问题）
+
+> 历史 P0：WR-001 已修复 commit c31b07d（2026-03-21）
 
 ### P1 — 重要（本 Sprint 修复）
 
-| ID | 问题 | 位置 | 证据 | 退回 |
-|----|------|------|------|------|
-| WR-002 | CycleIndicators TS 接口缺 4 字段 | tauri-bridge.ts:502 | TS 7 字段 vs Rust 11 字段，缺 `commodities`, `crypto`, `fiscal`, `energy` | @coder-fe：在 tauri-bridge.ts `CycleIndicators` 接口补充 4 个缺失字段及对应子类型 |
-| WR-003 | rsshub_base_url 不在 KNOWN_KEYS，无法 get_settings 读取 | commands/settings.rs:42-50 | KNOWN_KEYS 7 项无 rsshub_base_url；DataSourcesTab.tsx:24 读取永远 undefined | @coder-be：在 KNOWN_KEYS 中添加 `"rsshub_base_url"` |
+无（本版本无 P1 问题）
+
+> 历史 P1：WR-002 / WR-003 已修复 commit c31b07d（2026-03-21）
 
 ### P2 — 待关注
 
@@ -352,17 +340,24 @@ get_dollar_tide → dollar_tide.rs → DollarTide → CreditCyclePanel
 |----|------|------|------|
 | WR-004 | 孤立 Command：get_available_indicators | 已注册，Bridge 无 invoke | @coder-fe：Wave 4 启用时补充 bridge 函数 |
 | WR-005 | 孤立 Command：analyze_company | 已注册，Bridge 无 invoke | 同上 |
-| WR-006 | panelId 'daily-brief' 不在 PanelId 类型 | App.tsx:158 用 `as any` 规避 | @coder-fe：contracts/app-types.ts PanelId 添加 `'daily-brief'` |
-| WR-007 | listenCycleUpdated 已定义但无组件调用 | tauri-bridge.ts:571 | 确认是否已被 listenFiveLayerUpdated 取代，如是标记废弃 |
+| WR-006 | panelId 'daily-brief' 不在 PanelId 类型 | App.tsx 用 `as any` 规避 | @coder-fe：contracts/app-types.ts PanelId 添加 `'daily-brief'` |
+| WR-007 | listenCycleUpdated 已定义但无组件调用 | tauri-bridge.ts:573 | 确认是否已被 listenFiveLayerUpdated 取代，如是标记废弃 |
 | WR-008 | 静态数据面板未接真实数据 | SupplyChainPanel, GulfFdiPanel | 按产品路线图安排 Wave N |
+| WR-009 | 孤立 Command：reclassify_stale_news | 已注册，无前端 invoke 入口 | 管理工具，正常；如需 UI 入口可在 SettingsPage 添加触发按钮 |
+| TP-001 | TrendIndicator 初次启动前 4min 内无数据 | 4min warmup sleep 前 sparkline 为空骨架 | @coder-fe：可在空状态显示 "--" 文本（优雅降级，不崩溃）|
 
 ---
 
 ## 十四、自省
 
-- 本次扫描为 reverse 全量模式，覆盖 42 个 Command、13 个事件名、35 个 TS/Rust struct 字段对比、3 个 Capability 文件。
-- 历史记忆中的 CC-001（RadarSignal 类型不一致）已被修复：MarketRadarSignal TS 接口现在有 `bullish: boolean | null` 和 `detail`，与 Rust 完全对齐 ✅。
-- 历史记忆中的 CC-002/CC-003（孤立 listen 事件）已被修复：news-updated / market-updated 后端确实会 emit ✅。
-- 新发现 WR-001（five-layer-updated vs five-layer-reasoning-updated 不匹配）是目前最高优先级问题，影响自动推理推送。
-- 项目 i18n 状态与记忆中不符（记忆记录"无 i18n 系统"，实际已有 react-i18next），本次更新记忆。
-- 后续需确认：get_indicator_trend 的 bridge 函数已定义但无面板消费，是否有面板需要接入趋势图？
+### v3.0（2026-03-20）
+- 全量 reverse 模式：42 Command、13 事件名、35 个 TS/Rust struct 字段对比、3 个 Capability 文件。
+- 发现 WR-001/002/003（P0+P1），均于次日 commit c31b07d 修复。
+
+### v3.1（2026-03-22）
+- 增量扫描（3 commits：reclassify_stale_news + Sparkline/TrendIndicator + poll_loop startup snapshot）。
+- 本次 12 项检查全部通过，无阻塞项。
+- TP-001（初次启动 sparkline 空数据）已通过 219553f 修复（4min wait + initial snapshot + 2h early snapshot）。
+- reclassify_stale_news 登记为管理型孤立 command（正常，非断裂）。
+- Command 总数从 42 → 45（+reclassify_stale_news +get_indicator_trend +get_available_indicators 已在 v3.0 后新增）。
+- 后续关注：WR-006（panelId 'daily-brief' as any）和 WR-007（listenCycleUpdated 废弃确认）建议下一 session 处理。
