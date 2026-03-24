@@ -29,11 +29,11 @@ impl Default for PollConfig {
     fn default() -> Self {
         Self {
             rss_interval: Duration::from_secs(5 * 60),       // 5 minutes
-            yahoo_interval: Duration::from_secs(60),          // 1 minute
+            yahoo_interval: Duration::from_secs(5 * 60),       // 5 minutes (24h-safe: ~5k req/day vs 24k at 1min)
             fred_interval: Duration::from_secs(60 * 60),      // 1 hour
             eia_interval: Duration::from_secs(6 * 60 * 60),   // 6 hours
             fear_greed_interval: Duration::from_secs(30 * 60), // 30 minutes
-            coingecko_interval: Duration::from_secs(2 * 60),  // 2 minutes
+            coingecko_interval: Duration::from_secs(5 * 60),  // 5 minutes (24h-safe: stay within free tier limit)
             mc_interval: Duration::from_secs(60),               // 1 minute
             bis_interval: Duration::from_secs(6 * 60 * 60),    // 6 hours
             wto_interval: Duration::from_secs(24 * 60 * 60),   // 24 hours

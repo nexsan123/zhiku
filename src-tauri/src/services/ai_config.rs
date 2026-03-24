@@ -96,13 +96,14 @@ pub fn resolve_provider_key(app: &tauri::AppHandle, provider: &str) -> String {
 
 /// Resolve config + provider name for batch tasks (news summarization).
 ///
-/// Priority order optimized for high-frequency batch work: groq first (fast + free tier),
-/// then ollama (local, no rate limit), then others. Returns (config, provider_name).
+/// Priority order optimized for 24h unattended operation: deepseek first (cheap, no daily
+/// quota limit), then ollama (local, no rate limit), then groq (fast but 14.4k req/day
+/// free cap), then others. Returns (config, provider_name).
 pub fn resolve_batch_config(app: &tauri::AppHandle) -> (ResolvedAiConfig, String) {
     resolve_config_with_priority(
         app,
-        &["groq", "ollama", "deepseek", "openai", "mistral", "claude"],
-        "groq",
+        &["deepseek", "ollama", "groq", "openai", "mistral", "claude"],
+        "deepseek",
     )
 }
 
