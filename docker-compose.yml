@@ -1,0 +1,20 @@
+services:
+  zhiku:
+    build: .
+    container_name: zhiku
+    restart: always
+    ports:
+      - "9601:9601"  # REST API for QuantTerminal
+      - "9600:9600"  # WebSocket for QuantTerminal
+    volumes:
+      # Persistent app data: settings + databases
+      - zhiku-data:/root/.local/share/com.zhiku.app
+    environment:
+      - RUST_LOG=info
+      - DISPLAY=:99
+    # RSSHub is on the same host — container can reach it via host network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  zhiku-data:
