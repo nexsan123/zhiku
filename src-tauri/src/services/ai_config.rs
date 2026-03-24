@@ -124,6 +124,22 @@ pub fn resolve_reasoning_config(app: &tauri::AppHandle) -> (ResolvedAiConfig, St
     )
 }
 
+/// Read the QuantTerminal API token from settings store.
+///
+/// Key: `qt_api_token` in settings.json.
+/// Returns empty string if not configured — callers treat empty as "auth disabled"
+/// (safe for local dev, must be set for cloud deployment).
+pub fn resolve_qt_token(app: &tauri::AppHandle) -> String {
+    let store = match app.store("settings.json") {
+        Ok(s) => s,
+        Err(_) => return String::new(),
+    };
+    store
+        .get("qt_api_token")
+        .and_then(|v| v.as_str().map(|s| s.to_string()))
+        .unwrap_or_default()
+}
+
 /// Shared implementation: resolve AI config using a given provider priority order.
 ///
 /// Checks `ai_models` store array for the first enabled model matching the priority list.

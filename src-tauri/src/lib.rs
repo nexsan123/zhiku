@@ -90,7 +90,7 @@ pub fn run() {
 
             // Phase 5: QuantTerminal integration servers
             services::qt_rest::start_rest_server(pool.clone(), app.handle().clone());
-            let ws_broadcaster = services::qt_ws::start_ws_server();
+            let ws_broadcaster = services::qt_ws::start_ws_server(app.handle().clone());
             app.manage(ws_broadcaster);
 
             // Start SmartPollLoop — background data fetching (RT-001: tauri::async_runtime::spawn)

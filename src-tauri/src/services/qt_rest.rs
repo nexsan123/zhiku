@@ -1,12 +1,16 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use axum::extract::Request;
+use axum::http::StatusCode;
+use axum::middleware::{self, Next};
+use axum::response::Response;
 use axum::{extract::Query, extract::State, routing::get, Json, Router};
 use sqlx::SqlitePool;
 use tokio::net::TcpListener;
 
 use crate::services::{
-    company_intel, cycle_reasoner, deep_analyzer, dollar_tide, game_map,
+    ai_config, company_intel, cycle_reasoner, deep_analyzer, dollar_tide, game_map,
     global_aggregator, indicator_engine, market_radar, scenario_engine,
     trend_tracker,
 };
@@ -17,7 +21,43 @@ struct RestState {
     app_handle: tauri::AppHandle,
 }
 
+/// Bearer token auth middleware.
+///
+/// If `qt_api_token` is configured in settings, every request must include
+/// `Authorization: Bearer <token>`. If the token is empty (not configured),
+/// auth is disabled (local dev mode).
+async fn auth_middleware(
+    State(state): State<Arc<RestState>>,
+    req: Request,
+    next: Next,
+) -> Result<Response, StatusCode> {
+    let expected = ai_config::resolve_qt_token(&state.app_handle);
+
+    // No token configured → auth disabled (local dev)
+    if expected.is_empty() {
+        return Ok(next.run(req).await);
+    }
+
+    // Check Authorization header
+    let auth_header = req
+        .headers()
+        .get("authorization")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
+
+    let provided = auth_header.strip_prefix("Bearer ").unwrap_or("");
+
+    if provided == expected {
+        Ok(next.run(req).await)
+    } else {
+        log::warn!("REST auth rejected: invalid or missing Bearer token");
+        Err(StatusCode::FORBIDDEN)
+    }
+}
+
 /// Start the REST API server on port 9601.
+/// Binds 0.0.0.0 for remote access (cloud deployment).
+/// Bearer token auth via `qt_api_token` setting.
 /// Non-blocking -- spawns on its own tokio task via RT-001.
 pub fn start_rest_server(pool: SqlitePool, app_handle: tauri::AppHandle) {
     let state = Arc::new(RestState { pool, app_handle });
@@ -37,9 +77,10 @@ pub fn start_rest_server(pool: SqlitePool, app_handle: tauri::AppHandle) {
             .route("/api/v1/adjustment-factors", get(handle_adjustment_factors))
             .route("/api/v1/trends", get(handle_trends))
             .route("/api/v1/company-intel", get(handle_company_intel))
+            .route_layer(middleware::from_fn_with_state(state.clone(), auth_middleware))
             .with_state(state);
 
-        let listener = match TcpListener::bind("127.0.0.1:9601").await {
+        let listener = match TcpListener::bind("0.0.0.0:9601").await {
             Ok(l) => l,
             Err(e) => {
                 log::error!("Failed to bind REST server on :9601: {}", e);
@@ -47,7 +88,7 @@ pub fn start_rest_server(pool: SqlitePool, app_handle: tauri::AppHandle) {
             }
         };
 
-        log::info!("QuantTerminal REST API listening on http://127.0.0.1:9601");
+        log::info!("QuantTerminal REST API listening on http://0.0.0.0:9601");
 
         if let Err(e) = axum::serve(listener, app).await {
             log::error!("REST server error: {}", e);
